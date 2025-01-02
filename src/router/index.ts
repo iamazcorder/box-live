@@ -53,6 +53,10 @@ export const routerName = {
   notFound: 'notFound',
   group: 'group',
   my: 'my',
+  liveCenter: 'liveCenter',
+  messageCenter: 'messageCenter',
+  fans: 'fans',
+  follow: 'follow',
   user: 'user',
   download: 'download',
   downloadLive: 'downloadLive',
@@ -164,6 +168,28 @@ export const defaultRoutes: RouteRecordRaw[] = [
         name: routerName.my,
         path: '/my',
         component: () => import('@/views/my/index.vue'),
+        children: [
+          {
+            name: routerName.follow,
+            path: '/follow',
+            component: () => import('@/views/follow/index.vue'),
+          },
+          {
+            name: routerName.fans,
+            path: '/fans',
+            component: () => import('@/views/fans/index.vue'),
+          },
+        ],
+      },
+      {
+        name: routerName.liveCenter,
+        path: '/liveCenter',
+        component: () => import('@/views/liveCenter/index.vue'),
+      },
+      {
+        name: routerName.messageCenter,
+        path: '/messageCenter',
+        component: () => import('@/views/messageCenter/index.vue'),
       },
       {
         name: routerName.user,

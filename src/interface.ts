@@ -643,6 +643,7 @@ export interface IRole {
 export interface IArea {
   id?: number;
   name?: string;
+  english_name?: string;
   /** 备注 */
   remark?: string;
   /** 权重 */

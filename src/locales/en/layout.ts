@@ -3,6 +3,8 @@ import { nameSpaceWrap } from '@/locales/util';
 export default nameSpaceWrap('layout', {
   home: 'Home',
   area: 'Area',
+  music: 'Music',
+  message: 'Message',
   shop: 'Shop',
   liveAdmin: 'Admin',
   download: 'Download',
@@ -24,6 +26,7 @@ export default nameSpaceWrap('layout', {
   login: 'Login',
   logout: 'Logout',
   my: 'My',
+  liveCenter: 'Live Center',
   resource: 'Resource',
   libraries: 'Official libraries',
   rank: 'Rank',

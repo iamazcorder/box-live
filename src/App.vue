@@ -27,7 +27,7 @@ import { fetchAreaList } from '@/api/area';
 import { fetchGlobalMsgMyList } from '@/api/globalMsg';
 import NaiveMessage from '@/components/NaiveMessage/index.vue';
 import NaiveModal from '@/components/NaiveModal/index.vue';
-import { THEME_COLOR, appBuildInfo } from '@/constant';
+import { appBuildInfo, THEME_COLOR } from '@/constant';
 import { useCheckUpdate } from '@/hooks/use-common';
 import { useGoogleAd } from '@/hooks/use-google-ad';
 import { loginMessage } from '@/hooks/use-login';

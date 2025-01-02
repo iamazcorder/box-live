@@ -21,32 +21,32 @@
             {{ t('layout.home') }}
           </a>
 
+          <!-- <a class="item" :class="{
+            active: router.currentRoute.value.name === routerName.area,
+          }" @click.prevent="router.push({ name: routerName.area })">
+            {{ t('layout.area') }}
+          </a> -->
+
           <a
+            v-for="(item, index) in appStore.areaList"
+            :key="index"
             class="item"
             :class="{
-              active: router.currentRoute.value.name === routerName.area,
+              active: router.currentRoute.value.params.id === item.id + '',
             }"
-            @click.prevent="router.push({ name: routerName.area })"
+            @click.prevent="changeArea(item)"
           >
-            {{ t('layout.area') }}
+            <!-- {{ t(`layout.${item.english_name}`) }} -->
+            {{ item.name }}
           </a>
 
-          <a
-            class="item"
-            :href="COMMON_URL.admin"
-            @click.prevent="openToTarget(COMMON_URL.admin)"
-            v-if="!isMobile()"
-          >
+          <!-- <a class="item" :href="COMMON_URL.admin" @click.prevent="openToTarget(COMMON_URL.admin)" v-if="!isMobile()">
             {{ t('layout.liveAdmin') }}
-          </a>
+          </a> -->
 
-          <a
-            class="item"
-            @click.prevent="router.push({ name: routerName.downloadLive })"
-            v-if="!isMobile()"
-          >
+          <!-- <a class="item" @click.prevent="router.push({ name: routerName.downloadLive })" v-if="!isMobile()">
             {{ t('layout.download') }}
-          </a>
+          </a> -->
 
           <!-- <Dropdown
             class="item"
@@ -90,7 +90,7 @@
       </div>
 
       <div class="right">
-        <Dropdown
+        <!-- <Dropdown
           class="doc"
           v-if="!isMobile()"
         >
@@ -191,20 +191,9 @@
               </a>
             </div>
           </template>
-        </Dropdown>
+        </Dropdown> -->
 
-        <a
-          class="signin"
-          @click="handleSignin"
-          v-if="!isMobile() && userStore.userInfo"
-        >
-          {{ t('layout.signin') }}
-          <div
-            class="red-dot"
-            v-if="appStore.showSigninRedDot"
-          ></div>
-        </a>
-
+        <!-- 
         <a
           class="privatizationDeployment"
           :class="{
@@ -222,7 +211,7 @@
           <div class="badge">
             <div class="txt">hot</div>
           </div>
-        </a>
+        </a> -->
 
         <!-- <a
           class="videoTools"
@@ -238,7 +227,7 @@
             <div class="txt">beta</div>
           </div>
         </a> -->
-
+        <!-- 
         <a
           class="github"
           target="_blank"
@@ -248,11 +237,137 @@
             :src="githubStar"
             alt=""
           />
+        </a> -->
+
+        <div
+          v-if="!userStore.userInfo"
+          class="qqlogin"
+          @click="appStore.showLoginModal = true"
+        >
+          <div class="btn">{{ t('layout.login') }}</div>
+        </div>
+
+        <Dropdown
+          v-else
+          class="qqlogin"
+        >
+          <template #btn>
+            <Avatar
+              :url="userStore.userInfo.avatar"
+              :name="userStore.userInfo.username"
+              :size="35"
+            ></Avatar>
+          </template>
+          <template #list>
+            <div class="list">
+              <a
+                class="item"
+                @click.prevent="
+                  router.push({
+                    name: routerName.my,
+                    params: {
+                      userId: userStore.userInfo.id,
+                    },
+                  })
+                "
+              >
+                <div style="display: flex; align-items: center">
+                  <div class="ico imy"></div>
+                  <div class="txt">{{ t('layout.my') }}</div>
+                </div>
+                <div class="ico iright_arrow"></div>
+              </a>
+              <a
+                class="item"
+                @click.prevent="
+                  router.push({
+                    name: routerName.liveCenter,
+                    params: {
+                      // userId: userStore.userInfo.id,
+                    },
+                  })
+                "
+              >
+                <div style="display: flex; align-items: center">
+                  <div class="ico ilive_center"></div>
+                  <div class="txt">{{ t('layout.liveCenter') }}</div>
+                </div>
+                <div class="ico iright_arrow"></div>
+              </a>
+              <a
+                class="item"
+                @click.prevent="
+                  router.push({
+                    name: routerName.messageCenter,
+                    params: {
+                      // userId: userStore.userInfo.id,
+                    },
+                  })
+                "
+              >
+                <div style="display: flex; align-items: center">
+                  <div class="ico imessage"></div>
+                  <div class="txt">{{ t('layout.message') }}</div>
+                </div>
+                <div class="ico iright_arrow"></div>
+              </a>
+              <a
+                class="item"
+                @click.prevent="handleLogout"
+              >
+                <div style="display: flex; align-items: center">
+                  <div class="ico ilogout"></div>
+                  <div class="txt">{{ t('layout.logout') }}</div>
+                </div>
+              </a>
+            </div>
+          </template>
+        </Dropdown>
+
+        <a
+          class="signin"
+          @click="handleSignin"
+          v-if="!isMobile() && userStore.userInfo"
+        >
+          <!-- <div class="ico isignin"></div> -->
+          {{ t('layout.signin') }}
+          <div
+            class="red-dot"
+            v-if="appStore.showSigninRedDot"
+          ></div>
         </a>
+
+        <Dropdown
+          class="switch-lang"
+          v-if="!isMobile()"
+        >
+          <template #btn>
+            <div class="btn">
+              {{ localeList.find((v) => v.value === cacheStore.locale)?.label }}
+              <VPIconChevronDown class="icon"></VPIconChevronDown>
+            </div>
+          </template>
+          <template #list>
+            <div class="list">
+              <a
+                class="item"
+                v-for="(item, index) in localeList"
+                :key="index"
+                :class="{ active: item.value === cacheStore.locale }"
+                @click="changeLocale(item)"
+              >
+                <div class="txt">{{ item.label }}</div>
+              </a>
+            </div>
+          </template>
+        </Dropdown>
 
         <Dropdown class="start-live">
           <template #btn>
-            <div class="btn">{{ t('layout.startLive') }}</div>
+            <div class="btn">
+              <div class="ico ilive"></div>
+              <span>{{ t('layout.startLive') }}</span>
+            </div>
           </template>
           <template #list>
             <div class="list">
@@ -334,75 +449,6 @@
             </div>
           </template>
         </Dropdown>
-
-        <div
-          v-if="!userStore.userInfo"
-          class="qqlogin"
-          @click="appStore.showLoginModal = true"
-        >
-          <div class="btn">{{ t('layout.login') }}</div>
-        </div>
-
-        <Dropdown
-          v-else
-          class="qqlogin"
-        >
-          <template #btn>
-            <Avatar
-              :url="userStore.userInfo.avatar"
-              :name="userStore.userInfo.username"
-              :size="35"
-            ></Avatar>
-          </template>
-          <template #list>
-            <div class="list">
-              <a
-                class="item"
-                @click.prevent="
-                  router.push({
-                    name: routerName.my,
-                    params: {
-                      userId: userStore.userInfo.id,
-                    },
-                  })
-                "
-              >
-                <div class="txt">{{ t('layout.my') }}</div>
-              </a>
-              <a
-                class="item"
-                @click.prevent="handleLogout"
-              >
-                <div class="txt">{{ t('layout.logout') }}</div>
-              </a>
-            </div>
-          </template>
-        </Dropdown>
-
-        <Dropdown
-          class="switch-lang"
-          v-if="!isMobile()"
-        >
-          <template #btn>
-            <div class="btn">
-              {{ localeList.find((v) => v.value === cacheStore.locale)?.label }}
-              <VPIconChevronDown class="icon"></VPIconChevronDown>
-            </div>
-          </template>
-          <template #list>
-            <div class="list">
-              <a
-                class="item"
-                v-for="(item, index) in localeList"
-                :key="index"
-                :class="{ active: item.value === cacheStore.locale }"
-                @click="changeLocale(item)"
-              >
-                <div class="txt">{{ item.label }}</div>
-              </a>
-            </div>
-          </template>
-        </Dropdown>
       </div>
     </div>
   </header>
@@ -416,11 +462,10 @@ import { useRouter } from 'vue-router';
 
 import { fetchCreateSignin, fetchTodayIsSignin } from '@/api/signin';
 import Dropdown from '@/components/Dropdown/index.vue';
-import VPIconChevronDown from '@/components/icons/VPIconChevronDown.vue';
-import VPIconExternalLink from '@/components/icons/VPIconExternalLink.vue';
 import { COMMON_URL, DEFAULT_AUTH_INFO, URL_QUERY } from '@/constant';
 import { handleTip } from '@/hooks/use-common';
 import { loginTip } from '@/hooks/use-login';
+import { IArea } from '@/interface';
 import { routerName } from '@/router';
 import { useAppStore } from '@/store/app';
 import { useCacheStore } from '@/store/cache';
@@ -562,6 +607,11 @@ const plugins = ref([
     url: 'https://github.com/galaxy-s10/billd-html-webpack-plugin',
   },
 ]);
+
+function changeArea(item: IArea) {
+  console.log(item);
+  router.push({ name: routerName.areaDetail, params: { id: item.id } });
+}
 
 watch(
   () => userStore.userInfo?.id,
@@ -722,12 +772,60 @@ function handleWebsiteJump() {
     height: $layout-head-h;
     box-shadow: inset 0 -1px #f1f2f3 !important;
     font-size: 15px;
+
     .icon {
       margin-left: 5px;
       width: 13px;
 
       fill: currentColor;
     }
+
+    .ico {
+      /* margin: 0 auto; */
+      width: 18px;
+      height: 18px;
+      opacity: 0.9;
+
+      @extend %containBg;
+
+      &.isignin {
+        @include setBackground('@/assets/img/signin.png');
+      }
+
+      &.ilive {
+        width: 25px;
+        height: 25px;
+        margin-right: 5px;
+        @include setBackground('@/assets/img/startLive.png');
+      }
+
+      &.imy {
+        margin-right: 10px;
+        @include setBackground('@/assets/img/my.png');
+      }
+
+      &.ilive_center {
+        margin-right: 10px;
+        @include setBackground('@/assets/img/liveCenter.png');
+      }
+
+      &.imessage {
+        margin-right: 10px;
+        @include setBackground('@/assets/img/message.png');
+      }
+
+      &.ilogout {
+        margin-right: 10px;
+        @include setBackground('@/assets/img/logout.png');
+      }
+
+      &.iright_arrow {
+        width: 12px;
+        height: 12px;
+        @include setBackground('@/assets/img/rightArrow.png');
+      }
+    }
+
     .list {
       padding: 10px 0;
       width: 150px;
@@ -740,10 +838,12 @@ function handleWebsiteJump() {
         color: black;
         text-decoration: none;
         cursor: pointer;
+
         &.active,
         &:hover {
           color: $theme-color-gold;
         }
+
         .icon {
           margin-left: 5px;
           width: 13px;
@@ -753,6 +853,7 @@ function handleWebsiteJump() {
         }
       }
     }
+
     .badge {
       position: absolute;
       top: -10px;
@@ -762,12 +863,14 @@ function handleWebsiteJump() {
       background-color: red;
       color: white;
       line-height: 1;
+
       .txt {
         transform-origin: top !important;
 
         @include minFont(10);
       }
     }
+
     .red-dot {
       position: absolute;
       top: -5px;
@@ -777,15 +880,18 @@ function handleWebsiteJump() {
       border-radius: 50%;
       background-color: red;
     }
+
     .hr {
       width: 100%;
       height: 1px;
       background-color: #e7e7e7;
     }
+
     .left {
       display: flex;
       align-items: center;
       height: 100%;
+
       .logo-wrap {
         display: flex;
         align-items: center;
@@ -796,7 +902,7 @@ function handleWebsiteJump() {
           width: 90px;
           height: 56px;
 
-          @include setBackground('@/assets/img/logo-txt.png');
+          @include setBackground('@/assets/img/logo.png');
         }
       }
 
@@ -804,6 +910,7 @@ function handleWebsiteJump() {
         display: flex;
         align-items: center;
         height: 100%;
+
         .item {
           position: relative;
           display: flex;
@@ -827,12 +934,14 @@ function handleWebsiteJump() {
               transform: translateY(-100%);
             }
           }
+
           &:hover {
             color: $theme-color-gold;
           }
         }
       }
     }
+
     .download,
     .doc,
     .about,
@@ -840,15 +949,19 @@ function handleWebsiteJump() {
       &:hover {
         color: $theme-color-gold;
       }
+
       .btn {
         display: flex;
+        flex-direction: row;
         align-items: center;
+
         .icon {
           margin-left: 5px;
           width: 13px;
 
           fill: currentColor;
         }
+
         &:hover {
           color: $theme-color-gold;
         }
@@ -866,9 +979,11 @@ function handleWebsiteJump() {
           color: black;
           text-decoration: none;
           cursor: pointer;
+
           &:hover {
             color: $theme-color-gold;
           }
+
           .icon {
             margin-left: 5px;
             width: 13px;
@@ -884,6 +999,7 @@ function handleWebsiteJump() {
       display: flex;
       align-items: center;
       height: 100%;
+
       .doc,
       .about,
       .ecosystem {
@@ -915,17 +1031,22 @@ function handleWebsiteJump() {
       .sponsors,
       .privatizationDeployment,
       .videoTools,
+      .message,
       .signin {
         display: flex;
         align-items: center;
-        margin-right: 20px;
+        justify-content: center;
+        flex-direction: column;
+        margin-right: 30px;
         color: black;
         text-decoration: none;
         cursor: pointer;
+
         &:hover {
           color: $theme-color-gold;
         }
       }
+
       .github {
         width: 82px;
       }
@@ -937,15 +1058,23 @@ function handleWebsiteJump() {
       }
 
       .start-live {
-        margin-right: 20px;
+        margin-right: 30px;
+
         .btn {
-          padding: 5px 15px;
+          width: 100px;
+          height: 34px;
+          /* padding: 8px 15px; */
           border-radius: 6px;
           background-color: $theme-color-gold;
           color: white;
           font-size: 13px;
           cursor: pointer;
+          display: flex;
+          font-weight: 500;
+          justify-content: center;
+          align-items: center;
         }
+
         .list {
           position: relative;
           padding: 10px 0;
@@ -961,48 +1090,67 @@ function handleWebsiteJump() {
             &:hover {
               color: $theme-color-gold;
             }
+
             &.disabled {
               color: initial !important;
               opacity: 0.5;
               cursor: not-allowed;
             }
           }
+
           .tip {
             display: flex;
             justify-content: flex-end;
             padding-right: 6px;
             color: rgba(60, 60, 60, 0.7);
             font-size: 12px;
+
             .tip-txt {
               cursor: pointer;
             }
           }
         }
       }
+
       .qqlogin {
-        margin-right: 20px;
+        margin-right: 30px;
+
         .btn {
           cursor: pointer;
         }
+
         .list {
-          padding: 10px 0;
-          width: 90px;
+          padding: 10px 10px 10px;
+          /* width: 90px; */
 
           .item {
             position: relative;
             display: flex;
-            padding: 0 15px;
+            color: #61666d;
+            font-weight: 500;
+            /* padding: 0 15px; */
             cursor: pointer;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+
             &:hover {
-              color: $theme-color-gold;
+              /* color: $theme-color-gold; */
+              background-color: #f1f2f3;
             }
           }
         }
       }
+
       .switch-lang {
+        margin-right: 20px;
+
         .btn {
           display: flex;
           align-items: center;
+
           .icon {
             margin-left: 5px;
             width: 13px;
@@ -1010,6 +1158,7 @@ function handleWebsiteJump() {
             fill: currentColor;
           }
         }
+
         .list {
           padding: 10px 0;
           width: 80px;
@@ -1025,6 +1174,7 @@ function handleWebsiteJump() {
             &.active {
               color: $theme-color-gold;
             }
+
             &.disabled {
               color: initial !important;
               opacity: 0.5;

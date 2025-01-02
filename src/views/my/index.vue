@@ -1,4 +1,344 @@
 <template>
+  <div class="personal-space">
+    <!-- Banner 图 -->
+    <div class="banner">
+      <img
+        :src="user.banner"
+        alt="Banner"
+      />
+      <!-- 个人信息展示在 Banner 图上 -->
+      <div class="user-info">
+        <img
+          :src="user.avatar"
+          alt="头像"
+          class="avatar"
+        />
+        <div class="details">
+          <h2>
+            {{ user.name }}
+          </h2>
+          <div class="edit-btn">编辑个性签名</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab、搜索框和统计信息 -->
+    <div class="header-row">
+      <!-- 左侧：Tab 和搜索框 -->
+      <div class="left-section">
+        <div class="tabs">
+          <button
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :class="{ active: selectedTab === index }"
+            @click="selectTab(index)"
+          >
+            {{ tab }}
+          </button>
+        </div>
+        <div class="search-bar">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="搜索直播回放"
+            @keyup.enter="performSearch"
+          />
+          <div class="ico search"></div>
+        </div>
+      </div>
+
+      <!-- 右侧：关注数和粉丝数 -->
+      <div class="right-section">
+        <div
+          class="stat-item"
+          @click="
+            router.push({
+              name: 'follow',
+            })
+          "
+        >
+          <span class="title">关注数</span>
+          <span class="num">{{ user.following }}</span>
+        </div>
+        <div
+          class="stat-item"
+          @click="
+            router.push({
+              name: 'fans',
+            })
+          "
+        >
+          <span class="title">粉丝数</span>
+          <span class="num">{{ user.fans }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 内容 -->
+    <div class="tab-content">
+      <!-- <div class="live-replays">
+        <h3>直播回放</h3>
+        <div class="videos">
+          <div class="video-item" v-for="(video, index) in filteredReplays" :key="index">
+            <img :src="video.thumbnail" alt="缩略图" />
+            <p>{{ video.title }}</p>
+          </div>
+        </div>
+      </div> -->
+      <router-view></router-view>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+interface User {
+  avatar: string;
+  banner: string;
+  name: string;
+  level: number;
+  following: number;
+  fans: number;
+}
+
+const user: User = {
+  avatar: 'https://via.placeholder.com/150',
+  banner: 'https://via.placeholder.com/1200x300',
+  name: 'Tim_zh',
+  level: 5,
+  following: 210,
+  fans: 50,
+};
+
+const searchQuery = ref<string>('');
+const performSearch = () => {
+  console.log('搜索内容：', searchQuery.value);
+  // 搜索逻辑或 API 调用可以在这里实现
+};
+const replays = ref([
+  { thumbnail: 'https://via.placeholder.com/150', title: '直播回放1' },
+  { thumbnail: 'https://via.placeholder.com/150', title: '直播回放2' },
+]);
+
+const tabs = ref(['直播回放']);
+const selectedTab = ref(0);
+
+const selectTab = (index: number) => {
+  selectedTab.value = index;
+};
+
+const filteredReplays = computed(() =>
+  replays.value.filter((replay) =>
+    replay.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+);
+</script>
+
+<style lang="scss" scoped>
+.ico {
+  /* margin: 0 auto; */
+  width: 20px;
+  height: 20px;
+  opacity: 0.9;
+  margin-right: 8px;
+
+  @extend %containBg;
+
+  &.search {
+    @include setBackground('@/assets/img/search.png');
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}
+
+.personal-space {
+  font-family: Arial, sans-serif;
+
+  /* Banner 样式 */
+  .banner {
+    position: relative;
+    width: 100%;
+    height: 200px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-info {
+      position: absolute;
+      bottom: 20px;
+      left: 60px;
+      display: flex;
+      align-items: center;
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        margin-right: 15px;
+      }
+
+      .details {
+        h2 {
+          font-size: 20px;
+          margin: 0;
+          color: #fff;
+        }
+
+        .edit-btn {
+          margin-top: 10px;
+          font-size: 12px;
+          color: #fff;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  /* Header 样式：Tab、搜索框和统计信息 */
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 10px 60px 0;
+
+    .left-section {
+      height: 100%;
+      display: flex;
+      align-items: center;
+
+      .tabs {
+        display: flex;
+
+        button {
+          margin-right: 20px;
+          /* padding: 10px 20px; */
+          background: none;
+          border: none;
+          font-size: 14px;
+          color: #333;
+          cursor: pointer;
+          height: 64px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          &.active {
+            font-weight: bold;
+            color: #ffd700;
+            border-bottom: 2px solid #ffd700;
+          }
+
+          &:hover {
+            color: #ffd700;
+          }
+        }
+      }
+
+      /* 搜索框样式 */
+      .search-bar {
+        display: flex;
+        align-items: center;
+        position: relative;
+        width: 170px;
+        height: 30px;
+        border: 1px solid #e3e8ec;
+        border-radius: 6px;
+        padding: 0 5px;
+
+        /* 当搜索框或其中的输入框获得焦点时，改变边框颜色 */
+        &:focus-within {
+          border-color: #ffd700;
+          /* 设置选中时的边框颜色 */
+        }
+
+        input {
+          flex: 1;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 12px;
+          padding: 0 10px;
+          height: 100%;
+        }
+      }
+    }
+
+    .right-section {
+      display: flex;
+      align-items: center;
+      padding-bottom: 5px;
+
+      .stat-item {
+        margin-right: 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+
+        &:hover {
+          cursor: pointer;
+        }
+
+        .title {
+          color: #61666d;
+          margin-bottom: 5px;
+        }
+
+        .num {
+          color: #18191c;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  /* Tab 内容样式 */
+  .tab-content {
+    padding: 20px 60px;
+
+    .live-replays {
+      h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .videos {
+        display: flex;
+        flex-wrap: wrap;
+
+        .video-item {
+          width: calc(50% - 10px);
+          margin-right: 10px;
+          margin-bottom: 10px;
+
+          img {
+            width: 100%;
+            border-radius: 10px;
+          }
+
+          p {
+            font-size: 14px;
+            margin-top: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+</style>
+<!-- <template>
   <div class="my-wrap">
     <div class="id">用户id：{{ userStore.userInfo?.id }}</div>
     <div class="avatar">
@@ -546,4 +886,4 @@ async function handleUpdateKey() {
     }
   }
 }
-</style>
+</style> -->

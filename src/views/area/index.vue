@@ -1,5 +1,5 @@
 <template>
-  <div class="tab-list">
+  <!-- <div class="tab-list">
     <div
       v-for="(item, index) in appStore.areaList"
       :key="index"
@@ -10,9 +10,10 @@
       {{ item.name }}
     </div>
     <div v-if="!appStore.areaList.length">暂无分区</div>
+  </div> -->
+  <div class="wrapper">
+    <router-view></router-view>
   </div>
-
-  <router-view></router-view>
 </template>
 
 <script lang="ts" setup>
@@ -46,6 +47,10 @@ watch(
 </script>
 
 <style lang="scss" scoped>
+.wrapper {
+  padding-top: 20px;
+}
+
 .tab-list {
   display: flex;
   align-items: center;
@@ -55,10 +60,12 @@ watch(
   padding: 0 30px;
 
   user-select: none;
+
   .tab {
     position: relative;
     margin-right: 20px;
     cursor: pointer;
+
     &.active {
       color: $theme-color-gold;
       font-size: 16px;
