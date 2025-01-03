@@ -29,6 +29,7 @@ export default nameSpaceWrap('layout', {
   liveCenter: 'Live Center',
   resource: 'Resource',
   libraries: 'Official libraries',
+  liveSetting: 'liveSetting',
   rank: 'Rank',
   siteOrder: 'Site Order',
   myWallet: 'My Wallet',

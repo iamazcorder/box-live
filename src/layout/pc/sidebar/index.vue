@@ -2,6 +2,13 @@
   <aside class="sidebar-wrap">
     <div
       class="item"
+      @click="router.push({ name: routerName.myRoom })"
+    >
+      <div class="ico liveSetting"></div>
+      <div class="txt">{{ t('layout.liveSetting') }}</div>
+    </div>
+    <div
+      class="item"
       @click="router.push({ name: routerName.rank })"
     >
       <div class="ico rank"></div>
@@ -14,7 +21,7 @@
       <div class="ico shop"></div>
       <div class="txt">{{ t('layout.shop') }}</div>
     </div>
-    <div
+    <!-- <div
       class="item"
       @click="router.push({ name: routerName.order })"
     >
@@ -28,7 +35,7 @@
     >
       <div class="ico wallet"></div>
       <div class="txt">{{ t('layout.myWallet') }}</div>
-    </div>
+    </div> -->
   </aside>
 </template>
 
@@ -64,11 +71,14 @@ function handleJump() {
   color: $theme-color-gold;
   text-align: center;
   transform: translateY(-50%);
+
   .item {
     cursor: pointer;
+
     &:not(:last-child) {
       margin-bottom: 10px;
     }
+
     .ico {
       margin: 0 auto;
       width: 20px;
@@ -77,19 +87,27 @@ function handleJump() {
 
       @extend %containBg;
 
+      &.liveSetting {
+        @include setBackground('@/assets/img/myRoom_active.png');
+      }
+
       &.rank {
         @include setBackground('@/assets/img/rank.png');
       }
+
       &.shop {
         @include setBackground('@/assets/img/shop.png');
       }
+
       &.wallet {
         @include setBackground('@/assets/img/wallet.png');
       }
+
       &.data {
         @include setBackground('@/assets/img/data.png');
       }
     }
+
     .txt {
       font-size: 13px;
     }

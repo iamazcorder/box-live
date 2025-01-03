@@ -30,6 +30,7 @@ export default nameSpaceWrap('layout', {
   liveCenter: '直播中心',
   resource: '资源',
   libraries: '官方库',
+  liveSetting: '开播设置',
   rank: '排行榜',
   siteOrder: '全站充值',
   myWallet: '我的收支',

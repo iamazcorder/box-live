@@ -438,14 +438,14 @@
               >
                 <div class="txt">{{ t('layout.tencentCssPkLive') }}</div>
               </a>
-              <div class="tip">
+              <!-- <div class="tip">
                 <div
                   class="tip-txt"
                   @click="handleWebsiteJump"
                 >
                   有什么区别？
                 </div>
-              </div>
+              </div> -->
             </div>
           </template>
         </Dropdown>

@@ -4,7 +4,7 @@
       <n-modal-provider>
         <n-dialog-provider>
           <router-view></router-view>
-          <NaiveModal />
+          <!-- <NaiveModal /> -->
           <NaiveMessage />
         </n-dialog-provider>
       </n-modal-provider>

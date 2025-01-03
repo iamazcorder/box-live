@@ -53,7 +53,19 @@ export const routerName = {
   notFound: 'notFound',
   group: 'group',
   my: 'my',
+  playback: 'playback',
   liveCenter: 'liveCenter',
+  userCenter: 'userCenter',
+  myInfo: 'myInfo',
+  income: 'income',
+  viewHistory: 'viewHistory',
+  myRoom: 'myRoom',
+  startLive: 'startLive',
+  silentSetting: 'silentSetting',
+  shieldKeywordSetting: 'shieldKeywordSetting',
+  liveData: 'liveData',
+  overview: 'overview',
+  record: 'record',
   messageCenter: 'messageCenter',
   fans: 'fans',
   follow: 'follow',
@@ -167,16 +179,22 @@ export const defaultRoutes: RouteRecordRaw[] = [
       {
         name: routerName.my,
         path: '/my',
+        redirect: '/my/playback',
         component: () => import('@/views/my/index.vue'),
         children: [
           {
+            name: routerName.playback,
+            path: 'playback',
+            component: () => import('@/views/playback/index.vue'),
+          },
+          {
             name: routerName.follow,
-            path: '/follow',
+            path: 'follow',
             component: () => import('@/views/follow/index.vue'),
           },
           {
             name: routerName.fans,
-            path: '/fans',
+            path: 'fans',
             component: () => import('@/views/fans/index.vue'),
           },
         ],
@@ -184,7 +202,79 @@ export const defaultRoutes: RouteRecordRaw[] = [
       {
         name: routerName.liveCenter,
         path: '/liveCenter',
+        redirect: '/liveCenter/userCenter/myInfo',
         component: () => import('@/views/liveCenter/index.vue'),
+        children: [
+          {
+            name: routerName.userCenter,
+            path: 'userCenter',
+            redirect: '/liveCenter/userCenter/myInfo', // 添加重定向
+            children: [
+              {
+                name: routerName.myInfo,
+                path: 'myInfo',
+                component: () =>
+                  import('@/views/liveCenter/userCenter/myinfo.vue'),
+              },
+              {
+                name: routerName.income,
+                path: 'income',
+                component: () =>
+                  import('@/views/liveCenter/userCenter/income.vue'),
+              },
+              {
+                name: routerName.viewHistory,
+                path: 'viewHistory',
+                component: () =>
+                  import('@/views/liveCenter/userCenter/viewHistory.vue'),
+              },
+            ],
+          },
+          {
+            name: routerName.myRoom,
+            path: 'myRoom',
+            redirect: '/liveCenter/myRoom/startLive', // 添加重定向
+            children: [
+              {
+                name: routerName.startLive,
+                path: 'startLive',
+                component: () =>
+                  import('@/views/liveCenter/myRoom/startLive.vue'),
+              },
+              {
+                name: routerName.silentSetting,
+                path: 'silentSetting',
+                component: () =>
+                  import('@/views/liveCenter/myRoom/silentSetting.vue'),
+              },
+              {
+                name: routerName.shieldKeywordSetting,
+                path: 'shieldKeywordSetting',
+                component: () =>
+                  import('@/views/liveCenter/myRoom/shieldKeywordSetting.vue'),
+              },
+            ],
+          },
+          {
+            name: routerName.liveData,
+            path: 'liveData',
+            redirect: '/liveCenter/liveData/overview', // 添加重定向
+            children: [
+              {
+                name: routerName.overview,
+                path: 'overview',
+                component: () =>
+                  import('@/views/liveCenter/liveData/overview.vue'),
+              },
+              {
+                name: routerName.record,
+                path: 'record',
+                component: () =>
+                  import('@/views/liveCenter/liveData/record.vue'),
+              },
+            ],
+          },
+        ],
       },
       {
         name: routerName.messageCenter,

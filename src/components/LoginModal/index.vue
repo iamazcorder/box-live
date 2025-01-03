@@ -136,23 +136,25 @@
         </n-card>
         <div class="other-login">
           <span>第三方登录：</span>
-          <div
-            class="logo-wrap"
-            @click="handleQQLogin()"
-          >
-            <img
-              class="logo"
-              src="@/assets/img/qq_logo.png"
-            />
-          </div>
-          <div
-            class="logo-wrap"
-            @click="handleTip"
-          >
-            <img
-              class="logo"
-              src="@/assets/img/github_logo.png"
-            />
+          <div style="display: flex">
+            <div
+              class="logo-wrap"
+              @click="handleQQLogin()"
+            >
+              <img
+                class="logo"
+                src="@/assets/img/qq_logo.png"
+              />
+            </div>
+            <div
+              class="logo-wrap"
+              @click="handleTip"
+            >
+              <img
+                class="logo"
+                src="@/assets/img/wx_logo.png"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -270,6 +272,7 @@ const onBlur = () => {
   z-index: 100 !important;
 
   @extend %maskBg;
+
   .content {
     position: absolute;
     top: 50%;
@@ -278,6 +281,7 @@ const onBlur = () => {
     border-radius: 5px;
     background-color: #fff;
     transform: translate(-50%, -50%);
+
     .qrcode {
       width: 166px;
       height: 166px;
@@ -287,6 +291,7 @@ const onBlur = () => {
       background-repeat: no-repeat;
       background-position: center center;
     }
+
     .close {
       position: absolute;
       top: 20px;
@@ -306,6 +311,7 @@ const onBlur = () => {
       z-index: 100;
       width: 120px;
       transform: translate(-50%, -90%);
+
       &.close {
         z-index: 0;
         transform: translate(-50%, -99%);
@@ -320,17 +326,21 @@ const onBlur = () => {
     .other-login {
       display: flex;
       align-items: center;
-      justify-content: space-around;
+      /* justify-content: space-around; */
       margin: 5px 0;
+      padding: 0 25px;
+
       .logo-wrap {
         display: flex;
         align-items: center;
-        justify-content: center;
+        /* justify-content: center; */
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background-color: #f4f8fb;
+        /* background-color: #f4f8fb; */
         cursor: pointer;
+        margin-left: 10px;
+
         .logo {
           width: 26px;
           height: 26px;

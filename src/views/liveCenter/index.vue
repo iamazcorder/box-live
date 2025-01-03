@@ -11,7 +11,7 @@
         <div
           class="menu-title"
           :class="{ active: selectedMenu === index }"
-          @click="toggleMenu(index)"
+          @click="toggleMenu(index, menu.key)"
         >
           <div style="display: flex; align-items: center">
             <div
@@ -44,9 +44,9 @@
             v-for="(item, idx) in menu.submenu"
             :key="idx"
             :class="{ selected: selectedSubmenu === `${index}-${idx}` }"
-            @click="selectSubmenu(index, idx, $event)"
+            @click="selectSubmenu(index, idx, menu.key, item.path)"
           >
-            {{ item }}
+            {{ item.title }}
           </li>
         </ul>
       </div>
@@ -54,42 +54,56 @@
 
     <!-- 主内容 -->
     <main class="content">
-      <div class="header">我的信息</div>
-      <section class="section">
-        <h1>主内容区</h1>
-        <p>这里是主内容，可以自由滚动。</p>
-        <p>添加更多内容以验证滚动效果...</p>
-      </section>
+      <router-view></router-view>
     </main>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const router = useRouter();
+const route = useRoute();
 
 // 定义菜单数据类型
+interface SubMenuItem {
+  title: string;
+  path: string;
+}
 interface MenuItem {
   title: string;
   key: string;
-  submenu: string[];
+  submenu: SubMenuItem[];
 }
 
 // 定义菜单列表
 const menus = ref<MenuItem[]>([
   {
     title: '用户中心',
-    key: 'user',
-    submenu: ['个人信息', '我的关注', '观看历史'],
+    key: 'userCenter',
+    submenu: [
+      { title: '个人信息', path: 'myInfo' },
+      { title: '个人收益', path: 'income' },
+      { title: '观看历史', path: 'viewHistory' },
+    ],
   },
   {
     title: '我的直播间',
-    key: 'live',
-    submenu: ['开播设置', '禁言设置', '屏蔽词设置'],
+    key: 'myRoom',
+    submenu: [
+      { title: '开播设置', path: 'startLive' },
+      { title: '禁言设置', path: 'silentSetting' },
+      { title: '屏蔽词设置', path: 'shieldKeywordSetting' },
+    ],
   },
   {
     title: '直播数据',
     key: 'liveData',
-    submenu: ['数据总览', '粉丝分析', '直播收益'],
+    submenu: [
+      { title: '数据总览', path: 'overview' },
+      { title: '场次数据', path: 'record' },
+    ],
   },
 ]);
 
@@ -116,14 +130,33 @@ const calculateSubmenuHeights = () => {
 onMounted(() => {
   nextTick(() => {
     calculateSubmenuHeights();
+    updateSelectedMenuByRoute(); // 初始化时根据路由设置选中状态
   });
 });
 
+// 根据路由动态设置选中状态
+const updateSelectedMenuByRoute = () => {
+  const currentPath = route.path; // 当前路由路径
+  menus.value.forEach((menu, menuIndex) => {
+    menu.submenu.forEach((submenu, submenuIndex) => {
+      const fullPath = `/liveCenter/${menu.key}/${submenu.path}`;
+      if (currentPath === fullPath) {
+        selectedMenu.value = menuIndex;
+        selectedSubmenu.value = `${menuIndex}-${submenuIndex}`;
+      }
+    });
+  });
+};
+
 // 切换一级菜单展开
-const toggleMenu = (index: number) => {
+const toggleMenu = (index: number, menuKey: string) => {
   if (selectedMenu.value !== index) {
     selectedMenu.value = index; // 展开新菜单
     selectedSubmenu.value = `${index}-0`; // 自动选中第一个二级菜单
+
+    // 跳转到第一个二级菜单路由
+    const firstSubmenu = menus.value[index].submenu[0];
+    router.push({ path: `/liveCenter/${menuKey}/${firstSubmenu.path}` });
   }
 };
 
@@ -131,11 +164,20 @@ const toggleMenu = (index: number) => {
 const selectSubmenu = (
   menuIndex: number,
   submenuIndex: number,
-  event: Event
+  menuKey: string,
+  submenuPath: string
 ) => {
-  event.stopPropagation(); // 阻止冒泡，防止触发一级菜单点击事件
   selectedSubmenu.value = `${menuIndex}-${submenuIndex}`;
+  router.push({ path: `/liveCenter/${menuKey}/${submenuPath}` });
 };
+
+// 监听路由变化，根据路由动态更新选中状态
+watch(
+  () => route.path,
+  () => {
+    updateSelectedMenuByRoute();
+  }
+);
 </script>
 
 <style lang="scss" scoped>
@@ -158,20 +200,20 @@ const selectSubmenu = (
 
   @extend %containBg;
 
-  &.user {
-    @include setBackground('@/assets/img/user.png');
+  &.userCenter {
+    @include setBackground('@/assets/img/userCenter.png');
   }
 
-  &.user_active {
-    @include setBackground('@/assets/img/user_active.png');
+  &.userCenter_active {
+    @include setBackground('@/assets/img/userCenter_active.png');
   }
 
-  &.live {
-    @include setBackground('@/assets/img/live.png');
+  &.myRoom {
+    @include setBackground('@/assets/img/myRoom.png');
   }
 
-  &.live_active {
-    @include setBackground('@/assets/img/live_active.png');
+  &.myRoom_active {
+    @include setBackground('@/assets/img/myRoom_active.png');
   }
 
   &.liveData {
@@ -188,7 +230,7 @@ const selectSubmenu = (
   width: 200px;
   background-color: #ffffff;
   border: 1px solid #e6e6e6;
-  border-radius: 10px;
+  border-radius: 12px;
   /* 圆角边框 */
   padding: 20px 0;
   margin-right: 5px;

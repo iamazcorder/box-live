@@ -48,7 +48,7 @@
           >
             <div class="txt">CDN</div>
           </div>
-          <div class="logo-watermark">Billd直播</div>
+          <div class="logo-watermark">Box直播</div>
           <div
             class="cover"
             :style="{
@@ -71,7 +71,8 @@
                 }"
                 :liveRoom="currentLive?.live_room"
                 :liveLineList="[LiveLineEnum.flv, LiveLineEnum.hls]"
-              ></VideoControls>
+              >
+              </VideoControls>
             </div>
 
             <div
@@ -440,6 +441,7 @@ function joinRoom(data, isBilibili) {
     position: relative;
     z-index: 1;
     padding-bottom: 50px;
+
     .bg-img {
       position: absolute;
       top: 0;
@@ -452,6 +454,7 @@ function joinRoom(data, isBilibili) {
       background-size: cover;
       background-repeat: no-repeat;
     }
+
     .bg-video {
       position: absolute;
       top: 0;
@@ -461,9 +464,11 @@ function joinRoom(data, isBilibili) {
       width: 100%;
       height: 100%;
     }
+
     .slider-wrap {
       padding: 4px 0;
     }
+
     .container {
       display: flex;
       justify-content: center;
@@ -497,6 +502,7 @@ function joinRoom(data, isBilibili) {
           color: white;
           transform: rotate(45deg);
           transform-origin: bottom;
+
           .txt {
             margin-top: 11px;
             margin-left: 20px;
@@ -504,6 +510,7 @@ function joinRoom(data, isBilibili) {
             font-size: 14px;
           }
         }
+
         .logo-watermark {
           position: absolute;
           top: 10px;
@@ -523,6 +530,7 @@ function joinRoom(data, isBilibili) {
 
           inset: 0;
         }
+
         :deep(canvas) {
           position: absolute;
           top: 50%;
@@ -535,6 +543,7 @@ function joinRoom(data, isBilibili) {
 
           user-select: none;
         }
+
         :deep(video) {
           position: absolute;
           top: 50%;
@@ -547,6 +556,7 @@ function joinRoom(data, isBilibili) {
 
           user-select: none;
         }
+
         .join-btn {
           position: absolute;
           top: 50%;
@@ -558,6 +568,7 @@ function joinRoom(data, isBilibili) {
           box-sizing: border-box;
           // width: 80%;
           transform: translate(-50%, -50%);
+
           &.show {
             display: inline-flex !important;
           }
@@ -570,12 +581,14 @@ function joinRoom(data, isBilibili) {
             color: $theme-color-gold;
             font-size: 16px;
             cursor: pointer;
+
             &:hover {
               background-color: $theme-color-gold;
               color: white;
             }
           }
         }
+
         .video-controls {
           display: none;
         }
@@ -584,11 +597,13 @@ function joinRoom(data, isBilibili) {
           .join-btn {
             display: block;
           }
+
           .video-controls {
             display: block;
           }
         }
       }
+
       .right {
         display: inline-block;
         overflow: scroll;
@@ -617,11 +632,13 @@ function joinRoom(data, isBilibili) {
             &:last-child {
               margin-bottom: 0;
             }
+
             .hidden {
               position: relative;
               overflow: hidden;
               width: 200px;
               height: 110px;
+
               .cdn-ico {
                 position: absolute;
                 top: -9px;
@@ -653,6 +670,7 @@ function joinRoom(data, isBilibili) {
               border: 2px solid $theme-color-gold;
               border-radius: 4px;
             }
+
             .triangle {
               position: absolute;
               top: 50%;
@@ -662,16 +680,19 @@ function joinRoom(data, isBilibili) {
               border-right-color: $theme-color-gold;
               transform: translate(-100%, -50%);
             }
+
             &.active {
               &::before {
                 background-color: transparent;
               }
             }
+
             &:hover {
               &::before {
                 background-color: transparent;
               }
             }
+
             &::before {
               position: absolute;
               display: block;
@@ -682,6 +703,7 @@ function joinRoom(data, isBilibili) {
               content: '';
               transition: all cubic-bezier(0.22, 0.58, 0.12, 0.98) 0.4s;
             }
+
             .txt {
               position: absolute;
               bottom: 0;
@@ -703,6 +725,7 @@ function joinRoom(data, isBilibili) {
             }
           }
         }
+
         .none {
           width: 200px;
           color: white;
@@ -712,6 +735,7 @@ function joinRoom(data, isBilibili) {
       }
     }
   }
+
   .area-container {
     box-sizing: border-box;
     margin: 10px auto;
@@ -722,10 +746,12 @@ function joinRoom(data, isBilibili) {
         padding: 10px 0;
         font-size: 26px;
       }
+
       .live-room-list {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
+
         .live-room {
           display: inline-block;
           margin-right: 32px;
@@ -753,6 +779,7 @@ function joinRoom(data, isBilibili) {
               color: white;
               transform: rotate(45deg);
               transform-origin: bottom;
+
               .txt {
                 margin-left: 18px;
                 background-image: initial !important;
@@ -780,6 +807,7 @@ function joinRoom(data, isBilibili) {
               @extend %singleEllipsis;
             }
           }
+
           .desc {
             margin-top: 4px;
             font-size: 14px;
@@ -787,6 +815,7 @@ function joinRoom(data, isBilibili) {
             @extend %singleEllipsis;
           }
         }
+
         .null {
           width: 100%;
           text-align: center;
@@ -810,6 +839,7 @@ function joinRoom(data, isBilibili) {
   width: 250px;
   // height: 150px;
   border-radius: 10px;
+
   ins {
     width: 100%;
     height: 100%;
@@ -825,10 +855,12 @@ function joinRoom(data, isBilibili) {
 
         .left {
           width: $w-900;
+
           :deep(canvas) {
             max-width: $w-900;
             max-height: calc($w-900 / $video-ratio);
           }
+
           :deep(video) {
             max-width: $w-900;
             max-height: calc($w-900 / $video-ratio);
@@ -836,8 +868,10 @@ function joinRoom(data, isBilibili) {
         }
       }
     }
+
     .area-container {
       width: $w-1150;
+
       .area-item {
         .live-room-list {
           .live-room {
