@@ -33,10 +33,10 @@ watch(
   () => appStore.areaList,
   (newval) => {
     if (newval.length) {
-      router.push({
-        name: routerName.areaDetail,
-        params: { id: appStore.areaList[0].id },
-      });
+      // router.push({
+      //   name: routerName.areaDetail,
+      //   params: { id: appStore.areaList[0].id },
+      // });
     }
   },
   {

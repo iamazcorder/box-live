@@ -18,27 +18,45 @@
       <!-- 历史记录 -->
       <div class="history-list">
         <div
+          class="history-card"
           v-for="(item, index) in historyList"
           :key="index"
-          class="history-card"
         >
-          <div class="thumbnail">
-            <img
-              :src="item.thumbnail"
-              alt="缩略图"
-            />
+          <div class="cover-img">
+            <a
+              href="//live.bilibili.com/7734200"
+              target="_blank"
+            >
+              <img
+                :title="item.name"
+                alt="Anchor Avatar"
+                role="image"
+                :src="item.cover"
+              />
+            </a>
           </div>
-          <div class="info">
-            <div class="title">
-              <span>{{ item.title }}</span>
-              <span
-                v-if="item.tag"
-                class="tag"
-                >{{ item.tag }}</span
-              >
+          <div class="room-info clear-float">
+            <div
+              :title="item.title"
+              class="room-title f-left"
+            >
+              {{ item.title }}
             </div>
-            <div class="subtitle">{{ item.subtitle }}</div>
-            <div class="creator">👤 {{ item.creator }}</div>
+            <div class="room-area f-right">{{ item.area }}</div>
+          </div>
+          <div class="up-info clear-float">
+            <div class="up-uname f-left clear-float">
+              <div class="ico imy"></div>
+              <span class="f-left">{{ item.name }}</span>
+            </div>
+            <div class="room-status f-right">
+              <span
+                class="on-live"
+                v-if="item.isLive"
+                >直播中</span
+              >
+              <span v-if="!item.isLive">未开播</span>
+            </div>
           </div>
         </div>
       </div>
@@ -52,18 +70,20 @@ import { ref } from 'vue';
 // 假数据
 const historyList = ref([
   {
-    thumbnail: 'https://via.placeholder.com/200x100?text=缩略图2',
-    title: '【影之诗】今天能赢吗？',
-    subtitle: '影之诗',
-    creator: 'yokidou',
-    tag: '直播中',
+    cover:
+      'https://i0.hdslb.com/bfs/live/aa9d857cddc000f040424f7a8bb14b06dea9cc07.jpg',
+    title: '【预告】21号17点 EDG vs TT',
+    area: '游戏赛事',
+    name: '英雄联盟赛事',
+    isLive: true,
   },
   {
-    thumbnail: 'https://via.placeholder.com/200x100?text=缩略图2',
-    title: '【重播】双城之夜',
-    subtitle: '游戏赛事',
-    creator: '哔哩哔哩英雄联盟赛事',
-    tag: '重播',
+    cover:
+      'https://i0.hdslb.com/bfs/live/user_cover/a0b032bd1da021a7ae69c68045cc682378e8385a.jpg',
+    title: '看看麻油',
+    area: '生活杂谈',
+    name: 'Armeria_雨リヤ',
+    isLive: false,
   },
 ]);
 
@@ -123,55 +143,117 @@ const clearHistory = () => {
       gap: 20px;
     }
 
-    /* 单个历史卡片 */
     .history-card {
-      display: flex;
-      flex-direction: column;
-      width: 200px;
+      display: inline-block;
+      margin: 15px 10px 0;
+      padding: 8px;
+      width: 198px;
+      height: 188px;
+      border-radius: 4px;
       background-color: #fff;
-      border: 1px solid #e3e8ec;
-      border-radius: 8px;
-      overflow: hidden;
+      font-size: 12px;
+      color: #999;
 
-      .thumbnail {
+      .f-left {
+        float: left;
+      }
+
+      .f-right {
+        float: right;
+      }
+
+      .cover-img {
+        width: 100%;
+        height: 111px;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: pointer;
+        background: url(//s1.hdslb.com/bfs/static/blive/blfe-link-center/static/img/no-cover.1ebe4d5.jpg)
+          50% no-repeat;
+        background-size: cover;
+
+        & > a {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+
         img {
           width: 100%;
-          height: auto;
-          object-fit: cover;
+          height: 100%;
         }
       }
 
-      .info {
-        padding: 10px;
+      .room-info {
+        margin: 10px 0;
+        width: 100%;
+        height: 24px;
+        line-height: 24px;
+        color: #999;
 
-        .title {
+        .room-title {
+          width: 130px;
+          color: #333;
           font-size: 14px;
-          font-weight: bold;
-          margin-bottom: 6px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          float: left;
+        }
 
-          .tag {
-            font-size: 12px;
-            color: #fff;
-            background-color: #f56c6c;
-            padding: 2px 8px;
-            border-radius: 12px;
+        .room-area {
+          font-size: 14px;
+          padding: 0;
+          float: right;
+        }
+      }
+
+      .up-info {
+        width: 100%;
+        height: 24px;
+
+        .up-name {
+          span {
+            width: 100px;
+            color: #999;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
           }
         }
 
-        .subtitle {
-          font-size: 12px;
-          color: #666;
-          margin-bottom: 6px;
-        }
+        .room-status {
+          height: 32px;
+          font-size: 10px;
 
-        .creator {
-          font-size: 12px;
-          color: #999;
+          & > span {
+            padding: 0 3px;
+            height: 16px;
+            text-align: center;
+            line-height: 16px;
+            color: #999;
+            border: 1px solid #999;
+            border-radius: 2px;
+          }
+
+          .on-live {
+            color: #f69;
+            border: 1px solid #f69;
+          }
         }
       }
+    }
+  }
+
+  .ico {
+    width: 15px;
+    height: 15px;
+    opacity: 0.9;
+
+    &.imy {
+      margin-right: 5px;
+      float: left;
+      @include setBackground('@/assets/img/my.png');
     }
   }
 }

@@ -1,7 +1,7 @@
 import { nameSpaceWrap } from '@/locales/util';
 
 export default nameSpaceWrap('rank', {
-  liveRank: '直播榜',
+  liveRank: '人气榜',
   userRank: '用户榜',
   richRank: '土豪榜',
   signinRank: '签到榜',

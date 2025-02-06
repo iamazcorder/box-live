@@ -123,6 +123,8 @@ export interface ILiveRoom {
   mock_live_user_nums_refresh_delay?: number;
   /** 聊天消息审核 */
   msg_verify?: SwitchEnum;
+  /** 分区名称 */
+  area_name?: string;
 
   pull_rtmp_url?: string;
   pull_flv_url?: string;

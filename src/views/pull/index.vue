@@ -47,12 +47,12 @@
             <div class="top">
               <div class="name">{{ anchorInfo?.username }}</div>
               <div class="follow">
-                <div class="f-left">+关注</div>
-                <div class="f-right">666</div>
+                <div class="f-left">关注</div>
+                <!-- <div class="f-right">666</div> -->
               </div>
-              <span v-if="NODE_ENV === 'development'">
+              <!-- <span v-if="NODE_ENV === 'development'">
                 {{ liveRoomTypeEnumMap[liveRoomInfo?.type!] }}：{{ mySocketId }}
-              </span>
+              </span> -->
               <div
                 class="rtc-info"
                 v-if="
@@ -96,9 +96,15 @@
         </div>
         <div class="other">
           <div class="top">
-            <div class="item">666人看过</div>
-            <div class="item">666点赞</div>
-            <div class="item">当前在线:{{ liveUserList.length }}人</div>
+            <div class="item">
+              <div class="ico eye"></div>
+              666人看过
+            </div>
+            <div class="item">
+              <div class="ico like"></div>
+              666点赞
+            </div>
+            <!-- <div class="item">当前在线:{{ liveUserList.length }}人</div> -->
           </div>
           <div class="bottom">
             <n-popover
@@ -223,9 +229,19 @@
     <div class="right">
       <div class="rank-wrap">
         <div class="tab">
-          <span>在线用户</span>
-          <span> | </span>
-          <span>排行榜</span>
+          <span
+            :class="`tab_item ${
+              curTab === 'audience' ? 'tab_item_active' : ''
+            }`"
+            @click="handleTabChange('audience')"
+            >房间观众(270)</span
+          >
+          <!-- <span> | </span> -->
+          <span
+            :class="`tab_item ${curTab === 'rank' ? 'tab_item_active' : ''}`"
+            @click="handleTabChange('rank')"
+            >排行榜</span
+          >
         </div>
         <div class="user-list">
           <div
@@ -244,86 +260,174 @@
               </div>
             </div>
           </div>
+          <div
+            v-for="(item, index) in liveUserList"
+            :key="index"
+            class="item"
+          >
+            <div class="info">
+              <Avatar
+                :url="item.value.user_avatar"
+                :name="item.value.user_username"
+                :size="25"
+              ></Avatar>
+              <div class="username">
+                {{ item.value.user_username }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
       <div
         ref="danmuListRef"
         class="danmu-list"
       >
+        <div class="gift-notifications">
+          <div
+            v-for="(item, index) in giftNotifications"
+            :key="index"
+          >
+            <templateElement>
+              <!-- 送礼通知动画 -->
+              <div class="item">
+                <transition-group
+                  name="gift-animation"
+                  tag="div"
+                >
+                  <div class="gift-notification">
+                    <div class="gift-notification-content">
+                      <div class="gift-avatar">
+                        <img
+                          src="https://i0.hdslb.com/bfs/live/new_room_cover/f200fd26754a07badc2f3d5e7dba951ef28d5e16.jpg"
+                          alt="User Avatar"
+                        />
+                      </div>
+                      <div class="gift-info">
+                        <div class="gift-user">
+                          <span class="gift-username">{{ item.username }}</span>
+                          打赏了
+                        </div>
+                        <div class="gift-name">{{ item.giftName }}</div>
+                      </div>
+                      <div class="gift-icon">
+                        <img
+                          src="https://resource.hsslive.cn/billd-live/image/c5258ebf3a79c7d67ef8ae95062c8fe4.webp"
+                          alt="Gift Icon"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </transition-group>
+              </div>
+            </templateElement>
+          </div>
+        </div>
         <div
           v-for="(item, index) in damuList"
           :key="index"
-          class="item"
         >
           <template v-if="item.msg_type === DanmuMsgTypeEnum.reward">
-            <div class="reward">
-              <span>[{{ formatTimeHour(item.send_msg_time!) }}]</span>
-              <span> {{ item.user?.username }}打赏了{{ item.content }}！</span>
+            <div class="item">
+              <!-- <span>[{{ formatTimeHour(item.send_msg_time!) }}]</span> -->
+              <span> {{ item.user?.username }} 打赏了</span>
+              <span style="color: rgb(251, 208, 91); margin-left: 5px">{{
+                item.content
+              }}</span>
+              <div class="gift-icon">
+                <img
+                  src="https://resource.hsslive.cn/billd-live/image/c5258ebf3a79c7d67ef8ae95062c8fe4.webp"
+                  alt="Gift Icon"
+                />
+              </div>
             </div>
           </template>
           <template v-if="item.msg_type === DanmuMsgTypeEnum.danmu">
-            <span class="name">
-              <Dropdown
-                trigger="hover"
-                positon="left"
+            <div class="item">
+              <span class="name">
+                <Dropdown
+                  trigger="hover"
+                  positon="left"
+                >
+                  <template #btn>
+                    <!-- <span class="time">
+                      [{{ formatTimeHour(item.send_msg_time!) }}]
+                    </span> -->
+                    <span class="username">{{ item.username }}</span>
+                    <!-- <span class="role">
+                      [{{ item.user?.roles?.map((v) => v.role_name).join() }}]
+                    </span> -->
+                  </template>
+                  <template #list>
+                    <div class="list">
+                      <div class="item">{{ item.username }}</div>
+                      <div
+                        class="item operator"
+                        @click="handleDisableSpeakingUser()"
+                      >
+                        禁言
+                      </div>
+                      <div
+                        class="item operator"
+                        @click="handleCancelDisableSpeakingUser()"
+                      >
+                        解除禁言
+                      </div>
+                    </div>
+                  </template>
+                </Dropdown>
+              </span>
+              <span>：</span>
+              <span
+                class="msg"
+                v-if="item.content_type === WsMessageContentTypeEnum.txt"
               >
-                <template #btn>
-                  <span class="time">
-                    [{{ formatTimeHour(item.send_msg_time!) }}]
-                  </span>
-                  <span class="username">{{ item.username }}</span>
-                  <span class="role">
-                    [{{ item.user?.roles?.map((v) => v.role_name).join() }}]
-                  </span>
-                </template>
-                <template #list>
-                  <div class="list">
-                    <div class="item">{{ item.username }}</div>
-                    <div
-                      class="item operator"
-                      @click="handleDisableSpeakingUser()"
-                    >
-                      禁言
-                    </div>
-                    <div
-                      class="item operator"
-                      @click="handleCancelDisableSpeakingUser()"
-                    >
-                      解除禁言
-                    </div>
-                  </div>
-                </template>
-              </Dropdown>
-            </span>
-            <span>：</span>
-            <span
-              class="msg"
-              v-if="item.content_type === WsMessageContentTypeEnum.txt"
-            >
-              {{ item.content }}
-            </span>
-            <div
-              class="msg img"
-              v-else
-            >
-              <img
-                :src="item.content"
-                alt=""
-                @load="handleScrollTop"
-              />
+                {{ item.content }}
+              </span>
+              <div
+                class="msg img"
+                v-else
+              >
+                <img
+                  :src="item.content"
+                  alt=""
+                  @load="handleScrollTop"
+                />
+              </div>
             </div>
           </template>
           <template v-else-if="item.msg_type === DanmuMsgTypeEnum.otherJoin">
-            <span class="name system">系统通知：</span>
-            <span class="msg">{{ item.username }}进入直播！ </span>
+            <div class="item">
+              <span class="name system">系统通知：</span>
+              <span class="msg">{{ item.username }}进入直播！ </span>
+            </div>
           </template>
           <template v-else-if="item.msg_type === DanmuMsgTypeEnum.userLeaved">
-            <span class="name system">系统通知：</span>
-            <span class="msg">{{ item.username }}离开直播！ </span>
+            <div class="item">
+              <span class="name system">系统通知：</span>
+              <span class="msg">{{ item.username }}离开直播！ </span>
+            </div>
           </template>
         </div>
       </div>
+      <!-- 用户进入提示框 -->
+      <div
+        v-if="userEnterMessages.length"
+        class="enter-notification-box"
+      >
+        <transition-group
+          name="enter-animation"
+          tag="div"
+        >
+          <div
+            v-for="(message, index) in userEnterMessages"
+            :key="message.id"
+            class="enter-notification"
+          >
+            <span>{{ message.username }} 进入直播间</span>
+          </div>
+        </transition-group>
+      </div>
+
       <div
         class="send-msg"
         v-loading="msgLoading"
@@ -409,7 +513,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -426,7 +530,7 @@ import { fetchGoodsList } from '@/api/goods';
 import { fetchLiveRoomOnlineUser } from '@/api/live';
 import { fetchFindLiveRoom, fetchLiveRoomBilibili } from '@/api/liveRoom';
 import { fetchGetWsMessageList } from '@/api/wsMessage';
-import { liveRoomTypeEnumMap, URL_QUERY } from '@/constant';
+import { URL_QUERY } from '@/constant';
 import { emojiArray } from '@/emoji';
 import { commentAuthTip, loginTip } from '@/hooks/use-login';
 import { useFullScreen, usePictureInPicture } from '@/hooks/use-play';
@@ -453,8 +557,7 @@ import { useNetworkStore } from '@/store/network';
 import { useUserStore } from '@/store/user';
 import { ILiveRoom, LiveRoomTypeEnum } from '@/types/ILiveRoom';
 import { IUser } from '@/types/IUser';
-import { formatMoney, formatTimeHour } from '@/utils';
-import { NODE_ENV } from 'script/constant';
+import { formatMoney } from '@/utils';
 
 import RechargeCpt from './recharge/index.vue';
 
@@ -485,6 +588,7 @@ const uploadRef = ref<HTMLInputElement>();
 const danmuIptRef = ref<HTMLTextAreaElement>();
 const loopGetLiveUserTimer = ref();
 const isBilibili = ref(false);
+const curTab = ref('audience');
 
 const {
   initWs,
@@ -721,6 +825,7 @@ async function handleHistoryMsg() {
       res.data.rows.forEach((v) => {
         damuList.value.unshift(v);
       });
+      console.log('----', damuList);
       if (
         liveRoomInfo.value?.system_msg &&
         liveRoomInfo.value?.system_msg !== ''
@@ -836,28 +941,6 @@ async function uploadChange() {
   }
 }
 
-async function handlePay(item: IGoods) {
-  if (!loginTip()) {
-    return;
-  }
-  try {
-    const res = await fetchGiftRecordCreate({
-      goodsId: item.id!,
-      goodsNums: 1,
-      liveRoomId: Number(roomId.value),
-      isBilibili: false,
-    });
-    if (res.code === 200) {
-      window.$message.success('打赏成功！');
-      sendDanmuReward(item.name || '');
-    }
-    userStore.updateMyWallet();
-    getGiftGroupList();
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 function handleFullScreen() {
   const el = remoteVideoRef.value?.childNodes[0];
   if (el) {
@@ -892,6 +975,7 @@ async function getGoodsList() {
     });
     if (res.code === 200) {
       giftGoodsList.value = res.data.rows;
+      console.log('-------', res.data.rows);
     }
   } catch (error) {
     console.log(error);
@@ -910,6 +994,85 @@ function handleScrollTop() {
     danmuListRef.value.scrollTop = danmuListRef.value.scrollHeight + 10000;
   }
 }
+
+function handleTabChange(tab) {
+  curTab.value = tab;
+}
+
+// 送礼通知
+const giftNotifications = reactive<any>([
+  // 示例数据，实际应用中将会动态更新
+  // {
+  //   id: 1,
+  //   avatar: "https://i0.hdslb.com/bfs/live/new_room_cover/f200fd26754a07badc2f3d5e7dba951ef28d5e16.jpg",
+  //   username: "用户1",
+  //   giftName: "玫瑰花",
+  //   giftIcon: 'https://resource.hsslive.cn/billd-live/image/c5258ebf3a79c7d67ef8ae95062c8fe4.webp',
+  // },
+]);
+
+const commentText = ref('');
+
+async function handlePay(item: IGoods) {
+  if (!loginTip()) {
+    return;
+  }
+  try {
+    const res = await fetchGiftRecordCreate({
+      goodsId: item.id!,
+      goodsNums: 1,
+      liveRoomId: Number(roomId.value),
+      isBilibili: false,
+    });
+    if (res.code === 200) {
+      window.$message.success('打赏成功！');
+      sendDanmuReward(item.name || '');
+      const giftData = {
+        id: Date.now(),
+        avatar: '',
+        username: 'zxj',
+        giftName: item.name,
+        giftIcon: item.cover,
+      };
+      giftNotifications.push(giftData);
+
+      // 4秒后移除通知
+      setTimeout(() => {
+        const index = giftNotifications.findIndex(
+          (notification) => notification.id === giftData.id
+        );
+        if (index !== -1) {
+          giftNotifications.splice(index, 1);
+        }
+      }, 4000);
+    }
+    userStore.updateMyWallet();
+    getGiftGroupList();
+  } catch (error) {
+    console.log(error);
+  }
+}
+// 模拟用户进入数据
+const userEnterMessages = reactive<{ id: number; username: string }[]>([]);
+
+// 模拟用户进入直播间
+const addUserToRoom = (username: string) => {
+  const message = { id: Date.now(), username };
+  userEnterMessages.push(message);
+
+  // 每条消息展示2秒后删除
+  setTimeout(() => {
+    const index = userEnterMessages.findIndex((msg) => msg.id === message.id);
+    if (index !== -1) {
+      userEnterMessages.splice(index, 1);
+    }
+  }, 2000); // 2秒后删除
+};
+
+// 模拟实时添加用户进入
+setInterval(() => {
+  addUserToRoom('用户' + Math.floor(Math.random() * 100));
+}, 3000); // 每3秒模拟一个用户进入
 </script>
 
 <style lang="scss" scoped>
@@ -918,18 +1081,22 @@ function handleScrollTop() {
   align-items: center;
   flex-wrap: wrap;
   width: 140px;
+
   .item {
     margin-top: 10px;
     margin-right: 10px;
     text-align: center;
+
     &:nth-child(1),
     &:nth-child(2),
     &:nth-child(3) {
       margin-top: 5px;
     }
+
     &:nth-child(3n) {
       margin-right: 0px;
     }
+
     .ico {
       position: relative;
       width: 40px;
@@ -938,12 +1105,14 @@ function handleScrollTop() {
       background-size: cover;
       background-repeat: no-repeat;
     }
+
     .nums {
       margin-top: 5px;
       color: #18191c;
     }
   }
 }
+
 .pull-wrap {
   position: relative;
   z-index: 1;
@@ -964,6 +1133,7 @@ function handleScrollTop() {
     background-size: cover;
     background-repeat: no-repeat;
     transform: translateX(-50%);
+
     .bg-img {
       position: absolute;
       top: 0;
@@ -976,6 +1146,7 @@ function handleScrollTop() {
       background-size: cover;
       background-repeat: no-repeat;
     }
+
     .bg-video {
       position: absolute;
       top: 0;
@@ -986,6 +1157,7 @@ function handleScrollTop() {
       height: 100%;
     }
   }
+
   .left {
     position: relative;
     display: inline-block;
@@ -997,6 +1169,7 @@ function handleScrollTop() {
     background-color: $theme-color-papayawhip;
     color: #61666d;
     vertical-align: top;
+
     .head {
       display: flex;
       justify-content: space-between;
@@ -1026,6 +1199,7 @@ function handleScrollTop() {
               border-radius: 12px;
               background-color: $theme-color-gold;
               font-size: 12px;
+              cursor: pointer;
 
               .f-left {
                 display: flex;
@@ -1034,6 +1208,7 @@ function handleScrollTop() {
                 color: white;
                 cursor: pointer;
               }
+
               .f-right {
                 display: flex;
                 align-items: center;
@@ -1043,18 +1218,22 @@ function handleScrollTop() {
                 background-color: #e3e5e7;
               }
             }
+
             .rtc-info {
               display: flex;
               align-items: center;
+
               .item {
                 margin-right: 10px;
                 font-size: 14px;
               }
             }
           }
+
           .bottom {
             display: flex;
             font-size: 14px;
+
             .area {
               margin: 0 10px;
               color: #9499a0;
@@ -1063,20 +1242,28 @@ function handleScrollTop() {
           }
         }
       }
+
       .other {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        font-size: 14px;
+        font-size: 12px;
+
         .top {
           display: flex;
           margin-bottom: 10px;
+
           .item {
+            display: flex;
+            align-items: center;
             margin-right: 10px;
+            color: #9499a0;
           }
         }
+
         .bottom {
           font-size: 12px;
+
           .tag {
             display: inline-block;
             margin-right: 10px;
@@ -1091,6 +1278,7 @@ function handleScrollTop() {
         }
       }
     }
+
     .video-wrap {
       position: relative;
       display: flex;
@@ -1099,10 +1287,12 @@ function handleScrollTop() {
       justify-content: space-between;
       height: calc(100% - 80px - 100px);
       background-color: rgba($color: #000000, $alpha: 0.5);
+
       .remote-video {
         position: relative;
         width: 100%;
         height: 100%;
+
         :deep(video) {
           position: absolute;
           top: 50%;
@@ -1112,6 +1302,7 @@ function handleScrollTop() {
           height: calc(100% - 80px - 100px);
           transform: translate(-50%, -50%);
         }
+
         :deep(canvas) {
           position: absolute;
           top: 50%;
@@ -1122,6 +1313,7 @@ function handleScrollTop() {
           transform: translate(-50%, -50%);
         }
       }
+
       .video-controls {
         display: none;
       }
@@ -1140,6 +1332,7 @@ function handleScrollTop() {
 
         inset: 0;
       }
+
       .no-live {
         position: absolute;
         top: 50%;
@@ -1163,9 +1356,11 @@ function handleScrollTop() {
       box-sizing: border-box;
       padding: 5px 0;
       height: 100px;
+
       > :last-child {
         position: absolute;
       }
+
       .item {
         display: flex;
         align-items: center;
@@ -1175,6 +1370,7 @@ function handleScrollTop() {
         height: 88px;
         text-align: center;
         cursor: pointer;
+
         &:hover {
           background-color: #ebe0ce;
         }
@@ -1187,9 +1383,11 @@ function handleScrollTop() {
           background-position: center center;
           background-size: cover;
           background-repeat: no-repeat;
+
           &.wallet {
             background-image: url('@/assets/img/wallet.webp');
           }
+
           .badge {
             position: absolute;
             top: -8px;
@@ -1200,6 +1398,7 @@ function handleScrollTop() {
             padding: 2px;
             border-radius: 2px;
             color: white;
+
             .txt {
               display: inline-block;
               line-height: 1;
@@ -1209,16 +1408,19 @@ function handleScrollTop() {
             }
           }
         }
+
         .name {
           color: #18191c;
           font-size: 12px;
         }
+
         .price {
           color: #9499a0;
           font-size: 12px;
         }
       }
     }
+
     .ad-wrap-b {
       position: absolute;
       bottom: -10px;
@@ -1229,12 +1431,14 @@ function handleScrollTop() {
       border-radius: 10px;
       // background-color: red;
       transform: translateY(100%);
+
       ins {
         width: 100%;
         height: 100%;
       }
     }
   }
+
   .right {
     position: relative;
     display: inline-block;
@@ -1244,14 +1448,42 @@ function handleScrollTop() {
     border-radius: 6px;
     background-color: $theme-color-papayawhip;
     color: #9499a0;
+
     .rank-wrap {
       .tab {
         display: flex;
         align-items: center;
-        justify-content: space-evenly;
+        justify-content: space-between;
         height: 30px;
         font-size: 12px;
+        margin-bottom: 10px;
+
+        &_item {
+          width: 50%;
+          display: flex;
+          justify-content: center;
+          cursor: pointer;
+
+          &:hover {
+            color: #6f6e6e;
+          }
+
+          &_active {
+            color: #000000;
+            font-weight: 500;
+
+            &:hover {
+              color: #000000;
+            }
+          }
+
+          &:first-child {
+            width: 60%;
+            border-right: 1px solid #ccc;
+          }
+        }
       }
+
       .user-list {
         overflow-y: scroll;
         box-sizing: border-box;
@@ -1259,12 +1491,14 @@ function handleScrollTop() {
         height: 100px;
 
         @extend %customScrollbar;
+
         .item {
           display: flex;
           align-items: center;
           justify-content: space-between;
           margin-bottom: 5px;
           font-size: 12px;
+
           .info {
             display: flex;
             align-items: center;
@@ -1286,8 +1520,10 @@ function handleScrollTop() {
       height: calc(100% - 30px - 100px - 135px);
       background-color: #f6f7f8;
       text-align: initial;
+      position: relative;
 
       @extend %customScrollbar;
+
       .item {
         box-sizing: border-box;
         margin-bottom: 4px;
@@ -1295,6 +1531,18 @@ function handleScrollTop() {
         white-space: normal;
         word-wrap: break-word;
         font-size: 13px;
+        display: flex;
+        align-items: center;
+
+        .gift-icon {
+          margin-left: 5px;
+
+          img {
+            width: 20px;
+            height: 20px;
+          }
+        }
+
         .reward {
           color: $theme-color-gold;
           font-weight: bold;
@@ -1303,14 +1551,17 @@ function handleScrollTop() {
         .name,
         .time {
           color: #9499a0;
+
           &.system {
             color: red;
           }
+
           .dropdown-wrap {
             :deep(.container) {
               width: 120px;
             }
           }
+
           .list {
             .item {
               &:hover {
@@ -1322,9 +1573,11 @@ function handleScrollTop() {
             }
           }
         }
+
         .msg {
           margin-top: 4px;
           color: #61666d;
+
           &.img {
             img {
               width: 80%;
@@ -1332,7 +1585,12 @@ function handleScrollTop() {
           }
         }
       }
+
+      /* .reward {
+        display
+      } */
     }
+
     .send-msg {
       position: absolute;
       bottom: 0;
@@ -1341,6 +1599,7 @@ function handleScrollTop() {
       padding: 2px 10px;
       width: 100%;
       height: 135px;
+
       .disableSpeaking {
         cursor: no-drop;
 
@@ -1349,6 +1608,7 @@ function handleScrollTop() {
 
           @extend %maskBg;
         }
+
         .txt {
           position: absolute;
           top: 50%;
@@ -1359,9 +1619,11 @@ function handleScrollTop() {
           transform: translate(-50%, -50%);
         }
       }
+
       .control {
         display: flex;
         margin: 4px 0;
+
         .emoji-list {
           position: absolute;
           top: 0;
@@ -1376,6 +1638,7 @@ function handleScrollTop() {
           transform: translateY(-100%);
 
           @extend %customScrollbar;
+
           .item {
             display: inline-flex;
             align-items: center;
@@ -1388,24 +1651,29 @@ function handleScrollTop() {
             cursor: pointer;
           }
         }
+
         .ico {
           margin-right: 6px;
           width: 24px;
           height: 24px;
           cursor: pointer;
+
           .input-upload {
             width: 0;
             height: 0;
             opacity: 0;
           }
+
           &.face {
             @include setBackground('@/assets/img/msg-face.png');
           }
+
           &.img {
             @include setBackground('@/assets/img/msg-img.png');
           }
         }
       }
+
       .ipt {
         display: block;
         box-sizing: border-box;
@@ -1423,6 +1691,7 @@ function handleScrollTop() {
           font-size: 13px;
         }
       }
+
       .btn {
         box-sizing: border-box;
         margin-top: 10px;
@@ -1448,6 +1717,7 @@ function handleScrollTop() {
     width: 250px;
     // height: 150px;
     border-radius: 10px;
+
     // background-color: red;
     ins {
       width: 100%;
@@ -1469,20 +1739,25 @@ function handleScrollTop() {
       width: calc(100vw - 300px);
       height: 100%;
       border-radius: 0;
+
       .head {
         display: none;
       }
+
       .video-wrap {
         height: calc(100% - 100px);
+
         .remote-video {
           :deep(video) {
             max-width: 100%;
           }
+
           :deep(canvas) {
             max-width: 100%;
           }
         }
       }
+
       .gift-list {
         background-color: #8ec5fc;
         background-image: linear-gradient(62deg, #8ec5fc 0%, #e0c3fc 100%);
@@ -1491,16 +1766,19 @@ function handleScrollTop() {
           .name {
             color: white;
           }
+
           .price {
             color: black;
           }
         }
       }
     }
+
     .right {
       width: 300px;
       height: 100%;
       border-radius: 0;
+
       .rank-wrap {
         background-color: #8ec5fc;
         background-image: linear-gradient(62deg, #8ec5fc 0%, #e0c3fc 100%);
@@ -1514,6 +1792,145 @@ function handleScrollTop() {
   }
 }
 
+.gift-notifications {
+  position: absolute;
+  z-index: 10;
+}
+
+.gift-notification {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  padding-bottom: 2px;
+  /* margin-bottom: 10px; */
+  background: linear-gradient(to right, #4f8dd3, transparent);
+  /* 背景渐变从左到右 */
+  color: white;
+  border-radius: 30px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+
+  animation: slide-in-out 4s forwards;
+  position: relative;
+  width: 180px;
+}
+
+.gift-notification-content {
+  display: flex;
+  align-items: center;
+  /* width: 100%; */
+}
+
+.gift-avatar img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  margin-right: 10px;
+  /* margin-top: 5px; */
+}
+
+.gift-info {
+  /* flex-grow: 1; */
+  margin-right: 10px;
+}
+
+.gift-user {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.gift-name {
+  font-size: 12px;
+  color: #ffd700;
+}
+
+.gift-icon img {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes slide-in-out {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  25% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.enter-notification-box {
+  position: absolute;
+  bottom: 135px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 300px;
+  height: 30px;
+  /* 固定高度 */
+  background-color: #f6f7f8;
+  color: white;
+  font-size: 12px;
+  overflow: hidden;
+  color: #9499a0;
+  /* 隐藏超出的部分 */
+}
+
+.enter-notification {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  /* justify-content: center; */
+  padding: 5px;
+  padding-left: 10px;
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.enter-notification-box .enter-notification:nth-child(n + 2) {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.ico {
+  width: 15px;
+  height: 15px;
+  opacity: 0.9;
+  margin-right: 4px;
+
+  @extend %containBg;
+
+  &.eye {
+    @include setBackground('@/assets/img/eye_black.png');
+  }
+
+  &.like {
+    @include setBackground('@/assets/img/like.png');
+  }
+}
+
 // 屏幕宽度大于1500的时候
 @media screen and (min-width: $w-1500) {
   .pull-wrap {
@@ -1521,13 +1938,16 @@ function handleScrollTop() {
 
     .left {
       width: $w-1100;
+
       :deep(video) {
         max-width: $w-1100;
       }
+
       :deep(canvas) {
         max-width: $w-1100;
       }
     }
+
     .right {
       width: $w-300;
     }

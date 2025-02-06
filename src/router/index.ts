@@ -60,8 +60,10 @@ export const routerName = {
   income: 'income',
   viewHistory: 'viewHistory',
   myRoom: 'myRoom',
+  liveFollow: 'liveFollow',
   startLive: 'startLive',
   silentSetting: 'silentSetting',
+  previewSetting: 'previewSetting',
   shieldKeywordSetting: 'shieldKeywordSetting',
   liveData: 'liveData',
   overview: 'overview',
@@ -73,10 +75,13 @@ export const routerName = {
   download: 'download',
   downloadLive: 'downloadLive',
   downloadRemoteDesktop: 'downloadRemoteDesktop',
+  preview: 'preview',
+  liveNotification: 'liveNotification',
 
   pull: 'pull',
   push: 'push',
   store: 'store',
+  search: 'search',
   ...mobileRouterName,
 };
 
@@ -95,6 +100,11 @@ export const defaultRoutes: RouteRecordRaw[] = [
         name: routerName.home,
         path: '/',
         component: () => import('@/views/home/index.vue'),
+      },
+      {
+        name: routerName.preview,
+        path: '/preview',
+        component: () => import('@/views/preview/index.vue'),
       },
       {
         name: routerName.about,
@@ -217,10 +227,16 @@ export const defaultRoutes: RouteRecordRaw[] = [
                   import('@/views/liveCenter/userCenter/myinfo.vue'),
               },
               {
-                name: routerName.income,
-                path: 'income',
+                name: routerName.liveFollow,
+                path: 'liveFollow',
                 component: () =>
-                  import('@/views/liveCenter/userCenter/income.vue'),
+                  import('@/views/liveCenter/userCenter/follow.vue'),
+              },
+              {
+                name: routerName.liveNotification,
+                path: 'liveNotification',
+                component: () =>
+                  import('@/views/liveCenter/userCenter/liveNotification.vue'),
               },
               {
                 name: routerName.viewHistory,
@@ -240,6 +256,12 @@ export const defaultRoutes: RouteRecordRaw[] = [
                 path: 'startLive',
                 component: () =>
                   import('@/views/liveCenter/myRoom/startLive.vue'),
+              },
+              {
+                name: routerName.previewSetting,
+                path: 'previewSetting',
+                component: () =>
+                  import('@/views/liveCenter/myRoom/previewSetting.vue'),
               },
               {
                 name: routerName.silentSetting,
@@ -272,6 +294,12 @@ export const defaultRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/views/liveCenter/liveData/record.vue'),
               },
+              {
+                name: routerName.income,
+                path: 'income',
+                component: () =>
+                  import('@/views/liveCenter/liveData/income.vue'),
+              },
             ],
           },
         ],
@@ -285,6 +313,11 @@ export const defaultRoutes: RouteRecordRaw[] = [
         name: routerName.user,
         path: '/user/:id',
         component: () => import('@/views/user/index.vue'),
+      },
+      {
+        name: routerName.search,
+        path: '/search/:keyword',
+        component: () => import('@/views/search/index.vue'),
       },
       {
         name: routerName.downloadRemoteDesktop,

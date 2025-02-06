@@ -67,47 +67,47 @@ const users = ref([
   {
     name: '付金权的全栈课堂',
     description: '随缘更',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '英语兔',
     description: 'www.YingYuTu.com',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '陈善福儿',
     description: '原创不易！借鉴请珍惜！',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '盖里老哥',
     description: '工作室联系 wxb5emoney',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '三更草堂',
     description: '关注后会自动回复群号',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '高斯Goh',
     description: '小潮Eam桌游区的扛把子！',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '盖里老哥',
     description: '工作室联系 wxb5emoney',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '三更草堂',
     description: '关注后会自动回复群号',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
   {
     name: '高斯Goh',
     description: '小潮Eam桌游区的扛把子！',
-    avatar: 'https://via.placeholder.com/80',
+    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
   },
 ]);
 
@@ -201,6 +201,7 @@ const performSearch = () => {
           font-size: 16px;
           font-weight: bold;
           color: #333;
+          margin-bottom: 5px;
 
           &:hover {
             color: #ffd700;
@@ -210,6 +211,7 @@ const performSearch = () => {
         .description {
           font-size: 12px;
           color: #61666d;
+          margin-bottom: 5px;
         }
       }
 

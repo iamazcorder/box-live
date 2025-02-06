@@ -84,7 +84,8 @@ const menus = ref<MenuItem[]>([
     key: 'userCenter',
     submenu: [
       { title: '个人信息', path: 'myInfo' },
-      { title: '个人收益', path: 'income' },
+      { title: '我的关注', path: 'liveFollow' },
+      { title: '直播通知', path: 'liveNotification' },
       { title: '观看历史', path: 'viewHistory' },
     ],
   },
@@ -93,6 +94,7 @@ const menus = ref<MenuItem[]>([
     key: 'myRoom',
     submenu: [
       { title: '开播设置', path: 'startLive' },
+      { title: '预告设置', path: 'previewSetting' },
       { title: '禁言设置', path: 'silentSetting' },
       { title: '屏蔽词设置', path: 'shieldKeywordSetting' },
     ],
@@ -103,6 +105,7 @@ const menus = ref<MenuItem[]>([
     submenu: [
       { title: '数据总览', path: 'overview' },
       { title: '场次数据', path: 'record' },
+      { title: '个人收益', path: 'income' },
     ],
   },
 ]);

@@ -20,6 +20,15 @@
           >
             {{ t('layout.home') }}
           </a>
+          <a
+            class="item"
+            :class="{
+              active: router.currentRoute.value.path === '/preview',
+            }"
+            @click.prevent="goPreview"
+          >
+            直播预告
+          </a>
 
           <!-- <a class="item" :class="{
             active: router.currentRoute.value.name === routerName.area,
@@ -193,6 +202,7 @@
           </template>
         </Dropdown> -->
 
+        <Search class="search" />
         <!-- 
         <a
           class="privatizationDeployment"
@@ -336,11 +346,8 @@
             v-if="appStore.showSigninRedDot"
           ></div>
         </a>
-
-        <Dropdown
-          class="switch-lang"
-          v-if="!isMobile()"
-        >
+        <!-- 
+        <Dropdown class="switch-lang" v-if="!isMobile()">
           <template #btn>
             <div class="btn">
               {{ localeList.find((v) => v.value === cacheStore.locale)?.label }}
@@ -349,27 +356,25 @@
           </template>
           <template #list>
             <div class="list">
-              <a
-                class="item"
-                v-for="(item, index) in localeList"
-                :key="index"
-                :class="{ active: item.value === cacheStore.locale }"
-                @click="changeLocale(item)"
-              >
+              <a class="item" v-for="(item, index) in localeList" :key="index"
+                :class="{ active: item.value === cacheStore.locale }" @click="changeLocale(item)">
                 <div class="txt">{{ item.label }}</div>
               </a>
             </div>
           </template>
-        </Dropdown>
+        </Dropdown> -->
 
         <Dropdown class="start-live">
           <template #btn>
-            <div class="btn">
+            <div
+              class="btn"
+              @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)"
+            >
               <div class="ico ilive"></div>
               <span>{{ t('layout.startLive') }}</span>
             </div>
           </template>
-          <template #list>
+          <!-- <template #list>
             <div class="list">
               <a
                 class="item"
@@ -377,17 +382,11 @@
               >
                 <div class="txt">{{ t('layout.srsLive') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleTip2()"
-              >
-                <div class="txt">{{ t('layout.pkLive') }}</div>
-              </a>
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)">
                 <div class="txt">{{ t('layout.webrtcLive') }}</div>
+              </a>
+              <a class="item" @click.prevent="handleTip2()">
+                <div class="txt">{{ t('layout.pkLive') }}</div>
               </a>
               <a
                 class="item"
@@ -403,7 +402,7 @@
                   handleStartLive(LiveRoomTypeEnum.forward_bilibili)
                 "
               >
-                <div class="txt">{{ t('layout.forwardBilibili') }}</div>
+              <div class="txt">{{ t('layout.forwardBilibili') }}</div>
               </a>
               <a
                 class="item"
@@ -438,16 +437,16 @@
               >
                 <div class="txt">{{ t('layout.tencentCssPkLive') }}</div>
               </a>
-              <!-- <div class="tip">
+              <div class="tip">
                 <div
                   class="tip-txt"
                   @click="handleWebsiteJump"
                 >
                   有什么区别？
                 </div>
-              </div> -->
+              </div>
             </div>
-          </template>
+          </template> -->
         </Dropdown>
       </div>
     </div>
@@ -462,6 +461,7 @@ import { useRouter } from 'vue-router';
 
 import { fetchCreateSignin, fetchTodayIsSignin } from '@/api/signin';
 import Dropdown from '@/components/Dropdown/index.vue';
+import Search from '@/components/Search/index.vue';
 import { COMMON_URL, DEFAULT_AUTH_INFO, URL_QUERY } from '@/constant';
 import { handleTip } from '@/hooks/use-common';
 import { loginTip } from '@/hooks/use-login';
@@ -609,8 +609,11 @@ const plugins = ref([
 ]);
 
 function changeArea(item: IArea) {
-  console.log(item);
   router.push({ name: routerName.areaDetail, params: { id: item.id } });
+}
+
+function goPreview() {
+  router.push({ name: routerName.preview });
 }
 
 watch(
@@ -921,7 +924,9 @@ function handleWebsiteJump() {
           cursor: pointer;
 
           &.active {
-            &::after {
+            color: $theme-color-gold;
+
+            /* &::after {
               position: absolute;
               top: calc(50% - 8px);
               right: -5px;
@@ -932,7 +937,7 @@ function handleWebsiteJump() {
               content: '';
               transition: all 0.1s ease;
               transform: translateY(-100%);
-            }
+            } */
           }
 
           &:hover {
@@ -1000,6 +1005,10 @@ function handleWebsiteJump() {
       align-items: center;
       height: 100%;
 
+      .search {
+        margin-right: 20px;
+      }
+
       .doc,
       .about,
       .ecosystem {
@@ -1031,13 +1040,28 @@ function handleWebsiteJump() {
       .sponsors,
       .privatizationDeployment,
       .videoTools,
-      .message,
-      .signin {
+      .message {
         display: flex;
         align-items: center;
         justify-content: center;
         flex-direction: column;
         margin-right: 30px;
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+
+        &:hover {
+          color: $theme-color-gold;
+        }
+      }
+
+      .signin {
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin-right: 20px;
         color: black;
         text-decoration: none;
         cursor: pointer;
@@ -1113,7 +1137,7 @@ function handleWebsiteJump() {
       }
 
       .qqlogin {
-        margin-right: 30px;
+        margin-right: 10px;
 
         .btn {
           cursor: pointer;
