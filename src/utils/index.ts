@@ -692,3 +692,52 @@ export function videoToCanvas(data: {
 
   return { drawCanvas, stopDrawing, changeWrapSize, canvas };
 }
+
+export function timeAgo(lastLiveTime: string): string {
+  const now = new Date();
+  const lastLiveDate = new Date(lastLiveTime.replace(/-/g, '/')); // 替换 - 为 /，确保兼容某些浏览器的日期格式
+
+  const diff = now.getTime() - lastLiveDate.getTime(); // 获取时间差（毫秒）
+
+  const minutes = Math.floor(diff / (1000 * 60)); // 转换为分钟
+  const hours = Math.floor(diff / (1000 * 60 * 60)); // 转换为小时
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24)); // 转换为天
+
+  // 如果小于 1 小时
+  if (minutes < 60) {
+    return `${minutes}分钟前`;
+  }
+
+  // 如果小于 24 小时但超过 1 小时
+  if (hours < 24) {
+    return `${hours}小时前`;
+  }
+
+  // 如果超过 24 小时并且是昨天
+  const yesterday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - 1
+  );
+  if (days === 1 && lastLiveDate.getDate() === yesterday.getDate()) {
+    return '昨天';
+  }
+
+  // 如果是昨天之前，返回“几月几日”
+  const month = lastLiveDate.getMonth() + 1; // 月份是从0开始的，所以要加1
+  const day = lastLiveDate.getDate();
+  return `${month}月${day}日`;
+}
+
+// 格式化日期
+export function formatDate(date: string): string {
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  };
+  const liveDate = new Date(date);
+  return liveDate.toLocaleString('zh-CN', options);
+}

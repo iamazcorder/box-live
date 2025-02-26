@@ -15,7 +15,7 @@
         <div class="live-preview-card">
           <div class="image-wrapper">
             <img
-              :src="live.coverImage"
+              :src="live.cover_image"
               alt="Live Preview"
               class="live-preview-image"
             />
@@ -23,17 +23,17 @@
           <div class="live-preview-info">
             <div class="live-title">{{ live.title }}</div>
             <div class="live-username">
-              主播: <span>{{ live.username }}</span>
+              主播: <span>{{ live.user?.username }}</span>
             </div>
             <div class="live-time">
-              开播时间: {{ formatDate(live.startTime) }}
+              开播时间: {{ formatDate(live.preview_date) }}
             </div>
             <button
-              :class="`${live.id === 1 ? 'reserve-btn-done' : ''}`"
-              @click="reserveLive(live.id)"
-              v-if="live.id === 1"
+              class="reserve-btn-done"
+              v-if="isAppoint(live.id)"
+              @click="cancelLive(live.id)"
             >
-              已预约
+              取消预约
             </button>
             <button
               class="reserve-btn"
@@ -56,7 +56,7 @@
         <div class="live-preview-card">
           <div class="image-wrapper">
             <img
-              :src="live.coverImage"
+              :src="live.cover_image"
               alt="Live Preview"
               class="live-preview-image"
             />
@@ -64,12 +64,21 @@
           <div class="live-preview-info">
             <h3 class="live-title">{{ live.title }}</h3>
             <p class="live-username">
-              主播: <span>{{ live.username }}</span>
+              主播: <span>{{ live.user?.username }}</span>
             </p>
-            <p class="live-time">开播时间: {{ formatDate(live.startTime) }}</p>
+            <p class="live-time">
+              开播时间: {{ formatDate(live.preview_date) }}
+            </p>
+            <button
+              class="reserve-btn-done"
+              v-if="isAppoint(live.id)"
+            >
+              取消预约
+            </button>
             <button
               class="reserve-btn"
               @click="reserveLive(live.id)"
+              v-else
             >
               预约直播
             </button>
@@ -79,30 +88,40 @@
     </div>
 
     <!-- 分页 -->
-    <!-- <div class="pagination-container">
-            <button class="pagination-btn" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
-                上一页
-            </button>
-            <span class="pagination-text">第 {{ currentPage }} 页</span>
-            <button class="pagination-btn" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
-                下一页
-            </button>
-        </div> -->
+    <div class="pagination-container">
+      <button
+        class="pagination-btn"
+        :disabled="currentPage === 1"
+        @click="changePage(currentPage - 1)"
+      >
+        上一页
+      </button>
+      <span class="pagination-text">第 {{ currentPage }} 页</span>
+      <button
+        class="pagination-btn"
+        :disabled="currentPage >= totalPages"
+        @click="changePage(currentPage + 1)"
+      >
+        下一页
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import {
+  createLiveRoomAppointments,
+  deleteLiveRoomAppointment,
+  fetchLiveRoomAppointmentList,
+  fetchLiveRoomPreviewList,
+} from '@/api/liveRoom';
+import { useUserStore } from '@/store/user';
+import { formatDate } from '@/utils/index';
+import { computed, onMounted, ref, watch } from 'vue';
 
-interface LivePreview {
-  id: number;
-  title: string;
-  username: string;
-  startTime: string;
-  coverImage: string;
-}
+const userStore = useUserStore();
 
-const livePreviews = ref<LivePreview[]>([
+const livePreviews = ref<any[]>([
   {
     id: 1,
     title: '英雄联盟全球总决赛',
@@ -225,8 +244,27 @@ const livePreviews = ref<LivePreview[]>([
   },
 ]);
 
+const liveAppointments = ref<any>([]);
+
 const currentPage = ref(1);
 const itemsPerPage = 10;
+
+watch(
+  () => userStore?.userInfo?.id,
+  () => {
+    if (userStore?.userInfo?.id) {
+      getPreviewList();
+      getAppointments();
+    }
+  }
+);
+
+onMounted(() => {
+  if (userStore?.userInfo?.id) {
+    getPreviewList();
+    getAppointments();
+  }
+});
 
 // 计算总页数
 const totalPages = computed(() => {
@@ -240,29 +278,83 @@ const currentPageData = computed(() => {
   return livePreviews.value.slice(start, end);
 });
 
-// 格式化日期
-function formatDate(date: string): string {
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  };
-  const liveDate = new Date(date);
-  return liveDate.toLocaleString('zh-CN', options);
-}
-
 // 预约直播
-function reserveLive(liveId: number): void {
-  alert(`已预约直播 ${liveId}`);
-}
+const reserveLive = async (liveId: number) => {
+  if (userStore?.userInfo?.id && liveId) {
+    // 获取直播预告信息
+    const live = livePreviews.value.find((item) => item.id === liveId);
+
+    if (live && live.preview_date) {
+      // 将 preview_date 转换为 Date 对象
+      const previewDate = new Date(live.preview_date);
+
+      // 计算 notification_time，提前五分钟
+      const notificationTime = new Date(previewDate);
+      notificationTime.setMinutes(previewDate.getMinutes() - 5); // 提前5分钟
+
+      // 使用 notificationTime 来预约直播
+      const res = await createLiveRoomAppointments({
+        user_id: userStore?.userInfo?.id,
+        preview_id: liveId,
+        appointment_time: new Date().getTime(), // 当前时间
+        notification_time: notificationTime.getTime(), // 计算出来的 notification_time
+      });
+
+      if (res.code === 200) {
+        window.$message.success('预约直播成功');
+        getPreviewList();
+        getAppointments();
+      } else {
+        window.$message.error('预约直播失败');
+      }
+    }
+  }
+};
+
+// 取消预约
+const cancelLive = async (liveId: number) => {
+  if (userStore?.userInfo?.id && liveId) {
+    const res = await deleteLiveRoomAppointment({
+      ids: [liveId],
+      userId: userStore?.userInfo?.id,
+    });
+    if (res.code === 200) {
+      window.$message.success('取消预约成功');
+      getPreviewList();
+      getAppointments();
+    } else {
+      window.$message.error('取消预约失败');
+    }
+  }
+};
 
 // 更改页码
 function changePage(page: number): void {
   if (page < 1 || page > totalPages.value) return;
   currentPage.value = page;
 }
+
+// 获取预告列表
+const getPreviewList = async () => {
+  const res = await fetchLiveRoomPreviewList({ page: currentPage.value });
+  if (res.code === 200) {
+    livePreviews.value = res.data?.rows;
+  }
+};
+
+const getAppointments = async () => {
+  const res = await fetchLiveRoomAppointmentList({
+    userId: userStore?.userInfo?.id,
+    page: currentPage.value,
+  });
+  if (res.code === 200) {
+    liveAppointments.value = res.data?.rows;
+  }
+};
+
+const isAppoint = (previewId: number) => {
+  return liveAppointments.value.find((item) => item.preview_id === previewId);
+};
 </script>
 
 <style scoped lang="scss">
@@ -379,23 +471,23 @@ function changePage(page: number): void {
 
   &-done {
     padding: 8px 20px;
-    background-color: #ffd700;
-    color: white;
-    border: none;
+    background-color: #fff;
+    border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease;
-    background-color: #eee;
+    border: 1px solid rgb(225, 48, 48);
+    color: rgb(225, 48, 48);
 
-    :hover {
-      background-color: #eee;
+    &:hover {
+      background-color: #f9d0d0;
     }
   }
 }
 
 .reserve-btn:hover {
-  background-color: #e2c628;
+  background-color: #fbde3c;
 }
 
 .pagination-container {

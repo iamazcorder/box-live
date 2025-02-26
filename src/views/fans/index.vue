@@ -13,15 +13,22 @@
         placeholder="输入关键词"
         @keyup.enter="performSearch"
       />
-      <div class="ico search"></div>
+      <div
+        class="ico search"
+        @click="performSearch"
+      ></div>
     </div>
 
     <!-- 关注列表 -->
-    <div class="follow-list">
+    <div
+      class="follow-list"
+      v-if="followers.length !== 0"
+    >
       <div
-        v-for="(user, index) in filteredUsers"
+        v-for="(user, index) in followers"
         :key="index"
         class="follow-item"
+        @click="handleJump(user?.id)"
       >
         <img
           :src="user.avatar"
@@ -30,108 +37,180 @@
         />
         <div>
           <div class="info">
-            <div class="name">{{ user.name }}</div>
-            <div class="description">{{ user.description }}</div>
+            <div class="name">{{ user.username }}</div>
+            <div class="description">{{ user.desc }}</div>
           </div>
           <Dropdown class="follow-status">
             <template #btn>
-              <button class="btn">
-                <div class="icon-menu"></div>
-                已互粉
+              <button
+                :class="`btn ${!isMutualFollow(user) ? 'backfollow' : ''}`"
+                @click.stop.prevent="handleFollow(user)"
+              >
+                <div
+                  class="icon-menu"
+                  v-if="isMutualFollow(user)"
+                ></div>
+                <!-- 判断是否已互粉 -->
+                {{ isMutualFollow(user) ? '已互粉' : '回关' }}
               </button>
             </template>
-            <template #list>
+            <template
+              #list
+              v-if="isMutualFollow(user)"
+            >
               <div class="list">
-                <a class="item"> 取消关注 </a>
+                <a
+                  class="item"
+                  @click="handleUnfollow(user.id)"
+                >
+                  取消关注
+                </a>
               </div>
             </template>
           </Dropdown>
         </div>
       </div>
     </div>
+    <div
+      v-else
+      class="empty"
+    >
+      暂无粉丝数据～
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import {
+  fetchUserFollow,
+  fetchUserFollowersList,
+  fetchUserFollowingList,
+  fetchUserUnfollow,
+  searchUserFollowers,
+} from '@/api/user';
+import router, { routerName } from '@/router';
+import { useUserStore } from '@/store/user';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
-// 筛选选项
-const filterOptions = ['最近关注', '最常访问'];
-const selectedFilter = ref('最近关注');
+const emit = defineEmits();
+const userStore = useUserStore();
+const route = useRoute();
 
 // 搜索内容
 const searchQuery = ref('');
-
-// 用户数据
-const users = ref([
-  {
-    name: '付金权的全栈课堂',
-    description: '随缘更',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '英语兔',
-    description: 'www.YingYuTu.com',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '陈善福儿',
-    description: '原创不易！借鉴请珍惜！',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '盖里老哥',
-    description: '工作室联系 wxb5emoney',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '三更草堂',
-    description: '关注后会自动回复群号',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '高斯Goh',
-    description: '小潮Eam桌游区的扛把子！',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '盖里老哥',
-    description: '工作室联系 wxb5emoney',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '三更草堂',
-    description: '关注后会自动回复群号',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '高斯Goh',
-    description: '小潮Eam桌游区的扛把子！',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-]);
-
-// 选择筛选项
-const selectFilter = (option: string) => {
-  selectedFilter.value = option;
-};
-
-// 过滤用户
-const filteredUsers = computed(() => {
-  return users.value.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
+const followers = ref<any[]>([]);
+const followings = ref<any[]>([]);
 
 // 搜索功能
-const performSearch = () => {
+const performSearch = async () => {
   console.log('搜索内容：', searchQuery.value);
+  if (route.params.id && searchQuery.value.trim()) {
+    const res = await searchUserFollowers({
+      userId: route.params.id,
+      keyword: searchQuery.value.trim(),
+    });
+    if (res.code === 200) {
+      followers.value = res.data; // 更新粉丝列表为搜索结果
+    } else {
+      // 处理搜索失败的情况
+      followers.value = [];
+      window.$message.error('搜索失败，请重试');
+    }
+  } else {
+    // 如果搜索框为空，重新加载全部粉丝列表
+    requestFollowersList(route.params.id);
+  }
+};
+
+onMounted(() => {
+  if (route.params.id) {
+    requestFollowingList(route.params.id);
+    requestFollowersList(route.params.id);
+  }
+});
+
+// 请求关注列表
+const requestFollowingList = async (id) => {
+  const res = await fetchUserFollowingList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followings.value = res.data;
+  }
+};
+
+// 请求粉丝列表
+const requestFollowersList = async (id) => {
+  const res = await fetchUserFollowersList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followers.value = res.data;
+  }
+};
+
+// 判断是否已互粉
+const isMutualFollow = (follower: any) => {
+  console.log(follower, followings.value, '??????');
+  return followings.value.some(
+    (following: any) => following.id === follower.id
+  );
+};
+
+// 关注用户
+const handleFollow = async (following: any) => {
+  if (isMutualFollow(following)) {
+    return;
+  }
+  const res = await fetchUserFollow({
+    followingId: following?.id,
+    followerId: route.params.id,
+  });
+  if (res.code === 200) {
+    window.$message.success('关注成功');
+    emit('updateFollowingList');
+    if (route.params.id) {
+      requestFollowingList(route.params.id);
+      requestFollowersList(route.params.id);
+    }
+  }
+};
+
+// 取消关注
+const handleUnfollow = async (followingId) => {
+  const res = await fetchUserUnfollow({
+    followingId,
+    followerId: route.params.id,
+  });
+  if (res.code === 200) {
+    window.$message.success('取消关注成功');
+    emit('updateFollowingList');
+    if (route.params.id) {
+      requestFollowingList(route.params.id);
+      requestFollowersList(route.params.id);
+    }
+  }
+};
+const handleJump = (id) => {
+  router.push({
+    name: routerName.user,
+    params: { id },
+  });
 };
 </script>
 
 <style lang="scss" scoped>
 .follow-page {
   font-family: Arial, sans-serif;
+
+  .empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    height: 80px;
+  }
 
   .header {
     display: flex;
@@ -156,6 +235,10 @@ const performSearch = () => {
     padding: 0 10px;
     margin-bottom: 20px;
 
+    &:focus-within {
+      border-color: #ffd700;
+    }
+
     input {
       flex: 1;
       border: none;
@@ -168,6 +251,7 @@ const performSearch = () => {
       height: 16px;
       background: url('@/assets/img/search.png') no-repeat center center;
       background-size: contain;
+      cursor: pointer;
     }
   }
 
@@ -191,6 +275,7 @@ const performSearch = () => {
         height: 80px;
         border-radius: 50%;
         margin-right: 10px;
+        object-fit: cover;
       }
 
       .info {
@@ -216,10 +301,12 @@ const performSearch = () => {
       }
 
       .follow-status {
+        margin-top: 5px;
+
         .btn {
           background-color: #f5f6f9;
           border: none;
-          padding: 8px 14px;
+          padding: 8px 18px;
           font-size: 14px;
           border-radius: 4px;
           display: flex;
@@ -242,12 +329,27 @@ const performSearch = () => {
           }
         }
 
+        .backfollow {
+          background-color: #fff;
+          color: #ffd700;
+          border: 1px solid #ffd700;
+          padding: 6px 25px;
+
+          &:hover {
+            background-color: #fdf6d1;
+          }
+        }
+
         .list {
           width: 100px;
           padding: 15px 5px;
+          /* border: 1px solid #ccc;
+          border-radius: 15px; */
 
           .item {
             padding: 10px 20px;
+            cursor: pointer;
+            color: #61666d;
 
             &:hover {
               background-color: #e3e8ec;

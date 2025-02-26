@@ -174,4 +174,9 @@ export interface ILiveRoom {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string;
+
+  live_announcement?: string;
+  personal_intro?: string;
+  parent_category_id?: number;
+  child_category_id?: number;
 }

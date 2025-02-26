@@ -12,18 +12,31 @@
     >
       <!-- 每个轮播项 -->
       <n-carousel-item
-        v-for="(live, index) in topLivePreviews"
+        v-for="(live, index) in livePreviews.slice(0, 3)"
         :key="live.id"
       >
         <div class="carousel-item-content">
           <img
-            :src="live.coverImage"
+            :src="live.cover_image"
             alt="Live Preview"
             class="carousel-image"
           />
-          <div class="username">{{ live.username }}</div>
-          <div class="start-time">{{ formatDate(live.startTime) }}</div>
-          <div class="preview-btn">立即预约</div>
+          <div class="username">{{ live.user?.username }}</div>
+          <div class="start-time">{{ formatDate(live.preview_date) }}</div>
+          <div
+            class="reserve-btn-done"
+            v-if="isAppoint(live.id)"
+            @click="cancelLive(live.id)"
+          >
+            取消预约
+          </div>
+          <div
+            class="reserve-btn"
+            @click="reserveLive(live.id)"
+            v-else
+          >
+            预约直播
+          </div>
         </div>
       </n-carousel-item>
     </n-carousel>
@@ -44,19 +57,20 @@
 </template>
 
 <script lang="ts" setup>
+import {
+  createLiveRoomAppointments,
+  deleteLiveRoomAppointment,
+  fetchLiveRoomAppointmentList,
+  fetchLiveRoomPreviewList,
+} from '@/api/liveRoom';
+import { useUserStore } from '@/store/user';
 import { NCarousel, NCarouselItem } from 'naive-ui';
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
-interface LivePreview {
-  id: number;
-  title: string;
-  username: string;
-  startTime: string;
-  coverImage: string;
-}
+const userStore = useUserStore();
 
 // 模拟前三个直播预告
-const topLivePreviews = ref<LivePreview[]>([
+const livePreviews = ref<any[]>([
   {
     id: 1,
     title: '王者荣耀冠军赛直播',
@@ -81,6 +95,25 @@ const topLivePreviews = ref<LivePreview[]>([
   //     coverImage: "https://i0.hdslb.com/bfs/live/cover3.jpg",
   // }
 ]);
+
+const liveAppointments = ref<any>([]);
+
+watch(
+  () => userStore?.userInfo?.id,
+  () => {
+    if (userStore?.userInfo?.id) {
+      getPreviewList();
+      getAppointments();
+    }
+  }
+);
+
+onMounted(() => {
+  if (userStore?.userInfo?.id) {
+    getPreviewList();
+    getAppointments();
+  }
+});
 
 // 格式化日期
 function formatDate(date: string): string {
@@ -107,6 +140,77 @@ function prevSlide() {
 function nextSlide() {
   carouselRef.value?.next();
 }
+
+// 预约直播
+const reserveLive = async (liveId: number) => {
+  if (userStore?.userInfo?.id && liveId) {
+    // 获取直播预告信息
+    const live = livePreviews.value.find((item) => item.id === liveId);
+
+    if (live && live.preview_date) {
+      // 将 preview_date 转换为 Date 对象
+      const previewDate = new Date(live.preview_date);
+
+      // 计算 notification_time，提前五分钟
+      const notificationTime = new Date(previewDate);
+      notificationTime.setMinutes(previewDate.getMinutes() - 5); // 提前5分钟
+
+      // 使用 notificationTime 来预约直播
+      const res = await createLiveRoomAppointments({
+        user_id: userStore?.userInfo?.id,
+        preview_id: liveId,
+        appointment_time: new Date().getTime(), // 当前时间
+        notification_time: notificationTime.getTime(), // 计算出来的 notification_time
+      });
+
+      if (res.code === 200) {
+        window.$message.success('预约直播成功');
+        getPreviewList();
+        getAppointments();
+      } else {
+        window.$message.error('预约直播失败');
+      }
+    }
+  }
+};
+
+// 取消预约
+const cancelLive = async (liveId: number) => {
+  if (userStore?.userInfo?.id && liveId) {
+    const res = await deleteLiveRoomAppointment({
+      ids: [liveId],
+      userId: userStore?.userInfo?.id,
+    });
+    if (res.code === 200) {
+      window.$message.success('取消预约成功');
+      getPreviewList();
+      getAppointments();
+    } else {
+      window.$message.error('取消预约失败');
+    }
+  }
+};
+
+const isAppoint = (previewId: number) => {
+  return liveAppointments.value.find((item) => item.preview_id === previewId);
+};
+
+// 获取预告列表
+const getPreviewList = async () => {
+  const res = await fetchLiveRoomPreviewList({});
+  if (res.code === 200) {
+    livePreviews.value = res.data?.rows;
+  }
+};
+
+const getAppointments = async () => {
+  const res = await fetchLiveRoomAppointmentList({
+    userId: userStore?.userInfo?.id,
+  });
+  if (res.code === 200) {
+    liveAppointments.value = res.data?.rows;
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -137,6 +241,19 @@ function nextSlide() {
   border-radius: 4px;
   background-repeat: no-repeat;
   background-size: auto;
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow-clip-margin: content-box;
+  overflow: clip;
+  object-fit: cover;
+
+  /* width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 10px; */
 }
 
 .carousel-info {
@@ -172,16 +289,40 @@ function nextSlide() {
   font-size: 14px;
 }
 
-.preview-btn {
+.reserve-btn {
   position: absolute;
   bottom: 10px;
   right: 15px;
   background-color: #f69;
   color: white;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 6px 15px;
+  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: rgb(254, 127, 169);
+  }
+}
+
+.reserve-btn-done {
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  padding: 6px 15px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+  border: 1px solid rgb(225, 48, 48);
+  color: rgb(225, 48, 48);
+
+  &:hover {
+    background-color: #f9d0d0;
+  }
 }
 
 .custom-arrow {

@@ -283,11 +283,17 @@ const mockRank: {
 const rankList = ref(mockRank);
 
 function handleJump(item) {
-  if (userStore.userInfo?.id === item.id) {
-    router.push({
-      name: routerName.my,
-    });
-  } else {
+  // if (userStore.userInfo?.id === item.id) {
+  //   router.push({
+  //     name: routerName.my,
+  //   });
+  // } else {
+  //   router.push({
+  //     name: routerName.user,
+  //     params: { id: item.id },
+  //   });
+  // }
+  if (item?.id) {
     router.push({
       name: routerName.user,
       params: { id: item.id },

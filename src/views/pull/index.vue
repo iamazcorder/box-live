@@ -260,22 +260,6 @@
               </div>
             </div>
           </div>
-          <div
-            v-for="(item, index) in liveUserList"
-            :key="index"
-            class="item"
-          >
-            <div class="info">
-              <Avatar
-                :url="item.value.user_avatar"
-                :name="item.value.user_username"
-                :size="25"
-              ></Avatar>
-              <div class="username">
-                {{ item.value.user_username }}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <div
@@ -664,7 +648,7 @@ onMounted(async () => {
   initRoomId(roomId.value);
   await handleFindLiveRoomInfo();
   if (!liveRoomInfo.value) return;
-  handleRefresh();
+  // handleRefresh();
   appStore.videoControls.fps = true;
   appStore.videoControls.fullMode = true;
   appStore.videoControls.kbs = true;
@@ -1117,9 +1101,16 @@ setInterval(() => {
   position: relative;
   z-index: 1;
   display: flex;
-  justify-content: space-around;
-  margin: 15px auto 0;
-  width: $w-1200;
+  justify-content: center;
+  /* margin: 15px auto 0; */
+  width: 100%;
+  background-image: url('@/assets/img/live_pull_bg.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding-top: 20px;
+  padding-bottom: 30px;
+  height: 100%;
 
   .bg-img-wrap {
     position: absolute;
@@ -1128,7 +1119,7 @@ setInterval(() => {
     max-width: 1920px;
     max-height: 890px;
     width: 100%;
-    height: 100%;
+    /* height: 100%; */
     background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -1169,6 +1160,7 @@ setInterval(() => {
     background-color: $theme-color-papayawhip;
     color: #61666d;
     vertical-align: top;
+    margin-right: 20px;
 
     .head {
       display: flex;

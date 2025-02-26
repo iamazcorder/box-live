@@ -2,7 +2,7 @@ import { UploadFileInfo } from 'naive-ui';
 import { defineStore } from 'pinia';
 
 import {
-  IArea,
+  ICategory,
   LiveLineEnum,
   LiveRenderEnum,
   MediaTypeEnum,
@@ -14,7 +14,8 @@ export type AppRootState = {
   pageIsClick: boolean;
   useGoogleAd: boolean;
   usePayCourse: boolean;
-  areaList: IArea[];
+  areaList: ICategory[];
+  areaTagsMap: any;
   playing: boolean;
   videoRatio: number;
   normalVolume: number;
@@ -79,6 +80,7 @@ export const useAppStore = defineStore('app', {
       useGoogleAd: false,
       usePayCourse: false,
       areaList: [],
+      areaTagsMap: null,
       playing: false,
       videoRatio: 16 / 9,
       videoControls: {

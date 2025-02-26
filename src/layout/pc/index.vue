@@ -5,7 +5,7 @@
     <router-view v-slot="{ Component }">
       <component :is="Component"></component>
     </router-view>
-    <SidebarCpt></SidebarCpt>
+    <SidebarCpt v-if="isShowSideBar"></SidebarCpt>
     <LoginModal v-if="appStore.showLoginModal"></LoginModal>
     <PayCourse v-if="appStore.usePayCourse"></PayCourse>
   </div>
@@ -13,12 +13,35 @@
 
 <script lang="ts" setup>
 import { useAppStore } from '@/store/app';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import HeadCpt from './head/index.vue';
 import SidebarCpt from './sidebar/index.vue';
 
+const route = useRoute();
 document.body.style.minWidth = '1200px';
 const appStore = useAppStore();
+const isShowSideBar = ref(false);
+
+watch(
+  () => route.path,
+  () => {
+    handleShowSideBar();
+  }
+);
+
+onMounted(() => {
+  handleShowSideBar();
+});
+
+const handleShowSideBar = () => {
+  if (route.path === '/') {
+    isShowSideBar.value = true;
+  } else {
+    isShowSideBar.value = false;
+  }
+};
 </script>
 
 <style lang="scss" scoped>

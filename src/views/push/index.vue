@@ -31,9 +31,8 @@
                 </n-icon>
               </div>
               <div class="name">
-                {{ NODE_ENV === 'development' ? item.id : '' }}({{
-                  mediaTypeEnumMap[item.type]
-                }}){{ item.mediaName }}
+                <!-- {{ NODE_ENV === 'development' ? item.id : '' }} -->
+                ({{ mediaTypeEnumMap[item.type] }}){{ item.mediaName }}
               </div>
             </div>
 
@@ -171,43 +170,49 @@
                 class="name"
                 v-if="appStore.liveRoomInfo"
               >
-                名称：
-                <div class="val">
-                  <n-input-group>
-                    <n-input
-                      v-model:value="appStore.liveRoomInfo.name"
-                      size="small"
-                      placeholder="请输入房间名"
-                    />
-                    <n-button
-                      size="small"
-                      type="primary"
-                      @click="changeLiveRoomName"
-                    >
-                      确定
-                    </n-button>
-                  </n-input-group>
+                <div
+                  class="name_val"
+                  v-if="!showEditNameInput"
+                >
+                  {{ appStore.liveRoomInfo.name }}
                 </div>
+                <div
+                  class="name_edit"
+                  v-else
+                >
+                  <div class="name_edit_input">
+                    <input
+                      type="text"
+                      v-model="appStore.liveRoomInfo.name"
+                      placeholder="搜索直播回放"
+                    />
+                    <div class="ico search"></div>
+                  </div>
+                  <button
+                    @click="changeLiveRoomName"
+                    class="name_edit_btn name_edit_confirm"
+                  >
+                    确定
+                  </button>
+                  <button
+                    @click="changeLiveRoomName"
+                    class="name_edit_btn name_edit_cancel"
+                  >
+                    取消
+                  </button>
+                </div>
+                <div
+                  class="ico edit"
+                  @click="showEditNameInput = true"
+                  v-if="!showEditNameInput"
+                ></div>
               </div>
               <div class="area">
-                分区：
-                <div class="val">
-                  <n-input-group>
-                    <n-select
-                      v-model:value="currentArea"
-                      :options="areaList"
-                      size="small"
-                      placeholder="请选择分区"
-                    />
-
-                    <n-button
-                      size="small"
-                      type="primary"
-                      @click="changeLiveRoomArea"
-                    >
-                      确定
-                    </n-button>
-                  </n-input-group>
+                <div
+                  class="area_btn"
+                  @click="showModal = true"
+                >
+                  {{ selectedCategory }}
                 </div>
               </div>
               <!-- <div class="rtc-info">
@@ -514,6 +519,12 @@
       @close="showOpenMicophoneTipCpt = false"
     ></OpenMicophoneTipCpt>
   </div>
+  <!-- 控制弹窗的显示 -->
+  <CategoryBox
+    :isVisible="showModal"
+    @update:isVisible="handleCategorySelect"
+  >
+  </CategoryBox>
 </template>
 
 <script lang="ts" setup>
@@ -580,8 +591,8 @@ import {
   setAudioTrackContentHints,
   setVideoTrackContentHints,
 } from '@/utils';
-import { NODE_ENV } from 'script/constant';
 
+import { fetchUserHasLiveRoom } from '@/api/userLiveRoom';
 import MediaModalCpt from './mediaModal/index.vue';
 import OpenMicophoneTipCpt from './openMicophoneTip/index.vue';
 import SelectMediaModalCpt from './selectMediaModal/index.vue';
@@ -668,10 +679,85 @@ let avRecorder: AVRecorder | null = null;
 const loopGetLiveUserTimer = ref();
 const curTab = ref('audience');
 
+const liveRoomInfo = ref<any>({});
+const showEditNameInput = ref(false);
+// 直播一级分区
+const parentCategory = ref<any>({});
+// 直播二级分区
+const childCategory = ref<any>({});
+// 控制分区弹窗显示的状态
+const showModal = ref(false);
+
+watch(
+  () => userStore.userInfo?.id,
+  () => {
+    if (userStore.userInfo?.id) {
+      getLiveRoomInfo();
+    }
+  }
+);
+
+onMounted(() => {
+  if (userStore.userInfo?.id) {
+    getLiveRoomInfo();
+  }
+});
+
+const getLiveRoomInfo = async () => {
+  const res = await fetchUserHasLiveRoom(Number(userStore.userInfo?.id));
+  if (res.code === 200) {
+    liveRoomInfo.value = res.data.live_room;
+    updateLiveRoomInfo(res.data.live_room);
+  }
+};
+
+const updateLiveRoomInfo = (liveRoom) => {
+  liveRoomInfo.value.name = liveRoom.name;
+  parentCategory.value = appStore.areaList.find(
+    (item) => item.id === liveRoom?.parent_category_id
+  );
+  childCategory.value = parentCategory.value.children.find(
+    (item) => item.id === liveRoom?.child_category_id
+  );
+};
+
+// 显示的分区文字
+const selectedCategory = computed(() => {
+  if (parentCategory.value?.name && childCategory.value?.name) {
+    return `${parentCategory.value.name}·${childCategory.value.name}`;
+  }
+  return '请选择分区';
+});
+
+// 选择分区
+const handleCategorySelect = ($event) => {
+  showModal.value = $event.showModal;
+  parentCategory.value = $event.curParentCategory;
+  childCategory.value = $event.curChildCategory;
+  handleSaveCategory($event.curParentCategory, $event.curChildCategory);
+};
+
+const handleSaveCategory = async (parentId, childId) => {
+  if (parentId && childId) {
+    const res = await fetchUpdateMyLiveRoom({
+      parent_category_id: parentId,
+      child_category_id: childId,
+    });
+    if (res.code === 200) {
+      window.$message.success('分区设置成功');
+    } else {
+      window.$message.error('分区设置失败，请稍后重试');
+    }
+  } else {
+    window.$message.warning('请先选择分区');
+  }
+};
+
 function handleTabChange(tab) {
   curTab.value = tab;
 }
 
+// 计算并返回网络的延迟（rtt）信息
 const rtcRtt = computed(() => {
   const arr: any[] = [];
   networkStore.rtcMap.forEach((rtc) => {
@@ -679,7 +765,7 @@ const rtcRtt = computed(() => {
   });
   return arr.join();
 });
-
+// 计算并返回丢包率信息
 const rtcLoss = computed(() => {
   const arr: any[] = [];
   networkStore.rtcMap.forEach((rtc) => {
@@ -687,6 +773,7 @@ const rtcLoss = computed(() => {
   });
   return arr.join();
 });
+// 计算并返回视频帧率信息
 const rtcFps = computed(() => {
   const arr: any[] = [];
   networkStore.rtcMap.forEach((rtc) => {
@@ -694,6 +781,7 @@ const rtcFps = computed(() => {
   });
   return arr.join();
 });
+// 计算并返回已发送的字节数
 const rtcBytesSent = computed(() => {
   const arr: any[] = [];
   networkStore.rtcMap.forEach((rtc) => {
@@ -701,6 +789,7 @@ const rtcBytesSent = computed(() => {
   });
   return arr.join();
 });
+// 计算并返回已接收的字节数
 const rtcBytesReceived = computed(() => {
   const arr: any[] = [];
   networkStore.rtcMap.forEach((rtc) => {
@@ -709,6 +798,7 @@ const rtcBytesReceived = computed(() => {
   return arr.join();
 });
 
+// 监听`roomLiving`的变化，当直播结束时，调用`endLive`并提示用户
 watch(
   () => roomLiving.value,
   (newval) => {
@@ -724,7 +814,7 @@ watch(
     }
   }
 );
-
+// 监听最大比特率变化，更新推流设置
 watch(
   () => currentMaxBitrate.value,
   (newval) => {
@@ -740,7 +830,7 @@ watch(
     }
   }
 );
-
+// 监听视频内容提示变化，设置视频流内容提示
 watch(
   () => currentVideoContentHint.value,
   (newval) => {
@@ -754,7 +844,7 @@ watch(
     }
   }
 );
-
+// 监听音频内容提示变化，设置音频流内容提示
 watch(
   () => currentAudioContentHint.value,
   (newval) => {
@@ -768,7 +858,7 @@ watch(
     }
   }
 );
-
+// 监听帧率变化，调整画布的渲染帧率
 watch(
   () => currentMaxFramerate.value,
   (newval) => {
@@ -776,7 +866,7 @@ watch(
     renderFrame();
   }
 );
-
+// 监听分辨率变化，更新画布的属性
 watch(
   () => currentResolutionRatio.value,
   (newval, oldval) => {
@@ -784,7 +874,7 @@ watch(
     changeCanvasAttr({ newHeight: newval, oldHeight: oldval });
   }
 );
-
+// 监听RTC网络状态变化，更新媒体流
 watch(
   () => networkStore.rtcMap,
   (newVal) => {
@@ -827,7 +917,7 @@ watch(
     }, 0);
   }
 );
-
+// 检查房间名是否合法
 function roomNameIsOk() {
   if (!appStore.liveRoomInfo) return;
   if (!appStore.liveRoomInfo.name!.length) {
@@ -843,8 +933,9 @@ function roomNameIsOk() {
   }
   return true;
 }
-
+// 修改房间名
 async function changeLiveRoomName() {
+  showEditNameInput.value = false;
   if (!roomNameIsOk()) return;
   if (appStore.liveRoomInfo) {
     const res = await fetchUpdateMyLiveRoom(appStore.liveRoomInfo);
@@ -853,7 +944,7 @@ async function changeLiveRoomName() {
     }
   }
 }
-
+// 修改房间所在区域
 async function changeLiveRoomArea() {
   if (appStore.liveRoomInfo) {
     appStore.liveRoomInfo.areas = appStore.areaList.filter(
@@ -866,23 +957,25 @@ async function changeLiveRoomArea() {
     }
   }
 }
-
+// 发送弹幕
 function handleSendDanmu() {
   sendDanmuTxt(danmuStr.value);
   danmuStr.value = '';
 }
-
+// 处理输入框中内容的拼接
 function handlePushStr(str) {
   danmuStr.value += str;
   showEmoji.value = false;
 }
-
+// 处理滚动条位置，将滚动条滚动到最底部并多增加一定的偏移量
 function handleScrollTop() {
+  // 如果danmuListRef对象存在（即弹幕列表存在），则调整其scrollTop属性
   if (danmuListRef.value) {
+    // 将滚动条设置为元素的scrollHeight（即内容的总高度）加上10000的偏移量
     danmuListRef.value.scrollTop = danmuListRef.value.scrollHeight + 10000;
   }
 }
-
+// 处理Blob数据的发送
 function handleSendBlob(event: BlobEvent) {
   bolbId.value += 1;
   // const val = bolbId.value;
@@ -904,7 +997,7 @@ function handleSendBlob(event: BlobEvent) {
     max_delay: msrMaxDelay.value,
   });
 }
-
+// 模拟点击上传按钮，触发上传操作
 function mockClick() {
   if (!loginTip()) {
     return;
@@ -914,7 +1007,7 @@ function mockClick() {
   }
   uploadRef.value?.click();
 }
-
+// 处理文件上传变化
 async function uploadChange() {
   const fileList = uploadRef.value?.files;
   if (fileList?.length) {
@@ -939,7 +1032,7 @@ async function uploadChange() {
     }
   }
 }
-
+// 处理不同类型的MediaRecorder支持情况
 function handleMediaRecorderAllType() {
   const types = [
     'video/webm',
@@ -959,7 +1052,7 @@ function handleMediaRecorderAllType() {
     console.log(types[item], MediaRecorder.isTypeSupported(types[item]));
   });
 }
-
+// 处理媒体录制（例如摄像头和麦克风的录制流）
 function handleMsr(stream: MediaStream) {
   // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/codecs_parameter
   const mimeType = 'video/webm;codecs=avc1.4d002a,opus';
@@ -1605,10 +1698,10 @@ function initCanvas() {
   const resolutionWidth =
     (currentResolutionRatio.value / window.devicePixelRatio) *
     appStore.videoRatio;
-  const wrapWidth = containerRef.value!.getBoundingClientRect().width + 20;
+  const wrapWidth = containerRef.value!.getBoundingClientRect().width;
   // const wrapWidth = 1920;
   const ratio = wrapWidth / resolutionWidth;
-  const wrapHeight = resolutionHeight * ratio + 80;
+  const wrapHeight = resolutionHeight * ratio;
   // const wrapHeight = 1080;
   // lower-canvas: 实际的canvas画面，也就是pushCanvasRef
   // upper-canvas: 操作时候的canvas
@@ -2654,8 +2747,13 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
 .push-wrap {
   display: flex;
   justify-content: space-between;
-  margin: 15px auto 0;
+  /* margin: 15px auto 0; */
   width: $w-1350;
+  width: 100vw;
+  height: 92.2vh;
+  overflow: hidden;
+
+  background-image: url('@/assets/img/live_bg.jpg');
 
   .center {
     position: relative;
@@ -2664,13 +2762,14 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
     width: $w-960;
     height: 100%;
     border-radius: 6px;
-    background-color: white;
+    /* background-color: white; */
     color: #9499a0;
     vertical-align: top;
+    margin-top: 40px;
 
     .container {
       position: relative;
-      height: 100%;
+      /* height: 100%; */
       background-color: rgba($color: #232222, $alpha: 0.5);
       line-height: 0;
 
@@ -2731,7 +2830,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       justify-content: space-between;
       padding: 15px;
       border-radius: 0 0 6px 6px;
-      background-color: papayawhip;
+      background-color: rgba(255, 255, 255, 0.9);
 
       .debug-info {
         position: absolute;
@@ -2771,8 +2870,60 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
               align-items: center;
               margin-right: 15px;
 
-              .val {
-                width: 180px;
+              &_val {
+                font-size: 16px;
+                line-height: 1;
+                color: #18191c;
+              }
+
+              &_edit {
+                /* width: 180px; */
+                display: flex;
+
+                &_input {
+                  display: flex;
+                  align-items: center;
+                  position: relative;
+                  width: 170px;
+                  height: 30px;
+                  border: 1px solid rgb(224, 224, 230);
+                  border-radius: 3px;
+                  padding: 0 5px;
+
+                  &:focus-within {
+                    border-color: #ffd700;
+                  }
+
+                  input {
+                    flex: 1;
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    font-size: 14px;
+                    padding: 0 10px;
+                    height: 100%;
+                    color: rgb(51, 54, 57);
+                  }
+                }
+
+                &_btn {
+                  padding: 6px 15px;
+                  border-radius: 2px;
+                  border: none;
+                  margin-left: 10px;
+                  cursor: pointer;
+                }
+
+                &_confirm {
+                  color: #fff;
+                  background-color: #ffd700;
+                }
+
+                &_cancel {
+                  background-color: transparent;
+                  color: #ffd700;
+                  border: 1px solid #ffd700;
+                }
               }
             }
 
@@ -2785,6 +2936,18 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
               display: flex;
               align-items: center;
               margin-right: 15px;
+
+              &_btn {
+                background-color: #ffd700;
+                border-radius: 14px;
+                color: #fff;
+                cursor: pointer;
+                font-size: 15px;
+                height: 28px;
+                line-height: 28px;
+                /* min-width: 90px; */
+                padding: 0 15px;
+              }
 
               .val {
                 width: 130px;
@@ -2868,12 +3031,15 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
-    margin-left: 10px;
-    width: 250px;
+    width: 230px;
     border-radius: 6px;
     background-color: white;
     color: #9499a0;
     margin-right: 10px;
+    margin-left: 20px;
+    margin-top: 40px;
+    margin-bottom: 43px;
+    background-color: rgba(255, 255, 255, 0.9);
 
     .resource-card {
       position: relative;
@@ -2884,7 +3050,6 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       height: 100%;
       /* flex: 1; */
       border-radius: 6px;
-      background-color: papayawhip;
 
       .title {
         text-align: initial;
@@ -2921,6 +3086,13 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
                 margin-right: 6px;
               }
             }
+
+            .name {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              max-width: 130px;
+            }
           }
 
           .control {
@@ -2954,15 +3126,19 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
     justify-content: space-between;
     box-sizing: border-box;
     margin-left: 10px;
-    width: $w-300;
+    width: 230px;
     border-radius: 6px;
-    background-color: white;
+    /* background-color: white; */
     color: #9499a0;
+    margin-right: 20px;
+    margin-top: 40px;
+    margin-bottom: 43px;
 
     .rank-wrap {
       background-color: $theme-color-papayawhip;
       border-radius: 6px;
       margin-bottom: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
 
       .tab {
         display: flex;
@@ -3035,7 +3211,6 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       width: 100%;
       height: 290px;
       border-radius: 6px;
-      background-color: papayawhip;
 
       .title {
         text-align: initial;
@@ -3105,7 +3280,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       padding: 10px 10px 0px;
       width: 100%;
       border-radius: 6px;
-      background-color: papayawhip;
+      background-color: rgba(255, 255, 255, 0.9);
       text-align: initial;
 
       .title {
@@ -3287,6 +3462,13 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
 
   &.like {
     @include setBackground('@/assets/img/like.png');
+  }
+
+  &.edit {
+    width: 25px;
+    height: 25px;
+    @include setBackground('@/assets/img/edit.svg');
+    cursor: pointer;
   }
 }
 

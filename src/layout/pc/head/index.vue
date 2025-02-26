@@ -41,7 +41,8 @@
             :key="index"
             class="item"
             :class="{
-              active: router.currentRoute.value.params.id === item.id + '',
+              active:
+                router.currentRoute.value.query.parentAreaId === item.id + '',
             }"
             @click.prevent="changeArea(item)"
           >
@@ -272,11 +273,11 @@
             <div class="list">
               <a
                 class="item"
-                @click.prevent="
+                @click.stop.prevent="
                   router.push({
-                    name: routerName.my,
+                    name: routerName.user,
                     params: {
-                      userId: userStore.userInfo.id,
+                      id: userStore.userInfo.id,
                     },
                   })
                 "
@@ -374,7 +375,7 @@
               <span>{{ t('layout.startLive') }}</span>
             </div>
           </template>
-          <!-- <template #list>
+          <template #list>
             <div class="list">
               <a
                 class="item"
@@ -382,10 +383,16 @@
               >
                 <div class="txt">{{ t('layout.srsLive') }}</div>
               </a>
-              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)">
+              <a
+                class="item"
+                @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)"
+              >
                 <div class="txt">{{ t('layout.webrtcLive') }}</div>
               </a>
-              <a class="item" @click.prevent="handleTip2()">
+              <a
+                class="item"
+                @click.prevent="handleTip2()"
+              >
                 <div class="txt">{{ t('layout.pkLive') }}</div>
               </a>
               <a
@@ -402,7 +409,7 @@
                   handleStartLive(LiveRoomTypeEnum.forward_bilibili)
                 "
               >
-              <div class="txt">{{ t('layout.forwardBilibili') }}</div>
+                <div class="txt">{{ t('layout.forwardBilibili') }}</div>
               </a>
               <a
                 class="item"
@@ -446,7 +453,7 @@
                 </div>
               </div>
             </div>
-          </template> -->
+          </template>
         </Dropdown>
       </div>
     </div>
@@ -459,7 +466,9 @@ import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
+import { fetchCategoryList } from '@/api/categories';
 import { fetchCreateSignin, fetchTodayIsSignin } from '@/api/signin';
+
 import Dropdown from '@/components/Dropdown/index.vue';
 import Search from '@/components/Search/index.vue';
 import { COMMON_URL, DEFAULT_AUTH_INFO, URL_QUERY } from '@/constant';
@@ -609,7 +618,7 @@ const plugins = ref([
 ]);
 
 function changeArea(item: IArea) {
-  router.push({ name: routerName.areaDetail, params: { id: item.id } });
+  router.push({ name: routerName.area, query: { parentAreaId: item.id } });
 }
 
 function goPreview() {
@@ -676,6 +685,15 @@ onMounted(() => {
   locale.value = cacheStore.locale;
   githubStar.value =
     'https://img.shields.io/github/stars/galaxy-s10/billd-live?label=Star&logo=GitHub&labelColor=white&logoColor=black&style=social&cacheSeconds=3600';
+});
+
+onMounted(async () => {
+  const res = await fetchCategoryList({});
+  if (res.code === 200) {
+    // appStore.showSigninRedDot = false;
+    // eslint-disable-next-line
+    // window.$message.success(`签到成功！已连续签到${res.data.nums}天`);
+  }
 });
 
 function handleTip2() {
@@ -1141,6 +1159,7 @@ function handleWebsiteJump() {
 
         .btn {
           cursor: pointer;
+          margin-right: 10px;
         }
 
         .list {

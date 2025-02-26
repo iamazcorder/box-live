@@ -195,13 +195,13 @@ export function usePush() {
 
   async function startLive({ type, msrDelay, msrMaxDelay }) {
     if (!loginTip()) return;
-    const flag = handleUserHasLiveRoom();
+    const flag = handleUserHasLiveRoom(); // 查看用户是否已经开通直播间
     if (!flag) {
       await useTip({
         content: '你还没有直播间，是否立即开通？',
         maskClosable: false,
       });
-      await handleCreateUserLiveRoom();
+      await handleCreateUserLiveRoom(); // 在user_live_room表中创建数据
       return;
     }
     if (connectStatus.value !== WsConnectStatusEnum.connect) {

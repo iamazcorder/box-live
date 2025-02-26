@@ -77,6 +77,7 @@ export const routerName = {
   downloadRemoteDesktop: 'downloadRemoteDesktop',
   preview: 'preview',
   liveNotification: 'liveNotification',
+  liveAppointments: 'liveAppointments',
 
   pull: 'pull',
   push: 'push',
@@ -167,14 +168,16 @@ export const defaultRoutes: RouteRecordRaw[] = [
       {
         name: routerName.area,
         path: '/area',
-        component: () => import('@/views/area/index.vue'),
-        children: [
-          {
-            name: routerName.areaDetail,
-            path: '/area/:id',
-            component: () => import('@/views/area/id/index.vue'),
-          },
-        ],
+        component: () => import('@/views/area/id/index.vue'),
+        // path: '/area',
+        // component: () => import('@/views/area/index.vue'),
+        // children: [
+        //   {
+        //     name: routerName.areaDetail,
+        //     path: '/area/:id',
+        //     component: () => import('@/views/area/id/index.vue'),
+        //   },
+        // ],
       },
       {
         name: routerName.rank,
@@ -186,10 +189,36 @@ export const defaultRoutes: RouteRecordRaw[] = [
         path: '/shop',
         component: () => import('@/views/shop/index.vue'),
       },
+      // {
+      //   name: routerName.user,
+      //   path: '/user/:id',
+      //   // redirect: '/user/:id/playback',
+      //   component: () => import('@/views/my/index.vue'),
+      //   children: [
+      //     {
+      //       name: routerName.playback,
+      //       path: 'playback',
+      //       component: () => import('@/views/playback/index.vue'),
+      //     },
+      //     {
+      //       name: routerName.follow,
+      //       path: 'follow',
+      //       component: () => import('@/views/follow/index.vue'),
+      //     },
+      //     {
+      //       name: routerName.fans,
+      //       path: 'fans',
+      //       component: () => import('@/views/fans/index.vue'),
+      //     },
+      //   ],
+      // },
       {
-        name: routerName.my,
-        path: '/my',
-        redirect: '/my/playback',
+        name: routerName.user,
+        path: '/user/:id',
+        redirect: (to) => {
+          // 使用 `to.params.id` 获取 `id` 参数，并构造新的路径
+          return `/user/${to.params.id}/playback`;
+        },
         component: () => import('@/views/my/index.vue'),
         children: [
           {
@@ -231,6 +260,12 @@ export const defaultRoutes: RouteRecordRaw[] = [
                 path: 'liveFollow',
                 component: () =>
                   import('@/views/liveCenter/userCenter/follow.vue'),
+              },
+              {
+                name: routerName.liveAppointments,
+                path: 'liveAppointments',
+                component: () =>
+                  import('@/views/liveCenter/userCenter/liveAppointments.vue'),
               },
               {
                 name: routerName.liveNotification,
@@ -309,11 +344,11 @@ export const defaultRoutes: RouteRecordRaw[] = [
         path: '/messageCenter',
         component: () => import('@/views/messageCenter/index.vue'),
       },
-      {
-        name: routerName.user,
-        path: '/user/:id',
-        component: () => import('@/views/user/index.vue'),
-      },
+      // {
+      //   name: routerName.user,
+      //   path: '/user/:id',
+      //   component: () => import('@/views/user/index.vue'),
+      // },
       {
         name: routerName.search,
         path: '/search/:keyword',

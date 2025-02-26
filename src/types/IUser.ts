@@ -163,4 +163,9 @@ export interface IUser {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string;
+
+  // 新增字段
+  background_image?: string; // 主页背景图URL
+  gender?: 'male' | 'female' | 'other'; // 性别
+  birth_date?: string; // 出生日期 (格式为YYYY-MM-DD)
 }

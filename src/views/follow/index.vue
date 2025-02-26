@@ -13,15 +13,22 @@
         placeholder="输入关键词"
         @keyup.enter="performSearch"
       />
-      <div class="ico search"></div>
+      <div
+        class="ico search"
+        @click="performSearch"
+      ></div>
     </div>
 
     <!-- 关注列表 -->
-    <div class="follow-list">
+    <div
+      class="follow-list"
+      v-if="followings.length !== 0"
+    >
       <div
-        v-for="(user, index) in filteredUsers"
+        v-for="(user, index) in followings"
         :key="index"
         class="follow-item"
+        @click="handleJump(user?.id)"
       >
         <img
           :src="user.avatar"
@@ -30,8 +37,8 @@
         />
         <div>
           <div class="info">
-            <div class="name">{{ user.name }}</div>
-            <div class="description">{{ user.description }}</div>
+            <div class="name">{{ user.username }}</div>
+            <div class="description">{{ user.desc }}</div>
           </div>
           <Dropdown class="follow-status">
             <template #btn>
@@ -42,75 +49,115 @@
             </template>
             <template #list>
               <div class="list">
-                <a class="item"> 取消关注 </a>
+                <a
+                  class="item"
+                  @click="handleUnfollow(user.id)"
+                >
+                  取消关注
+                </a>
               </div>
             </template>
           </Dropdown>
         </div>
       </div>
     </div>
+    <div
+      v-else
+      class="empty"
+    >
+      暂无关注用户~
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import {
+  fetchUserFollowingList,
+  fetchUserUnfollow,
+  searchUserFollowing,
+} from '@/api/user';
+import router, { routerName } from '@/router';
+import { useUserStore } from '@/store/user';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
-// 筛选选项
-const filterOptions = ['最近关注', '最常访问'];
-const selectedFilter = ref('最近关注');
+// withDefaults(
+//   defineProps<{
+//     : string;
+//   }>(),
+//   {
+//     url: '',
+//   }
+// );
+
+const emit = defineEmits();
+const userStore = useUserStore();
+const route = useRoute();
 
 // 搜索内容
 const searchQuery = ref('');
 
 // 用户数据
-const users = ref([
-  {
-    name: '付金权的全栈课堂',
-    description: '随缘更',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '英语兔',
-    description: 'www.YingYuTu.com',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '陈善福儿',
-    description: '原创不易！借鉴请珍惜！',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '盖里老哥',
-    description: '工作室联系 wxb5emoney',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '三更草堂',
-    description: '关注后会自动回复群号',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-  {
-    name: '高斯Goh',
-    description: '小潮Eam桌游区的扛把子！',
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-  },
-]);
+const followings = ref<any[]>([]);
 
-// 选择筛选项
-const selectFilter = (option: string) => {
-  selectedFilter.value = option;
-};
-
-// 过滤用户
-const filteredUsers = computed(() => {
-  return users.value.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+// 获取关注列表
+onMounted(() => {
+  if (route.params.id) {
+    requestFollowingList(route.params.id);
+  }
 });
 
+const handleJump = (id) => {
+  router.push({
+    name: routerName.user,
+    params: { id },
+  });
+};
+
+// 请求用户关注列表
+const requestFollowingList = async (id) => {
+  const res = await fetchUserFollowingList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followings.value = res.data;
+  }
+};
+
 // 搜索功能
-const performSearch = () => {
+const performSearch = async () => {
   console.log('搜索内容：', searchQuery.value);
+  if (route.params.id && searchQuery.value.trim()) {
+    const res = await searchUserFollowing({
+      userId: route.params.id,
+      keyword: searchQuery.value.trim(),
+    });
+    if (res.code === 200) {
+      followings.value = res.data; // 更新关注列表为搜索结果
+    } else {
+      // 处理搜索失败的情况
+      followings.value = [];
+      window.$message.error('搜索失败，请重试');
+    }
+  } else {
+    // 如果搜索框为空，重新加载全部关注列表
+    requestFollowingList(route.params.id);
+  }
+};
+
+// 取消关注
+const handleUnfollow = async (followingId) => {
+  const res = await fetchUserUnfollow({
+    followingId,
+    followerId: route.params.id,
+  });
+  if (res.code === 200) {
+    window.$message.success('取消关注成功');
+    emit('updateFollowingList');
+    if (route.params.id) {
+      requestFollowingList(route.params.id);
+    }
+  }
 };
 </script>
 
@@ -141,6 +188,10 @@ const performSearch = () => {
     padding: 0 10px;
     margin-bottom: 20px;
 
+    &:focus-within {
+      border-color: #ffd700;
+    }
+
     input {
       flex: 1;
       border: none;
@@ -153,6 +204,7 @@ const performSearch = () => {
       height: 16px;
       background: url('@/assets/img/search.png') no-repeat center center;
       background-size: contain;
+      cursor: pointer;
     }
   }
 
@@ -176,6 +228,7 @@ const performSearch = () => {
         height: 80px;
         border-radius: 50%;
         margin-right: 10px;
+        object-fit: cover;
       }
 
       .info {
@@ -233,6 +286,8 @@ const performSearch = () => {
 
           .item {
             padding: 10px 20px;
+            color: #61666d;
+            cursor: pointer;
 
             &:hover {
               background-color: #e3e8ec;
@@ -241,6 +296,14 @@ const performSearch = () => {
         }
       }
     }
+  }
+
+  .empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    height: 80px;
   }
 }
 </style>

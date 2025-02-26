@@ -1,41 +1,48 @@
 <template>
   <div class="live-notification-page">
     <div class="header">
-      <div class="title">直播通知</div>
-      <div class="live-count">{{ liveNotifications.length }}</div>
-      <div class="live-person">人正在直播中</div>
+      <div class="title">直播预约</div>
+      <!-- <div class="live-count">{{ liveNowCount }}</div> -->
+      <!-- <div class="live-person">人正在直播中</div> -->
     </div>
 
     <div class="content-box">
       <div class="notification-grid">
         <div
-          v-for="(notification, index) in liveNotifications"
-          :key="notification.id"
+          v-for="(appointment, index) in appointmentList"
+          :key="appointment.id"
           class="notification-item"
         >
           <img
-            :src="notification.live_room?.cover_img"
+            :src="appointment.preview?.cover_image"
             alt="直播封面"
             class="cover-image"
           />
           <div class="info">
             <div class="title">
-              {{ notification.live_room?.name }}
-              <span class="live-status">
-                <img
-                  width="12"
-                  height="12"
-                  src="https://s1.hdslb.com/bfs/static/jinkela/long/images/live.gif"
-                /><span class="bili-live-card__info--living__text">直播中</span>
-              </span>
+              {{ appointment.preview?.title }}
+              <!-- <span v-if="appointment.isLive" class="live-status">
+                                <img width="12" height="12"
+                                    src="https://s1.hdslb.com/bfs/static/jinkela/long/images/live.gif" /><span
+                                    class="bili-live-card__info--living__text">直播中</span>
+                            </span> -->
             </div>
             <div class="details">
               <span class="time"
-                >开播时间: {{ formatDate(notification.created_at) }}</span
+                >开播时间:
+                {{ formatDate(appointment.preview?.preview_date) }}</span
               >
               <span class="host">
-                <div class="ico imy"></div>
-                {{ notification.user?.username }}
+                <div>
+                  <div class="ico imy"></div>
+                  {{ appointment.preview?.user?.username }}
+                </div>
+                <div
+                  class="cancel"
+                  @click="cancelAppoint(appointment?.preview_id)"
+                >
+                  取消预约
+                </div>
               </span>
             </div>
           </div>
@@ -46,17 +53,16 @@
 </template>
 
 <script lang="ts" setup>
-import { fetchLiveList } from '@/api/live';
-import { fetchLiveRoomAppointmentList } from '@/api/liveRoom';
+import {
+  deleteLiveRoomAppointment,
+  fetchLiveRoomAppointmentList,
+} from '@/api/liveRoom';
 import { useUserStore } from '@/store/user';
 import { onMounted, ref, watch } from 'vue';
+
 const userStore = useUserStore();
 
-// 模拟直播通知数据
-const liveNotifications = ref<any[]>([]);
-
 const appointmentList = ref<any>([]);
-const liveRoomList = ref<any[]>([]);
 
 watch(
   () => userStore?.userInfo?.id,
@@ -67,8 +73,61 @@ watch(
 
 onMounted(() => {
   getAppointments();
-  getLiveRoomList();
 });
+
+// 模拟直播通知数据
+const liveNotifications = ref([
+  {
+    id: 1,
+    title: '英雄联盟全球总决赛',
+    username: '电竞达人',
+    startTime: '2025-01-22T19:00:00',
+    coverImage:
+      'https://i1.hdslb.com/bfs/live/903683e4f2b2fd3226b73ea4fceec915c8578669.jpg@1e_1c_100q.webp',
+    isLive: true,
+  },
+  {
+    id: 2,
+    title: '唱歌娱乐夜',
+    username: '明星主播',
+    startTime: '2025-01-22T19:00:00',
+    coverImage:
+      'https://i1.hdslb.com/bfs/live/new_room_cover/fe7d877eefe6e461e508d247f19d2e2dd13b6f65.jpg@.webp',
+    isLive: true,
+  },
+  {
+    id: 3,
+    title: '王者荣耀冠军赛',
+    username: '游戏王',
+    startTime: '2025-01-22T19:00:00',
+    coverImage:
+      'https://i1.hdslb.com/bfs/live/new_room_cover/96043be7a8b1489b8b00056ad8e13a79e5f5609e.jpg@.webp',
+    isLive: true,
+  },
+  {
+    id: 4,
+    title: '王者荣耀冠军赛',
+    username: '游戏王',
+    startTime: '2025-02-20T20:00:00',
+    coverImage:
+      'https://i1.hdslb.com/bfs/live/new_room_cover/72bfe18e85339978d05952d6cf88c022594faa64.jpg@.webp',
+    isLive: false,
+  },
+  {
+    id: 5,
+    title: '热门电影解说',
+    username: '电影达人',
+    startTime: '2025-02-19T17:00:00',
+    coverImage:
+      'https://i1.hdslb.com/bfs/live/new_room_cover/41c0c5b119554e75c832ba3e1f0126dc8596f54d.jpg@.webp',
+    isLive: false,
+  },
+]);
+
+// 统计正在直播人数
+const liveNowCount = ref(
+  liveNotifications.value.filter((n) => n.isLive).length
+);
 
 // 格式化日期
 function formatDate(date: string): string {
@@ -83,7 +142,11 @@ function formatDate(date: string): string {
   return liveDate.toLocaleString('zh-CN', options);
 }
 
-// 获取预约列表
+// 跳转到直播间
+function goToLiveRoom(liveId: number) {
+  alert(`跳转到直播间，直播 ID: ${liveId}`);
+}
+
 const getAppointments = async () => {
   if (userStore?.userInfo?.id) {
     const res = await fetchLiveRoomAppointmentList({
@@ -91,57 +154,24 @@ const getAppointments = async () => {
     });
     if (res.code === 200) {
       appointmentList.value = res?.data?.rows;
-      updateLiveNotifications(); // 每次获取预约列表后更新 liveNotifications
     }
   }
 };
 
-// 获取当前直播列表
-async function getLiveRoomList() {
-  try {
-    const res = await fetchLiveList({});
-    if (res.code === 200) {
-      liveRoomList.value = res.data.rows;
-      updateLiveNotifications(); // 每次获取直播列表后更新 liveNotifications
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-// 更新 liveNotifications 列表
-function updateLiveNotifications() {
-  // 根据预约列表和当前直播列表进行过滤
-  const list = appointmentList.value
-    .filter((appointment) => {
-      // 获取预约的主播
-      const appointmentHost = appointment.user_id;
-      const appointmentTime = new Date(
-        appointment.preview?.preview_date
-      ).getTime();
-
-      // 查找当前正在直播的主播
-      // const liveStream = liveRoomList.value.find(
-      //   (live) =>
-      //     live.user_id === appointmentHost && new Date(live.created_at).getTime() >= appointmentTime
-      // );
-      const liveStream = liveRoomList.value.find(
-        (live) => live.user_id === appointmentHost
-      );
-
-      // 如果找到了正在直播且符合预约时间的主播
-      return liveStream !== undefined;
-    })
-    .map((appointment) => {
-      // 找到匹配的直播信息，并填充到 liveNotifications 中
-      const liveStream = liveRoomList.value.find(
-        (live) => live.user_id === appointment.user_id
-      );
-      return liveStream; // 返回当前直播或预约直播
+const cancelAppoint = async (liveId: number) => {
+  if (userStore?.userInfo?.id && liveId) {
+    const res = await deleteLiveRoomAppointment({
+      ids: [liveId],
+      userId: userStore?.userInfo?.id,
     });
-  liveNotifications.value = list;
-  console.log(list, '???');
-}
+    if (res.code === 200) {
+      window.$message.success('取消预约成功');
+      getAppointments();
+    } else {
+      window.$message.error('取消预约失败');
+    }
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -267,6 +297,18 @@ function updateLiveNotifications() {
             font-size: 14px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+
+            .cancel {
+              padding: 5px 10px;
+              border: 1px solid rgb(225, 48, 48);
+              color: rgb(225, 48, 48);
+              border-radius: 4px;
+
+              &:hover {
+                background-color: #f9d0d0;
+              }
+            }
           }
         }
 
@@ -298,6 +340,12 @@ function updateLiveNotifications() {
       margin-right: 5px;
       float: left;
       @include setBackground('@/assets/img/my.png');
+    }
+
+    &.operate {
+      margin-right: 5px;
+      float: left;
+      @include setBackground('@/assets/img/operate.png');
     }
   }
 }

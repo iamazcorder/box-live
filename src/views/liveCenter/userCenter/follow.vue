@@ -2,7 +2,7 @@
   <div class="live-follow-page">
     <div class="header">
       <div class="title">我的关注</div>
-      <div class="live-count">1</div>
+      <div class="live-count">{{ liveUsers?.length }}</div>
       <div class="live-person">人正在直播中</div>
     </div>
 
@@ -10,14 +10,10 @@
       <div class="history-list">
         <div
           class="favourite-card"
-          v-for="(item, index) in followList"
+          v-for="(item, index) in liveUsers"
           :key="index"
         >
-          <div
-            href="//space.bilibili.com/50329118"
-            target="_blank"
-            class="avatar"
-          >
+          <div class="avatar">
             <a
               href="//space.bilibili.com/50329118"
               target="_blank"
@@ -25,12 +21,9 @@
             >
               <img
                 :src="item.avatar"
-                :class="`anchor-avatar ${item.isLive ? 'pinkBorder' : ''}`"
+                class="anchor-avatar pinkBorder"
               />
-              <div
-                v-if="item.isLive"
-                class="pink-live"
-              >
+              <div class="pink-live">
                 <div class="gif-icon">
                   <img
                     src="data:image/gif;base64,R0lGODlhGAAYAJECAP7+/v///wAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/wtYTVAgRGF0YVhNUDw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QTI2NTYzMDc2RTNDMTFFREJENEJEMzUxOTQzQjMxMkQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QTI2NTYzMDg2RTNDMTFFREJENEJEMzUxOTQzQjMxMkQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBMjY1NjMwNTZFM0MxMUVEQkQ0QkQzNTE5NDNCMzEyRCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBMjY1NjMwNjZFM0MxMUVEQkQ0QkQzNTE5NDNCMzEyRCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PgH//v38+/r5+Pf29fTz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPS0dDPzs3My8rJyMfGxcTDwsHAv769vLu6ubi3trW0s7KxsK+urayrqqmop6alpKOioaCfnp2cm5qZmJeWlZSTkpGQj46NjIuKiYiHhoWEg4KBgH9+fXx7enl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmFgX15dXFtaWVhXVlVUU1JRUE9OTUxLSklIR0ZFRENCQUA/Pj08Ozo5ODc2NTQzMjEwLy4tLCsqKSgnJiUkIyIhIB8eHRwbGhkYFxYVFBMSERAPDg0MCwoJCAcGBQQDAgEAACH5BAkEAAIALAAAAAAYABgAAAI5lI+py+0Po2QhTFXrRdlu031gJgqhpI0pdJ4sacJv6j6trABeTOMcfFslgp7ar4fcDVcyX+kJjToKACH5BAkEAAIALAAAAAAYABgAAAI2lI+py+0Po5xUhFDRvdls3H0T522SaJkRikKs6qptAr+kYoOzJvc37dPBgKQco3YbdpbM5qQAACH5BAkEAAIALAAAAAAYABgAAAI3lI+py+0Po5y02hhykHqLzmkGiImfCZHkkh0qmrztOSuyt8bmzfC0Z9sJa7qZLwhEwS7MpnNSAAAh+QQJBAACACwAAAAAGAAYAAACPJSPqcvtD6OctJoQ7MFYC55dYQSKHcmZo3J+qdsmJRzO7DvbMs7HSN5b/YIqBvCkGyKJixds4/NIp1RHAQAh+QQJBAACACwAAAAAGAAYAAACOpSPqcvtD6OcLwSarMVHXy54YKhJIrmhn3K25eKmJ/vGa1bnKS3rN2IzzHC94q/jE754yNVyBI1KIQUAIfkECQQAAgAsAAAAABgAGAAAAjmUj6nL7Q+jnLSaEOzBePbLSVwmjGJYopCZfmnDxmoif6xSkzeN5ozfIuF6RBfPVhQeN66Z5gmNTgoAIfkECQQAAgAsAAAAABgAGAAAAjmUj6nL7Q+jnLRaETLSMnMfdJ4Bit8YlRgKqerauOibyCen2OGK1/Pf2wB3NOGNyPLteIfk5QmNTgoAIfkECQQAAgAsAAAAABgAGAAAAjeUj6nL7Q+jnCkEWu3FRm/uHdYUCiVUnk+qSewYvd/amrWKyF2t6DbcuwmBGZgv+OHxOMyms1kAACH5BAkEAAIALAAAAAAYABgAAAI5lI+py+0PowtBLkptwlUf7n1YaIBlF5kmpI6puz5t9tLxBLsCgCpzdxPZcjQfEajbFHVJkvMJtRQAACH5BAkEAAIALAAAAAAYABgAAAI1lI+py+0Po5wpBFrtxUZv7nGdJgqheJ5QSkasJb2bmsFmSyPyaCv73avNcC1fr1gsKZdMSAEAIfkECQQAAgAsAAAAABgAGAAAAjWUj6nL7Q+jnLRaEfI1Wd8ebKDYkR4WHqcyol7Llm4KJ+0tx69cI/i+8vGGQdUpl9sol0xIAQAh+QQJBAACACwAAAAAGAAYAAACNJSPqcvtD6OctNq7QsBCa+xtV9h8DJl5p5qaCtqJsZugNvuyN43sIlzTCXkHnJHISSqXiQIAIfkECQQAAgAsAAAAABgAGAAAAjKUj6nL7Q+jnLTai3MMPLDuLeDXkZwZKqNYsqebJqva0u86yy1e6/feQ9SGL43xiEwUAAAh+QQJBAACACwAAAAAGAAYAAACM5SPqcvtD6OctNp7Q8BCa+xtzDd6JamEp5iai2qgcEvCc2K7N5LXLi3qsXCy4pCDTCoXBQAh+QQJBAACACwAAAAAGAAYAAACNJSPqcvtD6OctNoYcrhC7+txIag1mVkuY/exp5qOayLHqVK/M5J/+9Ez/IQvF7DISSqXkAIAIfkEBQQAAgAsAAAAABgAGAAAAjKUj6nL7Q+jnFSEUNG92WzcfZ21jWJYRucJranyutwig2xSey+e5nQPnMGEMeHoiExCCgA7"
@@ -46,7 +39,7 @@
                 href="//space.bilibili.com/50329118"
                 target="_blank"
                 class="anchor-name"
-                >{{ item.name }}</a
+                >{{ item.username }}</a
               >
               <div class="spot-mark">
                 <img
@@ -63,31 +56,21 @@
               </div>
             </div>
             <a
-              v-if="item.isLive"
               href="//space.bilibili.com/50329118"
               target="_blank"
               class="title"
-              >{{ item.title }}
+              >{{ item.liveRoomName }}
             </a>
-            <div
-              v-if="!item.isLive"
-              class="title"
-            >
+            <!-- <div class="title">
               {{ item.lastTime }}直播了{{ item.area }}
-            </div>
+            </div> -->
             <a class="live-detail">
               <img
-                :src="item.cover"
+                :src="item.liveRecord?.live_room?.cover_img"
                 class="cover"
               />
-              <div
-                class="bottom-mask"
-                v-if="item.isLive"
-              ></div>
-              <div
-                class="block-views"
-                v-if="item.isLive"
-              >
+              <div class="bottom-mask"></div>
+              <div class="block-views">
                 <div class="views">
                   <span>{{ item.views }}</span>
                 </div>
@@ -95,32 +78,90 @@
             ><!---->
           </div>
         </div>
-        <div class="favourite-card">
+        <div
+          class="favourite-card"
+          v-for="(item, index) in offlineUsers"
+          :key="index"
+        >
+          <div class="avatar">
+            <a
+              href="//space.bilibili.com/50329118"
+              target="_blank"
+              class="avatar-pic"
+            >
+              <img
+                :src="item.avatar"
+                class="anchor-avatar"
+              />
+            </a>
+          </div>
+          <div class="anchor-info">
+            <div class="anchor">
+              <a
+                href="//space.bilibili.com/50329118"
+                target="_blank"
+                class="anchor-name"
+                >{{ item.username }}</a
+              >
+              <div class="spot-mark">
+                <img
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAF9SURBVHgB7da9SgNBFAXgc7NZsUyp3T6AxUYiNhbxCcwbODYSRHDzCHmDiAoBA46dnZZ2SRkUwrZ26xskXTA/17v+gMZUMwurMh8kZKYIJ8PckwUc558hZECpqAR/VgNzojvnPViwDqTUUUi+15VvKn1sJfwy2dW6ncBAAZZopXj7JUwqgF+MYMgqkKpHAcDB4j4R7cGQ3QmNMQTLaxHjGYasAmndGjKhie9hhuxNFAxlM2WHxzUiVNPPTNOWbptdaOdP8pARVa8H4cYO4rg/hoUMmlq6yJ9eSfdU0zUzNCZeI51AGMigqefdzzBva4JCcZpTU6d/qsuaukD7MGR9Qkvl2dRyaU7xI89Mw5D1lMWDh/vN8vZIxmNdlk8MbujLixs4Tk6yaOqSFOGJlGPExAnmuJMH/SYMWU9ZWKm0pQgj+WmrBFpLWzssb43iwWMfBqybelkrS6hf1tQW7Jua0FvcZ6ZrGLI+ISbvQN7fA8gDvtyjpu6cteA4OXkFQG91iIqGacYAAAAASUVORK5CYII="
+                />
+                <div class="isCancel">
+                  <button
+                    data-v-b145b4ae=""
+                    class="bl-button attend-btn pointer ts-dot-2 bl-button--primary bl-button--size btn-default"
+                  >
+                    取消关注
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="title">
+              {{ timeAgo(item.lastLiveTime) }}直播了
+              {{
+                getChildCategoryName(
+                  item.liveRecord?.live_room?.parent_category_id,
+                  item.liveRecord?.live_room?.child_category_id
+                )
+              }}
+            </div>
+            <a class="live-detail">
+              <img
+                :src="item.liveRecord?.live_room?.cover_img"
+                class="cover"
+              />
+              <div class="bottom-mask"></div>
+              <div class="block-views">
+                <div class="views">
+                  <span>{{ item.views }}</span>
+                </div>
+              </div> </a
+            ><!---->
+          </div>
+        </div>
+        <div
+          class="favourite-card"
+          @click="handleFocusAll"
+        >
           <div class="surplus-avatars">
-            <div class="anchor">
-              <img
-                src="https://i0.hdslb.com/bfs/face/d725e70b2327c3baac51e8093a36667d492f5b5c.jpg"
-              />
+            <div
+              class="anchor"
+              v-for="item in neverLiveList.slice(0, 3)"
+            >
+              <img :src="item.avatar" />
+            </div>
+            <!-- <div class="anchor">
+              <img src="https://i1.hdslb.com/bfs/face/3f6fe87c5b0593d3a1260ab75f3c74adee4e1d30.jpg" />
             </div>
             <div class="anchor">
-              <img
-                src="https://i1.hdslb.com/bfs/face/3f6fe87c5b0593d3a1260ab75f3c74adee4e1d30.jpg"
-              />
-            </div>
-            <div class="anchor">
-              <img
-                src="https://i1.hdslb.com/bfs/face/ece79097541b2d3f4cbd5e2736ea961b955680b9.jpg"
-              />
-            </div>
+              <img src="https://i1.hdslb.com/bfs/face/ece79097541b2d3f4cbd5e2736ea961b955680b9.jpg" />
+            </div> -->
           </div>
-          <div class="unlive-anchor">41个你关注过的用户未开播过</div>
-          <div
-            class="all-follow"
-            @click="handleFocusAll"
-          >
-            <span>所有关注</span>
-            <div class="follow-arrow"></div>
+          <div class="unlive-anchor">
+            {{ neverLiveList?.length || 0 }}个你关注的用户未开播过
           </div>
+          <div class="all-follow">所有关注 &gt</div>
         </div>
       </div>
     </div>
@@ -128,8 +169,23 @@
 </template>
 
 <script lang="ts" setup>
+import {
+  getFollowedUsersWithLiveRecords,
+  getUsersWhoNeverStreamed,
+} from '@/api/user';
 import router, { routerName } from '@/router';
-import { ref } from 'vue';
+import { useAppStore } from '@/store/app';
+import { useUserStore } from '@/store/user';
+import { timeAgo } from '@/utils';
+import { onMounted, ref, watch } from 'vue';
+
+const appStore = useAppStore();
+
+const userStore = useUserStore();
+const liveUsers = ref<any[]>([]);
+const offlineUsers = ref<any[]>([]);
+
+const neverLiveList = ref<any[]>([]);
 
 // 假数据
 const followList = ref([
@@ -165,10 +221,67 @@ const followList = ref([
   },
 ]);
 
+watch(
+  () => userStore?.userInfo?.id,
+  () => {
+    if (userStore?.userInfo?.id) {
+      getRecordList();
+      getNeverLiveList();
+    }
+  }
+);
+
+onMounted(() => {
+  if (userStore?.userInfo?.id) {
+    getRecordList();
+    getNeverLiveList();
+  }
+  console.log(appStore.areaList, '....');
+});
+
+const getRecordList = async () => {
+  const res = await getFollowedUsersWithLiveRecords({
+    userId: userStore?.userInfo?.id,
+  });
+  if (res?.code === 200) {
+    liveUsers.value = res?.data?.liveUsers;
+    offlineUsers.value = res?.data?.offlineUsers;
+  }
+};
+
+const getNeverLiveList = async () => {
+  const res = await getUsersWhoNeverStreamed({
+    userId: userStore?.userInfo?.id,
+  });
+  if (res?.code === 200) {
+    neverLiveList.value = res?.data?.noLiveUsers;
+  }
+};
+
 const handleFocusAll = () => {
   router.push({
     name: routerName.follow,
+    params: {
+      id: userStore?.userInfo?.id,
+    },
   });
+};
+
+const getChildCategoryName = (parent_id, child_id) => {
+  // 遍历 areaList，查找父级ID
+  for (let parent of appStore.areaList) {
+    if (parent.id === parent_id) {
+      // 找到父级，接着查找子级ID
+      if (parent?.children && parent?.children?.length > 0) {
+        for (let child of parent?.children) {
+          if (child.id === child_id) {
+            return child.name; // 返回子级名称
+          }
+        }
+      }
+    }
+  }
+  return null; // 如果没有找到，返回null
 };
 </script>
 
@@ -311,6 +424,7 @@ const handleFocusAll = () => {
             border-radius: 50px;
             position: absolute;
             top: 0;
+            object-fit: cover;
           }
 
           .pinkBorder {
@@ -474,6 +588,9 @@ const handleFocusAll = () => {
           .cover {
             width: 100%;
             height: 100%;
+            overflow-clip-margin: content-box;
+            overflow: clip;
+            object-fit: cover;
           }
 
           .bottom-mask {
@@ -541,12 +658,12 @@ const handleFocusAll = () => {
         -ms-flex-align: center;
         align-items: center;
         -ms-flex-pack: center;
-        justify-content: center;
+        /* justify-content: center; */
         width: 146px;
         height: 45px;
         position: absolute;
         top: 43.68px;
-        left: 13.96px;
+        left: 23px;
 
         .anchor {
           width: 56px;
@@ -592,35 +709,28 @@ const handleFocusAll = () => {
         font-size: 16px;
         font-weight: 400;
         color: #18191c;
+
+        &:hover {
+          color: #ffd700;
+        }
       }
 
       .all-follow {
         position: absolute;
         top: 135.68px;
         left: 16px;
-        width: 68px;
+        /* width: 68px; */
         height: 20px;
-        display: -ms-flexbox;
         display: flex;
-        -ms-flex-align: center;
         align-items: center;
-        -ms-flex-pack: center;
         justify-content: center;
+        font-family: PingFang SC;
+        font-size: 14px;
+        font-weight: 400;
+        color: #61666d;
 
-        span {
-          font-family: PingFang SC;
-          font-size: 14px;
-          font-weight: 400;
-          color: #61666d;
-        }
-
-        .follow-arrow {
-          width: 4.87px;
-          height: 9.25px;
-          background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAATCAYAAACp65zuAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADGSURBVHgBjdHBDYIwFAbg/wfF6MkROgKOwAa6QS8aYzy4gY6AN292A0fADdQNGMEzECrFaAxY6Ds0r+nX15c+ytV2D2COrFgodUphCQ+aM4Ihg2Ei5VrYYe5LgPcqF12YZpFyN2VQJoAOq22qszxqtsFP0of5e6sLs9mLDbegDf+FLaxxtcIaLzch6d9MPuioKMjyUlUECUUrej8rzDD0xIvoglQcP+mCzBld0Bf2oRq6IBMeRsW5D6H+R40jqB967B9syMQLMjWSfL0eiisAAAAASUVORK5CYII=);
-          background-size: 4.87px 9.25px;
-          background-repeat: no-repeat;
-          margin-left: 4.13px;
+        &:hover {
+          color: #ffd700;
         }
       }
     }

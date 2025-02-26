@@ -104,21 +104,26 @@ function changeRoute(item: AppRootState['navList'][0]) {
     height: 40px;
     border-bottom: 1px solid #e7e7e7;
     background-color: white;
+
     .logo {
       width: 90px;
       height: 36px;
 
       @include setBackground('@/assets/img/logo-txt.png');
     }
+
     .top-right {
       display: flex;
       align-items: center;
+
       .github {
         display: flex;
+
         img {
           margin-left: 6px;
         }
       }
+
       .btn {
         margin-left: 10px;
         display: flex;
@@ -136,15 +141,18 @@ function changeRoute(item: AppRootState['navList'][0]) {
       }
     }
   }
+
   .nav-list {
     display: flex;
     align-items: center;
     height: 40px;
     background-color: white;
     line-height: 40px;
+
     .item {
       position: relative;
       margin: 0 20px;
+
       &.active {
         &::after {
           position: absolute;

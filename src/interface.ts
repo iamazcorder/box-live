@@ -657,6 +657,18 @@ export interface IArea {
   deleted_at?: string;
 }
 
+export interface ICategory {
+  id?: number;
+  name?: string;
+  parent_id?: number;
+  level?: number;
+  desc?: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string;
+  children?: ICategory[];
+}
+
 export interface IAreaLiveRoom {
   id?: number;
   area_id?: number;

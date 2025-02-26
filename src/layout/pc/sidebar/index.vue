@@ -14,13 +14,10 @@
       <div class="ico rank"></div>
       <div class="txt">{{ t('layout.rank') }}</div>
     </div>
-    <div
-      class="item"
-      @click="router.push({ name: routerName.shop })"
-    >
+    <!-- <div class="item" @click="router.push({ name: routerName.shop })">
       <div class="ico shop"></div>
       <div class="txt">{{ t('layout.shop') }}</div>
-    </div>
+    </div> -->
     <!-- <div
       class="item"
       @click="router.push({ name: routerName.order })"

@@ -24,7 +24,7 @@ import { GlobalThemeOverrides, NConfigProvider } from 'naive-ui';
 import { onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { fetchAreaList } from '@/api/area';
+import { fetchCategoryList } from '@/api/categories';
 import { fetchGlobalMsgMyList } from '@/api/globalMsg';
 import NaiveMessage from '@/components/NaiveMessage/index.vue';
 import { appBuildInfo, THEME_COLOR } from '@/constant';
@@ -37,7 +37,7 @@ import { useUserStore } from '@/store/user';
 import { getHostnameUrl } from '@/utils';
 import { getLastBuildDate, setLastBuildDate } from '@/utils/localStorage/app';
 import { getToken } from '@/utils/localStorage/user';
-import { IArea } from './interface';
+import { ICategory } from './interface';
 
 const { checkUpdate } = useCheckUpdate();
 const appStore = useAppStore();
@@ -111,84 +111,15 @@ async function handleGlobalMsgMyList() {
 }
 
 async function getAreaList() {
-  const res = await fetchAreaList({ orderName: 'priority', orderBy: 'desc' });
+  const res = await fetchCategoryList({});
   if (res.code === 200) {
-    console.log(res.data.rows, '------');
-    const list: IArea[] = [
-      {
-        id: 1,
-        name: '网游',
-        priority: 9,
-        remark: '英雄联盟、CS:GO、DOTA2',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 2,
-        name: '手游',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 3,
-        name: '单机游戏',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 4,
-        name: '娱乐',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 5,
-        name: '电台',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 6,
-        name: '赛事',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 7,
-        name: '聊天室',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-      {
-        id: 8,
-        name: '生活',
-        priority: 9,
-        remark: '和平精英、王者荣耀',
-        created_at: '2024-12-10 17:17:34',
-        updated_at: '2024-12-10 17:17:34',
-        deleted_at: undefined,
-      },
-    ];
+    const list: ICategory[] = res.data;
+    const areaTagsMap = {};
+    res.data.forEach((item) => {
+      areaTagsMap[item.id] = item.children;
+    });
     appStore.areaList = list;
+    appStore.areaTagsMap = areaTagsMap;
   }
 }
 

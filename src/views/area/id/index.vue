@@ -8,58 +8,40 @@
       <div
         v-for="tag in tagList"
         key="tag"
-        :class="`tag ${curTag === tag ? 'active' : ''}`"
-        @click="curTag = tag"
+        :class="`tag ${curTag === tag.name ? 'active' : ''}`"
+        @click="curTag = tag.name"
       >
-        {{ tag }}
+        {{ tag.name }}
       </div>
     </div>
-    <LongList
-      v-if="height > 0"
-      ref="longListRef"
-      class="list"
-      @get-list-data="getListData"
-      :rootMargin="{
-        top: 0,
-        bottom: 100,
-        left: 0,
-        right: 0,
-      }"
-      :status="status"
-    >
-      <div
-        v-for="(item, index) in liveRoomList"
-        :key="index"
-        class="item"
-        @click="goRoom(item)"
-      >
-        <div
-          class="cover"
-          v-lazy:background-image="item?.cover_img || item?.users?.[0]?.avatar"
-        >
-          <div
-            v-if="item?.live"
-            class="living-ico"
-          >
+    <div class="title">直播</div>
+    <div class="empty">暂无数据</div>
+    <!-- <LongList v-if="height > 0" ref="longListRef" class="list" @get-list-data="getListData" :rootMargin="{
+      top: 0,
+      bottom: 100,
+      left: 0,
+      right: 0,
+    }" :status="status">
+      <div v-for="(item, index) in liveRoomList" :key="index" class="item" @click="goRoom(item)">
+        <div class="cover" v-lazy:background-image="item?.cover_img || item?.users?.[0]?.avatar">
+          <div v-if="item?.live" class="living-ico">
             直播中
           </div>
-          <div
-            v-if="
-              item?.cdn === SwitchEnum.yes ||
-              [
-                LiveRoomTypeEnum.tencent_css,
-                LiveRoomTypeEnum.tencent_css_pk,
-              ].includes(item.type!)
-            "
-            class="cdn-ico"
-          >
+          <div v-if="item?.cdn === SwitchEnum.yes ||
+            [
+              LiveRoomTypeEnum.tencent_css,
+              LiveRoomTypeEnum.tencent_css_pk,
+            ].includes(item.type!)
+            " class="cdn-ico">
             <div class="txt">CDN</div>
           </div>
           <div class="txt">{{ item?.users?.[0]?.username }}</div>
         </div>
         <div class="desc">{{ item?.name }}</div>
       </div>
-    </LongList>
+    </LongList> -->
+    <div class="title">直播回放</div>
+    <div class="empty">暂无数据</div>
   </div>
 </template>
 
@@ -69,14 +51,18 @@ import { onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { fetchLiveRoomList } from '@/api/area';
+import { fetchCategoryList } from '@/api/categories';
 import LongList from '@/components/LongList/index.vue';
-import { SwitchEnum } from '@/interface';
+import { ICategory, SwitchEnum } from '@/interface';
 import router, { routerName } from '@/router';
-import { ILiveRoom, LiveRoomTypeEnum } from '@/types/ILiveRoom';
+import { useAppStore } from '@/store/app';
+import { ILiveRoom } from '@/types/ILiveRoom';
+
+const appStore = useAppStore();
 
 const liveRoomList = ref<ILiveRoom[]>([]);
-const tagList = ref([]);
-const curTag = ref('全部');
+const tagList = ref<any[]>([]);
+const curTag = ref('');
 const route = useRoute();
 const status = ref<'loading' | 'nonedata' | 'allLoaded' | 'normal'>('loading');
 
@@ -91,7 +77,7 @@ const pageParams = reactive({
 });
 
 watch(
-  () => route.params.id,
+  () => route.query.parentAreaId,
   (newVal) => {
     if (!newVal) return;
     liveRoomList.value = [];
@@ -99,96 +85,17 @@ watch(
     getData();
   }
 );
-
-const areaTagsMap = {
-  1: [
-    '全部',
-    '剑网3',
-    '暗区突围：无限',
-    '剑网3缘起',
-    '生死狙击2',
-    '永劫无间',
-    '吃鸡行动',
-    '大话西游',
-    '赛尔号',
-    '最终幻想14',
-    '炉石传说',
-    '冒险岛',
-    '龙之谷',
-    '逆战',
-    'DNF',
-    '三角洲行动',
-    'QQ飞车',
-    'CS:GO',
-    'APEX英雄',
-    '穿越火线',
-    '魔兽世界',
-    '守望先锋',
-    'DOTA2',
-    '英雄联盟',
-    '三国杀',
-  ],
-  2: [
-    '全部',
-    '欢乐斗地主',
-    'QQ飞车手游',
-    'CF手游',
-    '元梦之星',
-    '蛋仔派对',
-    '第五人格',
-    '原神',
-    '和平精英',
-    '王者荣耀',
-    '阴阳师',
-    '狼人杀',
-    '决战！平安京',
-    '碧蓝航线',
-    '火影忍者手游',
-    '鸣潮',
-    '崩坏：星穹铁道崩坏3',
-    '游戏王',
-    '梦幻西游手游',
-    '少女前线',
-  ],
-  3: [
-    '全部',
-    'NBA2K',
-    '幻兽帕鲁',
-    '黑神话：悟空',
-    '怀旧游戏',
-    '独立游戏',
-    '主机游戏',
-    '荒野大嫖客2',
-    '饥荒',
-    '战地风云',
-    '使命召唤21',
-    '塞尔达传说',
-    '鬼泣5',
-    '方舟',
-    '糖豆人',
-    '赛博朋克2077',
-    '刺客信条',
-    '生化危机',
-    '我的世界',
-  ],
-  4: ['全部', '萌宅', '舞见', '颜值'],
-  5: ['全部', '唱见电台', '聊天电台', '男声电台'],
-  6: ['全部', '游戏赛事', '赛事综合'],
-  7: ['全部', '找人玩', '交友', '点唱', '兴趣'],
-  8: [
-    '全部',
-    '生活杂谈',
-    '情感杂谈',
-    '体育·运动',
-    '手工绘画',
-    '户外',
-    '萌宠',
-    '美食',
-    '时尚',
-    '电子榨菜',
-    '沉浸体验',
-  ],
-};
+// watch(
+//   () => [route.params.id, route.query.child], // 监听 id 和 query.child
+//   ([newId, newChild]) => {
+//     if (!newId) return;
+//     console.log("路由参数更新:", newId, newChild);
+//     liveRoomList.value = [];
+//     pageParams.nowPage = 0;
+//     getData();
+//   },
+//   { immediate: true }
+// );
 
 function handleStatus() {
   if (loading.value) {
@@ -229,6 +136,19 @@ function getListData() {
   getData();
 }
 
+async function getAreaList() {
+  const res = await fetchCategoryList({});
+  if (res.code === 200) {
+    const list: ICategory[] = res.data;
+    const areaTagsMap = {};
+    res.data.forEach((item) => {
+      areaTagsMap[item.id] = item.children;
+    });
+    appStore.areaList = list;
+    appStore.areaTagsMap = areaTagsMap;
+  }
+}
+
 async function getData() {
   try {
     if (loading.value) return;
@@ -236,8 +156,14 @@ async function getData() {
     status.value = 'loading';
     pageParams.nowPage += 1;
     // 获取每个区域下的tag
-    tagList.value = areaTagsMap[Number(route.params.id)];
-    curTag.value = areaTagsMap[Number(route.params.id)]?.[0];
+    if (!appStore.areaTagsMap) {
+      await getAreaList();
+    }
+    tagList.value = appStore.areaTagsMap[Number(route.query.parentAreaId)];
+    const curAreaItem = appStore.areaTagsMap[
+      Number(route.query.parentAreaId)
+    ]?.find((item) => item.id === Number(route.query.areaId));
+    curTag.value = curAreaItem?.name;
     const res = await fetchLiveRoomList({
       id: Number(route.params.id),
       live_room_is_show: SwitchEnum.yes,
@@ -260,7 +186,7 @@ async function getData() {
 
 <style lang="scss" scoped>
 .area-wrap {
-  padding: 0 20px;
+  padding: 20px 20px;
 
   .tag-wrap {
     box-sizing: border-box;
@@ -291,6 +217,19 @@ async function getData() {
       border-color: gold;
       border-image: initial;
     }
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: 500;
+    padding-left: 50px;
+  }
+
+  .empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 0;
   }
 
   .list {

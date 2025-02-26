@@ -10,44 +10,38 @@
       </div>
     </div>
     <div
-      v-if="filteredLives.length === 0"
+      v-if="liveNotifications.length === 0"
       class="empty-message"
     >
-      暂无符合条件的通知～
+      暂无直播中的主播～
     </div>
     <div
       v-else
       class="notification-list"
     >
       <div
-        v-for="live in filteredLives"
+        v-for="live in liveNotifications"
         :key="live.id"
         class="notification-item"
       >
         <div class="live-info">
           <img
-            :src="live.coverImage"
+            :src="live.user?.avatar"
             alt="Live Cover"
             class="live-cover"
           />
           <div class="live-details">
-            <span class="live-title">{{ live.title }} </span>
-            <div class="live-username">{{ live.username }}</div>
+            <span class="live-title">{{ live.live_room?.name }} </span>
+            <div class="live-username">{{ live.user?.username }}</div>
           </div>
         </div>
         <div class="live-time">
-          <span
-            v-if="live.isLive"
-            class="live-status"
-          >
+          <span class="live-status">
             <img
               width="12"
               height="12"
               src="https://s1.hdslb.com/bfs/static/jinkela/long/images/live.gif"
             /><span class="bili-live-card__info--living__text">直播中</span>
-          </span>
-          <span v-else>
-            {{ live.message }}
           </span>
         </div>
         <!-- <button class="enter-btn" @click="enterLiveRoom(live.id)">
@@ -58,8 +52,11 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { fetchLiveList } from '@/api/live';
+import { fetchLiveRoomAppointmentList } from '@/api/liveRoom';
 import router, { routerName } from '@/router';
-import { computed, onMounted, ref } from 'vue';
+import { useUserStore } from '@/store/user';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface LivePreview {
   id: number;
@@ -70,6 +67,20 @@ interface LivePreview {
   isLive?: boolean;
   message?: string;
 }
+
+const userStore = useUserStore();
+
+watch(
+  () => userStore?.userInfo?.id,
+  () => {
+    getAppointments();
+  }
+);
+
+onMounted(() => {
+  getAppointments();
+  getLiveRoomList();
+});
 
 // 模拟预约的直播数据
 const reservedLives = ref<LivePreview[]>([
@@ -98,6 +109,11 @@ const reservedLives = ref<LivePreview[]>([
       'https://i1.hdslb.com/bfs/face/eda015c1a7794c35879f7685c1c7a6ff5ebb3ff7.jpg@80w_80h_1e_1c_100q.webp',
   },
 ]);
+
+const liveNotifications = ref<any[]>([]);
+
+const appointmentList = ref<any>([]);
+const liveRoomList = ref<any[]>([]);
 
 // 筛选即将开始和正在直播的记录
 const filteredLives = computed(() => {
@@ -140,6 +156,66 @@ function handleFocusAll() {
     name: routerName.liveNotification,
   });
 }
+
+// 获取预约列表
+const getAppointments = async () => {
+  if (userStore?.userInfo?.id) {
+    const res = await fetchLiveRoomAppointmentList({
+      userId: userStore?.userInfo?.id,
+    });
+    if (res.code === 200) {
+      appointmentList.value = res?.data?.rows;
+      updateLiveNotifications(); // 每次获取预约列表后更新 liveNotifications
+    }
+  }
+};
+
+// 获取当前直播列表
+async function getLiveRoomList() {
+  try {
+    const res = await fetchLiveList({});
+    if (res.code === 200) {
+      liveRoomList.value = res.data.rows;
+      updateLiveNotifications(); // 每次获取直播列表后更新 liveNotifications
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// 更新 liveNotifications 列表
+function updateLiveNotifications() {
+  // 根据预约列表和当前直播列表进行过滤
+  const list = appointmentList.value
+    .filter((appointment) => {
+      // 获取预约的主播
+      const appointmentHost = appointment.user_id;
+      const appointmentTime = new Date(
+        appointment.preview?.preview_date
+      ).getTime();
+
+      // 查找当前正在直播的主播
+      // const liveStream = liveRoomList.value.find(
+      //   (live) =>
+      //     live.user_id === appointmentHost && new Date(live.created_at).getTime() >= appointmentTime
+      // );
+      const liveStream = liveRoomList.value.find(
+        (live) => live.user_id === appointmentHost
+      );
+
+      // 如果找到了正在直播且符合预约时间的主播
+      return liveStream !== undefined;
+    })
+    .map((appointment) => {
+      // 找到匹配的直播信息，并填充到 liveNotifications 中
+      const liveStream = liveRoomList.value.find(
+        (live) => live.user_id === appointment.user_id
+      );
+      return liveStream; // 返回当前直播或预约直播
+    });
+  liveNotifications.value = list;
+  console.log(list, '???');
+}
 </script>
 <style scoped lang="scss">
 .live-notification {
@@ -173,9 +249,10 @@ function handleFocusAll() {
 }
 
 .empty-message {
-  font-size: 16px;
+  font-size: 14px;
   color: #888;
   text-align: center;
+  margin-top: 70px;
 }
 
 .notification-list {

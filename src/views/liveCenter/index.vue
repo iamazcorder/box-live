@@ -85,6 +85,7 @@ const menus = ref<MenuItem[]>([
     submenu: [
       { title: '个人信息', path: 'myInfo' },
       { title: '我的关注', path: 'liveFollow' },
+      { title: '直播预约', path: 'liveAppointments' },
       { title: '直播通知', path: 'liveNotification' },
       { title: '观看历史', path: 'viewHistory' },
     ],

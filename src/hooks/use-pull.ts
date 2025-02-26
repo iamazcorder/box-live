@@ -410,8 +410,9 @@ export function usePull() {
         handleHlsPlay();
       }
     }
+    console.log(data.type, '////');
     if (LiveRoomTypeEnum.pk === data.type && !route.query[URL_QUERY.pkKey]) {
-      play();
+      // play();
     } else if (
       [
         LiveRoomTypeEnum.system,
@@ -426,7 +427,7 @@ export function usePull() {
         LiveRoomTypeEnum.tencent_css_pk,
       ].includes(data.type!)
     ) {
-      play();
+      // play();
     } else if (
       [
         LiveRoomTypeEnum.wertc_live,
