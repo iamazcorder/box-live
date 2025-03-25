@@ -63,6 +63,7 @@ function handleMouseLeave() {
   position: relative;
   display: inline-block;
   cursor: initial;
+
   &.hover {
     &:hover {
       .container {
@@ -76,6 +77,7 @@ function handleMouseLeave() {
 
     user-select: none;
   }
+
   .container {
     position: absolute;
     top: 100%;
@@ -86,20 +88,25 @@ function handleMouseLeave() {
       right: 0;
       left: auto;
     }
+
     &.left {
       right: auto;
       left: 0;
     }
+
     &.center {
       left: 50%;
       transform: translate(-50%, 0%);
     }
+
     &.isTop {
       top: 0%;
       transform: translate(-50%, -100%);
     }
+
     .wrap {
       box-sizing: border-box;
+      border: 1px solid #d8d7d7;
       margin-top: 5px;
       border-radius: 5px;
       background-color: #fff;

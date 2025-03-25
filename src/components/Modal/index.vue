@@ -60,6 +60,7 @@ const emits = defineEmits(['close']);
   background-color: rgba(0, 0, 0, 0.6) !important;
 
   @extend %maskBg;
+
   .container {
     position: absolute;
     top: 50%;
@@ -70,10 +71,12 @@ const emits = defineEmits(['close']);
     background-color: #fff;
     font-size: 14px;
     transform: translate(-50%, -50%);
+
     .title {
       font-weight: 700;
-      font-size: 24px;
+      font-size: 18px;
     }
+
     .close {
       position: absolute;
       top: 20px;
@@ -84,9 +87,11 @@ const emits = defineEmits(['close']);
 
       @include cross(#ccc, 3px);
     }
+
     .content {
       margin: 15px 0;
     }
+
     .footer {
       .btn {
         width: 280px;

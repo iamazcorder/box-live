@@ -343,6 +343,7 @@ async function init() {
         margin: 6px 0;
       }
     }
+
     .margin-right {
       text-align: right;
     }

@@ -8,40 +8,81 @@
       <div
         v-for="tag in tagList"
         key="tag"
-        :class="`tag ${curTag === tag.name ? 'active' : ''}`"
-        @click="curTag = tag.name"
+        :class="`tag ${curTag === tag.id ? 'active' : ''}`"
+        @click="curTag = tag.id"
       >
         {{ tag.name }}
       </div>
     </div>
-    <div class="title">直播</div>
-    <div class="empty">暂无数据</div>
-    <!-- <LongList v-if="height > 0" ref="longListRef" class="list" @get-list-data="getListData" :rootMargin="{
-      top: 0,
-      bottom: 100,
-      left: 0,
-      right: 0,
-    }" :status="status">
-      <div v-for="(item, index) in liveRoomList" :key="index" class="item" @click="goRoom(item)">
-        <div class="cover" v-lazy:background-image="item?.cover_img || item?.users?.[0]?.avatar">
-          <div v-if="item?.live" class="living-ico">
-            直播中
-          </div>
-          <div v-if="item?.cdn === SwitchEnum.yes ||
-            [
-              LiveRoomTypeEnum.tencent_css,
-              LiveRoomTypeEnum.tencent_css_pk,
-            ].includes(item.type!)
-            " class="cdn-ico">
-            <div class="txt">CDN</div>
-          </div>
-          <div class="txt">{{ item?.users?.[0]?.username }}</div>
-        </div>
-        <div class="desc">{{ item?.name }}</div>
+    <div class="tabs">
+      <div
+        class="tabs-item"
+        :class="curTab === 'live' ? 'tabs-item-active' : ''"
+        @click="curTab = 'live'"
+      >
+        直播
       </div>
+      <div
+        class="tabs-item"
+        :class="curTab === 'video' ? 'tabs-item-active' : ''"
+        @click="curTab = 'video'"
+      >
+        视频
+      </div>
+    </div>
+    <div
+      class="live-list"
+      v-if="height > 0 && curTab === 'live'"
+    >
+      <LiveRoomCard
+        v-for="(item, index) in liveRoomList"
+        :key="index"
+        :liveRoomData="item"
+        :isFollow="checkIsFollow(item.users?.[0]?.id)"
+      />
+    </div>
+    <!-- <LongList v-if="height > 0 && curTab === 'live'" ref="longListRef" class="live-list" @get-list-data="getLiveList"
+      :rootMargin="{
+        top: 0,
+        bottom: 100,
+        left: 0,
+        right: 0,
+      }" :status="status">
+      <LiveRoomCard v-for="(item, index) in liveRoomList" :key="index" :liveRoomData="item"
+        :isFollow="checkIsFollow(item.users?.[0]?.id)" />
     </LongList> -->
-    <div class="title">直播回放</div>
-    <div class="empty">暂无数据</div>
+    <div
+      class="video-list"
+      v-if="height > 0 && curTab === 'video'"
+    >
+      <VideoCard
+        v-for="(item, index) in videoList"
+        :key="index"
+        :video="item"
+        class="video-card-wrap"
+        :isEdit="false"
+        :isMy="false"
+      />
+    </div>
+    <div
+      class="empty-wrap"
+      v-if="
+        (curTab === 'live' && liveRoomList.length === 0) ||
+        (curTab === 'video' && videoList.length === 0)
+      "
+    >
+      <div class="ico empty-data"></div>
+      这里没有数据哦～
+    </div>
+    <!-- <LongList v-if="height > 0 && curTab === 'video'" ref="longListRef" class="video-list" @get-list-data="getVideoList"
+      :rootMargin="{
+        top: 0,
+        bottom: 100,
+        left: 0,
+        right: 0,
+      }" :status="status">
+      <VideoCard v-for="(item, index) in videoList" :key="index" :video="item" class="video-card-wrap" :isEdit="false" />
+    </LongList> -->
   </div>
 </template>
 
@@ -50,19 +91,25 @@ import { openToTarget } from 'billd-utils';
 import { onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { fetchLiveRoomList } from '@/api/area';
 import { fetchCategoryList } from '@/api/categories';
+import { fetchAllLiveRooms, fetchUserVideos } from '@/api/liveRoom';
+import { fetchUserFollowingList } from '@/api/user';
+import LiveRoomCard from '@/components/LiveRoomCard/index.vue';
 import LongList from '@/components/LongList/index.vue';
-import { ICategory, SwitchEnum } from '@/interface';
+import VideoCard from '@/components/VideoCard/index.vue';
+import { ICategory } from '@/interface';
 import router, { routerName } from '@/router';
 import { useAppStore } from '@/store/app';
+import { useUserStore } from '@/store/user';
 import { ILiveRoom } from '@/types/ILiveRoom';
 
 const appStore = useAppStore();
+const userStore = useUserStore();
 
 const liveRoomList = ref<ILiveRoom[]>([]);
+const videoList = ref<ILiveRoom[]>([]);
 const tagList = ref<any[]>([]);
-const curTag = ref('');
+const curTag = ref(0);
 const route = useRoute();
 const status = ref<'loading' | 'nonedata' | 'allLoaded' | 'normal'>('loading');
 
@@ -75,14 +122,46 @@ const pageParams = reactive({
   nowPage: 0,
   pageSize: 50,
 });
+const curTab = ref('live');
+const followings = ref<any[]>([]);
 
 watch(
   () => route.query.parentAreaId,
   (newVal) => {
     if (!newVal) return;
     liveRoomList.value = [];
+    videoList.value = [];
     pageParams.nowPage = 0;
-    getData();
+    if (curTab.value === 'live') {
+      getLiveList();
+    } else {
+      getVideoList();
+    }
+  }
+);
+
+watch(
+  () => curTab.value,
+  () => {
+    if (curTab.value === 'live') {
+      getLiveList();
+    } else {
+      getVideoList();
+    }
+  }
+);
+
+watch(
+  () => curTag.value,
+  () => {
+    liveRoomList.value = [];
+    videoList.value = [];
+    pageParams.nowPage = 0;
+    if (curTab.value === 'live') {
+      getLiveList();
+    } else {
+      getVideoList();
+    }
   }
 );
 // watch(
@@ -96,6 +175,21 @@ watch(
 //   },
 //   { immediate: true }
 // );
+
+onMounted(async () => {
+  if (userStore?.userInfo?.id) {
+    await requestFollowingList(userStore?.userInfo?.id);
+  }
+});
+
+watch(
+  () => userStore?.userInfo?.id,
+  async () => {
+    if (userStore?.userInfo?.id) {
+      requestFollowingList(userStore?.userInfo?.id);
+    }
+  }
+);
 
 function handleStatus() {
   if (loading.value) {
@@ -128,12 +222,20 @@ onMounted(() => {
       document.documentElement.clientHeight -
       topRef.value.getBoundingClientRect().top;
   }
-  getData();
+  if (curTab.value === 'live') {
+    getLiveList();
+  } else {
+    getVideoList();
+  }
 });
 
 function getListData() {
   if (!hasMore.value) return;
-  getData();
+  if (curTab.value === 'live') {
+    getLiveList();
+  } else {
+    getVideoList();
+  }
 }
 
 async function getAreaList() {
@@ -149,7 +251,7 @@ async function getAreaList() {
   }
 }
 
-async function getData() {
+const getLiveList = async () => {
   try {
     if (loading.value) return;
     loading.value = true;
@@ -159,20 +261,26 @@ async function getData() {
     if (!appStore.areaTagsMap) {
       await getAreaList();
     }
-    tagList.value = appStore.areaTagsMap[Number(route.query.parentAreaId)];
-    const curAreaItem = appStore.areaTagsMap[
-      Number(route.query.parentAreaId)
-    ]?.find((item) => item.id === Number(route.query.areaId));
-    curTag.value = curAreaItem?.name;
-    const res = await fetchLiveRoomList({
-      id: Number(route.params.id),
-      live_room_is_show: SwitchEnum.yes,
-      nowPage: pageParams.nowPage,
-      pageSize: pageParams.pageSize,
-    });
-    if (res.code === 200) {
-      // liveRoomList.value.push(...res.data.rows);
-      hasMore.value = res.data.hasMore;
+    // 获取当前的区域 Tag 列表，并在开头插入 "全部"
+    const areaTags =
+      appStore.areaTagsMap[Number(route.query.parentAreaId)] || [];
+    tagList.value = [{ name: '全部', id: 0 }, ...areaTags];
+    if (route.query.areaId) {
+      const curAreaItem = appStore.areaTagsMap[
+        Number(route.query.parentAreaId)
+      ]?.find((item) => item.id === Number(route.query.areaId));
+      curTag.value = curAreaItem?.id;
+    }
+
+    if (route.query.parentAreaId) {
+      const res = await fetchAllLiveRooms({
+        parent_category_id: route.query.parentAreaId,
+        child_category_id: route.query.areaId || curTag.value || undefined,
+      });
+      if (res.code === 200) {
+        liveRoomList.value = res.data?.rows;
+        hasMore.value = res.data.hasMore;
+      }
     }
   } catch (error) {
     pageParams.nowPage -= 1;
@@ -181,18 +289,82 @@ async function getData() {
   loading.value = false;
   status.value = 'normal';
   handleStatus();
-}
+};
+
+const getVideoList = async () => {
+  try {
+    if (loading.value) return;
+    loading.value = true;
+    status.value = 'loading';
+    pageParams.nowPage += 1;
+
+    if (route.query.parentAreaId) {
+      const res = await fetchUserVideos({
+        parent_category_id: route.query.parentAreaId,
+        child_category_id: route.query.areaId || curTag.value || undefined,
+      });
+      if (res.code === 200) {
+        videoList.value = res.data?.rows;
+        hasMore.value = res.data.hasMore;
+      }
+    }
+  } catch (error) {
+    pageParams.nowPage -= 1;
+    console.log(error);
+  }
+  loading.value = false;
+  status.value = 'normal';
+  handleStatus();
+};
+
+// 请求关注列表
+const requestFollowingList = async (id) => {
+  const res = await fetchUserFollowingList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followings.value = res.data;
+  }
+};
+
+// 判断是否关注
+const checkIsFollow = (userId) => {
+  return followings.value.some((following: any) => following.id === userId);
+};
 </script>
 
 <style lang="scss" scoped>
+.ico {
+  width: 80px;
+  height: 80px;
+  opacity: 0.9;
+  background-size: contain;
+  background-repeat: no-repeat;
+
+  &.empty-data {
+    margin-bottom: 20px;
+    background-image: url('@/assets/img/empty-data.png');
+  }
+}
+
+.empty-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 150px;
+  color: #575555;
+}
+
 .area-wrap {
-  padding: 20px 20px;
+  padding: 20px;
 
   .tag-wrap {
     box-sizing: border-box;
-    width: 1450px;
-    padding: 0px 40px 0px 50px;
-    margin-bottom: 20px;
+    /* width: 1450px; */
+    /* padding: 0px 40px 0px 50px; */
+    margin: 0 140px;
 
     .tag {
       display: inline-block;
@@ -219,6 +391,29 @@ async function getData() {
     }
   }
 
+  .tabs {
+    display: flex;
+    margin: 10px 140px 0;
+
+    &-item {
+      font-size: 14px;
+      cursor: pointer;
+      padding-bottom: 3px;
+      margin-right: 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid transparent;
+      color: #333;
+      color: #2f3238;
+
+      &-active {
+        color: gold;
+        border-bottom: 2px solid #23ade5;
+        border-color: gold;
+      }
+    }
+  }
+
   .title {
     font-size: 20px;
     font-weight: 500;
@@ -232,94 +427,21 @@ async function getData() {
     padding: 30px 0;
   }
 
-  .list {
+  .live-list {
     display: flex;
     align-content: flex-start;
     flex-wrap: wrap;
-    justify-content: space-between;
+    margin: 0 120px;
+  }
 
-    .item {
-      display: inline-block;
-      margin-right: 25px;
-      margin-bottom: 12px;
-      width: 300px;
-      cursor: pointer;
+  .video-list {
+    display: flex;
+    align-content: flex-start;
+    flex-wrap: wrap;
+    margin: 0 125px;
 
-      .cover {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        height: 150px;
-        border-radius: 8px;
-
-        @extend %containBg;
-
-        .living-ico {
-          position: absolute;
-          top: 0px;
-          left: 0px;
-          z-index: 10;
-          padding: 0 10px;
-          height: 20px;
-          border-radius: 8px 0 10px;
-          background-color: $theme-color-gold;
-          color: white;
-          text-align: center;
-          font-size: 12px;
-          line-height: 20px;
-        }
-
-        .cdn-ico {
-          position: absolute;
-          top: -10px;
-          right: -10px;
-          z-index: 2;
-          width: 70px;
-          height: 28px;
-          background-color: #f87c48;
-          color: white;
-          transform: rotate(45deg);
-          transform-origin: bottom;
-
-          .txt {
-            margin-left: 18px;
-            background-image: initial !important;
-            font-size: 13px;
-          }
-        }
-
-        .txt {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          box-sizing: border-box;
-          padding: 4px 8px;
-          width: 100%;
-          border-radius: 0 0 4px 4px;
-          background-image: linear-gradient(
-            -180deg,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.6)
-          );
-          color: white;
-          text-align: initial;
-          font-size: 13px;
-
-          @extend %singleEllipsis;
-        }
-      }
-
-      .desc {
-        margin-top: 4px;
-        font-size: 14px;
-
-        @extend %singleEllipsis;
-      }
-    }
-
-    .null {
-      width: 100%;
-      text-align: center;
+    .video-card-wrap {
+      margin: 15px 10px;
     }
   }
 

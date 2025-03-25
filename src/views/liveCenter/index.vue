@@ -98,6 +98,7 @@ const menus = ref<MenuItem[]>([
       { title: '预告设置', path: 'previewSetting' },
       { title: '禁言设置', path: 'silentSetting' },
       { title: '屏蔽词设置', path: 'shieldKeywordSetting' },
+      { title: '直播片段', path: 'livePlayback' },
     ],
   },
   {
@@ -106,7 +107,7 @@ const menus = ref<MenuItem[]>([
     submenu: [
       { title: '数据总览', path: 'overview' },
       { title: '场次数据', path: 'record' },
-      { title: '个人收益', path: 'income' },
+      { title: '直播收益', path: 'income' },
     ],
   },
 ]);

@@ -2,13 +2,6 @@
   <div class="start-live-page">
     <!-- 页面标题 -->
     <div class="page-title">预告设置</div>
-    <Avatar
-      :name="userStore.userInfo?.username"
-      :size="80"
-      :enableAvatarChange="true"
-    >
-    </Avatar>
-
     <!-- 白底框 -->
     <div class="content-container">
       <!-- 开播设置表单 -->
@@ -50,9 +43,17 @@
             hidden
           />
           <img
-            :src="form.cover || placeholderCover"
+            :src="form.cover"
             alt="封面预览"
+            v-if="form.cover"
           />
+          <div
+            class="empty-cover"
+            v-else
+          >
+            <div class="ico empty"></div>
+            这里还没有图片啦～
+          </div>
           <button
             type="button"
             @click="triggerCoverUpload"
@@ -64,7 +65,7 @@
 
       <!-- 保存按钮 -->
       <div class="form-actions">
-        <button @click="handleSave">保存</button>
+        <button @click="handleSave">发布</button>
       </div>
     </div>
 
@@ -124,7 +125,10 @@
       </div>
 
       <div class="content-box">
-        <div class="notification-grid">
+        <div
+          class="notification-grid"
+          v-if="livePreviews.length"
+        >
           <div
             v-for="(preview, index) in livePreviews"
             :key="preview.id"
@@ -169,6 +173,13 @@
               </div>
             </div>
           </div>
+        </div>
+        <div
+          class="empty-box"
+          v-else
+        >
+          <div class="ico empty"></div>
+          你还没有发布预告哟～
         </div>
       </div>
     </div>
@@ -443,6 +454,32 @@ const handleSave = async () => {
       margin: 0 5px;
     }
   }
+}
+
+.empty-cover {
+  width: 200px;
+  height: 120px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #eaeaea;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.empty-box {
+  width: 200px;
+  height: 120px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
 }
 
 .start-live-page {
@@ -747,6 +784,13 @@ const handleSave = async () => {
       width: 13px;
       height: 13px;
       background-image: url('@/assets/img/selected.png');
+    }
+
+    &.empty {
+      width: 50px;
+      height: 50px;
+      margin-bottom: 5px;
+      background-image: url('@/assets/img/empty-data.png');
     }
   }
 

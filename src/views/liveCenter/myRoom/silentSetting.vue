@@ -136,6 +136,7 @@ const removeUser = (index: number) => {
     background: #fff;
     border: 1px solid #e3e8ec;
     border-radius: 12px;
+    min-height: 620px;
 
     .tabs {
       display: flex;

@@ -170,6 +170,7 @@ export interface ILiveRoom {
   live?: ILive;
 
   is_fake?: SwitchEnum;
+  views_count?: number;
 
   created_at?: string;
   updated_at?: string;

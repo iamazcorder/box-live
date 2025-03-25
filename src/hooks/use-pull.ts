@@ -96,6 +96,7 @@ export function usePull() {
   }
 
   function videoPlay(videoEl: HTMLVideoElement) {
+    console.log('video play-------');
     stopDrawingArr.value.forEach((cb) => cb());
     stopDrawingArr.value = [];
     if (appStore.videoControls.renderMode === LiveRenderEnum.canvas) {
@@ -182,6 +183,7 @@ export function usePull() {
     () => remoteVideo.value,
     (newval) => {
       newval.forEach((videoEl) => {
+        console.log('video append child+++++++');
         videoWrapRef.value?.appendChild(videoEl);
       });
     },
@@ -335,6 +337,7 @@ export function usePull() {
 
   function initRtcReceive() {
     const ws = networkStore.wsMap.get(roomId.value);
+    console.log(ws, '0000');
     if (!ws?.socketIo) return;
     // 收到nativeWebRtcOffer
     ws.socketIo.on(
@@ -346,6 +349,7 @@ export function usePull() {
           LiveRoomTypeEnum.wertc_live,
           data
         );
+        console.log(data.live_room.type, '00000');
         if (data.live_room.type === LiveRoomTypeEnum.wertc_live) {
           if (data.receiver === mySocketId.value) {
             console.warn('是发给我的nativeWebRtcOffer-wertc_live');
@@ -398,7 +402,7 @@ export function usePull() {
   }
 
   function handlePlay(data: ILiveRoom) {
-    roomLiving.value = true;
+    // roomLiving.value = true;
     flvurl.value =
       data.cdn === SwitchEnum.yes ? data.pull_cdn_flv_url! : data.pull_flv_url!;
     hlsurl.value =
@@ -539,11 +543,15 @@ export function usePull() {
     });
   }
 
-  function keydownDanmu(event: KeyboardEvent) {
+  function keydownDanmu(event: KeyboardEvent, danmu) {
+    // 如果字符长度大于最大限制，阻止输入
+    if (danmu.length >= 20 && event.key !== 'Backspace') {
+      event.preventDefault(); // 阻止默认行为
+    }
     const key = event.key.toLowerCase();
     if (key === 'enter') {
       event.preventDefault();
-      sendDanmuTxt(danmuStr.value);
+      sendDanmuTxt(danmu, roomId.value);
       danmuStr.value = '';
     }
   }

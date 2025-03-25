@@ -200,7 +200,7 @@ export const useRTCParams = () => {
       },
       [MediaTypeEnum.microphone]: {
         type: MediaTypeEnum.microphone,
-        txt: '麦克风',
+        txt: '音频设备',
       },
       [MediaTypeEnum.screen]: {
         type: MediaTypeEnum.screen,
@@ -208,7 +208,7 @@ export const useRTCParams = () => {
       },
       [MediaTypeEnum.txt]: {
         type: MediaTypeEnum.txt,
-        txt: '文字',
+        txt: '文本',
       },
       [MediaTypeEnum.img]: {
         type: MediaTypeEnum.img,
@@ -216,17 +216,26 @@ export const useRTCParams = () => {
       },
       [MediaTypeEnum.media]: {
         type: MediaTypeEnum.media,
-        txt: '视频',
+        txt: '多媒体',
       },
-      [MediaTypeEnum.time]: {
-        type: MediaTypeEnum.time,
-        txt: '时间',
-      },
-      [MediaTypeEnum.stopwatch]: {
-        type: MediaTypeEnum.stopwatch,
-        txt: '秒表',
-      },
+      // [MediaTypeEnum.time]: {
+      //   type: MediaTypeEnum.time,
+      //   txt: '时间',
+      // },
+      // [MediaTypeEnum.stopwatch]: {
+      //   type: MediaTypeEnum.stopwatch,
+      //   txt: '秒表',
+      // },
     };
+
+  const allMediaTypeMap = {
+    [MediaTypeEnum.camera]: 'camera',
+    [MediaTypeEnum.microphone]: 'audio',
+    [MediaTypeEnum.screen]: 'screen',
+    [MediaTypeEnum.txt]: 'text',
+    [MediaTypeEnum.img]: 'image',
+    [MediaTypeEnum.media]: 'media',
+  };
 
   return {
     maxBitrate,
@@ -235,5 +244,6 @@ export const useRTCParams = () => {
     videoContentHint,
     audioContentHint,
     allMediaTypeList,
+    allMediaTypeMap,
   };
 };

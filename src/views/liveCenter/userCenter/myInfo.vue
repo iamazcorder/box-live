@@ -8,6 +8,16 @@
       class="info-form"
       @submit.prevent="handleSave"
     >
+      <!-- 头像 -->
+      <div class="form-group">
+        <label for="username">头像：</label>
+        <Avatar
+          :url="avatar"
+          :size="80"
+          :enableAvatarChange="true"
+        >
+        </Avatar>
+      </div>
       <!-- 用户名 -->
       <div class="form-group">
         <label for="username">用户名：</label>
@@ -90,6 +100,7 @@ const username = ref();
 const desc = ref();
 const gender = ref();
 const birth_date = ref();
+const avatar = ref();
 
 watch(
   () => userStore.userInfo?.id,
@@ -103,6 +114,7 @@ onMounted(() => {
 });
 
 const handleUserInfo = () => {
+  avatar.value = userStore.userInfo?.avatar || '';
   username.value = userStore.userInfo?.username || '';
   desc.value = userStore.userInfo?.desc || '';
   gender.value = userStore.userInfo?.gender || 'other';
@@ -159,6 +171,7 @@ const handleSave = async () => {
     border: 1px solid #e3e8ec;
     border-radius: 12px;
     padding: 20px 10px;
+    min-height: 580px;
 
     .form-group {
       margin-bottom: 20px;

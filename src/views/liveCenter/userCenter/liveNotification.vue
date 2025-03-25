@@ -2,12 +2,25 @@
   <div class="live-notification-page">
     <div class="header">
       <div class="title">直播通知</div>
-      <div class="live-count">{{ liveNotifications.length }}</div>
-      <div class="live-person">人正在直播中</div>
+      <div
+        class="live-count"
+        v-if="liveNotifications.length > 0"
+      >
+        {{ liveNotifications.length }}
+      </div>
+      <div
+        class="live-person"
+        v-if="liveNotifications.length > 0"
+      >
+        人正在直播中
+      </div>
     </div>
 
     <div class="content-box">
-      <div class="notification-grid">
+      <div
+        class="notification-grid"
+        v-if="liveNotifications.length > 0"
+      >
         <div
           v-for="(notification, index) in liveNotifications"
           :key="notification.id"
@@ -40,6 +53,13 @@
             </div>
           </div>
         </div>
+      </div>
+      <div
+        class="empty-wrap"
+        v-else
+      >
+        <div class="ico empty-data"></div>
+        暂时还没有直播通知哟～
       </div>
     </div>
   </div>
@@ -299,6 +319,25 @@ function updateLiveNotifications() {
       float: left;
       @include setBackground('@/assets/img/my.png');
     }
+
+    &.empty-data {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
+  .empty-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 100px;
+    color: #575555;
   }
 }
 </style>

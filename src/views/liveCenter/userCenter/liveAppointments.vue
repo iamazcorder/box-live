@@ -7,7 +7,10 @@
     </div>
 
     <div class="content-box">
-      <div class="notification-grid">
+      <div
+        class="notification-grid"
+        v-if="appointmentList.length > 0"
+      >
         <div
           v-for="(appointment, index) in appointmentList"
           :key="appointment.id"
@@ -47,6 +50,13 @@
             </div>
           </div>
         </div>
+      </div>
+      <div
+        class="empty-wrap"
+        v-else
+      >
+        <div class="ico empty-data"></div>
+        你还没有预约直播哟～
       </div>
     </div>
   </div>
@@ -347,6 +357,25 @@ const cancelAppoint = async (liveId: number) => {
       float: left;
       @include setBackground('@/assets/img/operate.png');
     }
+
+    &.empty-data {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
+  .empty-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 100px;
+    color: #575555;
   }
 }
 </style>

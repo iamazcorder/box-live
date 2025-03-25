@@ -90,6 +90,7 @@ const removeWord = (index: number) => {
     border: 1px solid #e3e8ec;
     border-radius: 12px;
     padding: 20px;
+    min-height: 580px;
 
     .input-group {
       display: flex;

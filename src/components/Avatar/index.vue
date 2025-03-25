@@ -135,7 +135,7 @@ const handleFileChange = async (event: Event) => {
 </script>
 <style lang="scss" scoped>
 .avatar-wrap {
-  /* position: relative; */
+  position: relative;
 
   .cycle-wrap {
     position: relative;

@@ -203,7 +203,10 @@
           </template>
         </Dropdown> -->
 
-        <Search class="search" />
+        <Search
+          class="search"
+          v-if="isShowSearch"
+        />
         <!-- 
         <a
           class="privatizationDeployment"
@@ -305,23 +308,20 @@
                 </div>
                 <div class="ico iright_arrow"></div>
               </a>
-              <a
-                class="item"
-                @click.prevent="
-                  router.push({
-                    name: routerName.messageCenter,
-                    params: {
-                      // userId: userStore.userInfo.id,
-                    },
-                  })
-                "
-              >
+              <!-- <a class="item" @click.prevent="
+                router.push({
+                  name: routerName.messageCenter,
+                  params: {
+                    // userId: userStore.userInfo.id,
+                  },
+                })
+                ">
                 <div style="display: flex; align-items: center">
                   <div class="ico imessage"></div>
                   <div class="txt">{{ t('layout.message') }}</div>
                 </div>
                 <div class="ico iright_arrow"></div>
-              </a>
+              </a> -->
               <a
                 class="item"
                 @click.prevent="handleLogout"
@@ -375,85 +375,52 @@
               <span>{{ t('layout.startLive') }}</span>
             </div>
           </template>
-          <template #list>
+          <!-- <template #list>
             <div class="list">
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.srs)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.srs)">
                 <div class="txt">{{ t('layout.srsLive') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.wertc_live)">
                 <div class="txt">{{ t('layout.webrtcLive') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleTip2()"
-              >
+              <a class="item" @click.prevent="handleTip2()">
                 <div class="txt">{{ t('layout.pkLive') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="
-                  handleStartLive(LiveRoomTypeEnum.wertc_meeting_one)
-                "
-              >
+              <a class="item" @click.prevent="
+                handleStartLive(LiveRoomTypeEnum.wertc_meeting_one)
+                ">
                 <div class="txt">{{ t('layout.webrtcMeeting') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="
-                  handleStartLive(LiveRoomTypeEnum.forward_bilibili)
-                "
-              >
+              <a class="item" @click.prevent="
+                handleStartLive(LiveRoomTypeEnum.forward_bilibili)
+                ">
                 <div class="txt">{{ t('layout.forwardBilibili') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.forward_huya)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.forward_huya)">
                 <div class="txt">{{ t('layout.forwardHuya') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.forward_all)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.forward_all)">
                 <div class="txt">{{ t('layout.forwardAll') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.msr)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.msr)">
                 <div class="txt">{{ t('layout.msrLive') }}</div>
               </a>
 
-              <a
-                class="item"
-                @click.prevent="handleStartLive(LiveRoomTypeEnum.tencent_css)"
-              >
+              <a class="item" @click.prevent="handleStartLive(LiveRoomTypeEnum.tencent_css)">
                 <div class="txt">{{ t('layout.tencentCssLive') }}</div>
               </a>
-              <a
-                class="item"
-                @click.prevent="
-                  handleStartLive(LiveRoomTypeEnum.tencent_css_pk)
-                "
-              >
+              <a class="item" @click.prevent="
+                handleStartLive(LiveRoomTypeEnum.tencent_css_pk)
+                ">
                 <div class="txt">{{ t('layout.tencentCssPkLive') }}</div>
               </a>
               <div class="tip">
-                <div
-                  class="tip-txt"
-                  @click="handleWebsiteJump"
-                >
+                <div class="tip-txt" @click="handleWebsiteJump">
                   有什么区别？
                 </div>
               </div>
             </div>
-          </template>
+          </template> -->
         </Dropdown>
       </div>
     </div>
@@ -464,7 +431,7 @@
 import { isMobile, openToTarget, windowReload } from 'billd-utils';
 import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { fetchCategoryList } from '@/api/categories';
 import { fetchCreateSignin, fetchTodayIsSignin } from '@/api/signin';
@@ -481,12 +448,14 @@ import { useCacheStore } from '@/store/cache';
 import { useUserStore } from '@/store/user';
 import { LiveRoomTypeEnum } from '@/types/ILiveRoom';
 
+const route = useRoute();
 const { t, locale } = useI18n();
 const router = useRouter();
 const userStore = useUserStore();
 const appStore = useAppStore();
 const cacheStore = useCacheStore();
 const githubStar = ref('');
+const isShowSearch = ref(true);
 
 const localeList = [
   { label: '中文', value: 'zh' },
@@ -624,6 +593,25 @@ function changeArea(item: IArea) {
 function goPreview() {
   router.push({ name: routerName.preview });
 }
+
+watch(
+  () => route.path,
+  () => {
+    handleShowSearch();
+  }
+);
+
+onMounted(() => {
+  handleShowSearch();
+});
+
+const handleShowSearch = () => {
+  if (route.path.startsWith('/search')) {
+    isShowSearch.value = false;
+  } else {
+    isShowSearch.value = true;
+  }
+};
 
 watch(
   () => userStore.userInfo?.id,

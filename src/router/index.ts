@@ -78,6 +78,8 @@ export const routerName = {
   preview: 'preview',
   liveNotification: 'liveNotification',
   liveAppointments: 'liveAppointments',
+  livePlayback: 'livePlayback',
+  video: 'video',
 
   pull: 'pull',
   push: 'push',
@@ -310,6 +312,12 @@ export const defaultRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/views/liveCenter/myRoom/shieldKeywordSetting.vue'),
               },
+              {
+                name: routerName.livePlayback,
+                path: 'livePlayback',
+                component: () =>
+                  import('@/views/liveCenter/myRoom/livePlayback.vue'),
+              },
             ],
           },
           {
@@ -415,6 +423,11 @@ export const defaultRoutes: RouteRecordRaw[] = [
         name: routerName.push,
         path: '/push',
         component: () => import('@/views/push/index.vue'),
+      },
+      {
+        name: routerName.video,
+        path: '/video/:id',
+        component: () => import('@/views/video/index.vue'),
       },
     ],
   },

@@ -1,133 +1,104 @@
 <template>
   <div class="app">
+    <Search
+      class="search"
+      :inHead="false"
+      @search="handleSearch"
+    />
     <!-- 顶部导航栏 -->
     <div class="tabs">
       <button
         v-for="(tab, index) in tabs"
         :key="tab.key"
-        :class="{ active: selectedTab === tab.label }"
-        @click="selectTab(tab.label)"
+        :class="{ active: selectedTab === tab.key }"
+        @click="selectTab(tab.key)"
       >
         <span>{{ tab.label }}</span>
-        <span class="tabs-num">99+</span>
+        <span class="tabs-num">{{ tab.num }}</span>
       </button>
     </div>
 
     <!-- 内容展示区 -->
     <div class="content">
-      <!-- 动态显示每个 Tab 对应的内容 -->
-      <div class="content-header">
-        <button class="filter-btn">更多筛选</button>
+      <div class="filter-content">
+        <div
+          v-for="filter in filerMap[selectedTab]"
+          :key="filter.key"
+          :class="[
+            'filter-content-item',
+            { 'filter-content-item-active': selectedFilter === filter.key },
+          ]"
+          @click="selectFilter(filter.key)"
+        >
+          {{ filter.name }}
+        </div>
       </div>
 
       <!-- Tab 内容区域 -->
       <div class="tab-content">
-        <div v-if="selectedTab === '直播'">
-          <div class="video-list">
-            <div
-              class="video-card"
-              v-for="(video, index) in videos"
+        <div v-if="selectedTab === 'live'">
+          <div
+            class="video-list"
+            v-if="liveRoomList.length > 0"
+          >
+            <LiveRoomCard
+              v-for="(liveRoom, index) in liveRoomList"
               :key="index"
-            >
-              <div class="video-thumbnail">
-                <img
-                  :src="video.thumbnail"
-                  alt="视频缩略图"
-                />
-                <div class="video-data">
-                  <div class="video-data-left">
-                    <div class="view-count">
-                      <div class="ico eye"></div>
-                      <span>{{ video.viewCount }}</span>
-                    </div>
-                    <div class="like-count">
-                      <div class="ico comment"></div>
-                      <span>{{ video.commentCount }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="video-info">
-                <div class="video-title">
-                  <div class="bili-live-card__info--living">
-                    <img
-                      width="12"
-                      height="12"
-                      src="https://s1.hdslb.com/bfs/static/jinkela/long/images/live.gif"
-                    /><span class="bili-live-card__info--living__text"
-                      >直播中</span
-                    >
-                  </div>
-                  {{ video.title }}
-                </div>
-                <div class="video-details">
-                  <span>{{ video.author }}</span>
-                </div>
-              </div>
-            </div>
+              :liveRoomData="liveRoom"
+              class="live_room_card"
+              :coverHeight="130"
+            />
+          </div>
+          <div
+            class="empty-wrap"
+            v-else
+          >
+            <div class="ico empty-data"></div>
+            这里没有数据呀～
           </div>
         </div>
-        <div v-if="selectedTab === '回放'">
-          <div class="video-list">
-            <div
-              class="video-card"
-              v-for="(video, index) in videos"
+        <div v-if="selectedTab === 'video'">
+          <div
+            class="video-list"
+            v-if="videoList.length > 0"
+          >
+            <VideoCard
+              v-for="(video, index) in videoList"
               :key="index"
-            >
-              <div class="video-thumbnail">
-                <img
-                  :src="video.thumbnail"
-                  alt="视频缩略图"
-                />
-                <div class="video-data">
-                  <div class="video-data-left">
-                    <div class="view-count">
-                      <div class="ico eye"></div>
-                      <span>{{ video.viewCount }}</span>
-                    </div>
-                    <div class="like-count">
-                      <div class="ico comment"></div>
-                      <span>{{ video.commentCount }}</span>
-                    </div>
-                  </div>
-                  <div>{{ video.duration }}</div>
-                </div>
-              </div>
-              <div class="video-info">
-                <div class="video-title">{{ video.title }}</div>
-                <div class="video-details">
-                  <span>{{ video.author }}</span>
-                  <span class="split-dot"> · </span>
-                  <span>{{ video.time }}</span>
-                </div>
-              </div>
-            </div>
+              :video="video"
+              :isEdit="false"
+              class="video-card"
+              :isMy="false"
+            />
+          </div>
+          <div
+            class="empty-wrap"
+            v-else
+          >
+            <div class="ico empty-data"></div>
+            这里没有数据呀～
           </div>
         </div>
-        <div v-if="selectedTab === '用户'">
-          <div class="user-list">
-            <div
+        <div v-if="selectedTab === 'user'">
+          <div
+            class="user-list"
+            v-if="userList.length > 0"
+          >
+            <UserCard
+              v-for="(user, index) in userList"
+              :key="index"
+              :userData="user"
+              :followings="followings"
+              :followers="followers"
               class="user-card"
-              v-for="(user, index) in users"
-              :key="index"
-            >
-              <!-- <div class="user-avatar">
-                                <img src="@/assets/img/userCenter.png" alt="用户头像" />
-                            </div> -->
-              <Avatar
-                :size="90"
-                class="user-avatar"
-              />
-              <div class="user-info">
-                <div class="user-name">{{ user.name }}</div>
-                <div class="user-stats">
-                  <span>{{ user.followers }}粉丝</span>
-                  <span class="split-dot"> · </span>
-                  <span>{{ user.description }}</span>
-                </div>
-                <button class="follow-btn">+ 关注</button>
-              </div>
-            </div>
+            />
+          </div>
+          <div
+            class="empty-wrap"
+            v-else
+          >
+            <div class="ico empty-data"></div>
+            这里没有数据呀～
           </div>
         </div>
       </div>
@@ -136,191 +107,176 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { fetchAllLiveRooms, fetchUserVideos } from '@/api/liveRoom';
+import {
+  fetchUserFollowersList,
+  fetchUserFollowingList,
+  fetchUserList,
+} from '@/api/user';
+import LiveRoomCard from '@/components/LiveRoomCard/index.vue';
+import Search from '@/components/Search/index.vue';
+import UserCard from '@/components/UserCard/index.vue';
+import VideoCard from '@/components/VideoCard/index.vue';
+import { useUserStore } from '@/store/user';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-const tabs = ref([
+const route = useRoute();
+const userStore = useUserStore();
+
+const tabs = ref<any>([
   { label: '直播', key: 'live' },
-  { label: '回放', key: 'playback' },
+  { label: '视频', key: 'video' },
   { label: '用户', key: 'user' },
 ]);
 
-// 当前选中的 Tab
-const selectedTab = ref('直播');
+const filerMap = ref<any>({
+  live: [
+    {
+      name: '综合排序',
+      key: 'default',
+    },
+    {
+      name: '最新开播',
+      key: 'newLive',
+    },
+  ],
+  video: [
+    {
+      name: '综合排序',
+      key: 'default',
+    },
+    {
+      name: '最多播放',
+      key: 'mostPlay',
+    },
+    {
+      name: '最新发布',
+      key: 'newPublish',
+    },
+  ],
+  user: [
+    {
+      name: '综合排序',
+      key: 'default',
+    },
+    {
+      name: '粉丝数由高到低',
+      key: 'highToLow',
+    },
+    {
+      name: '粉丝数由低到高',
+      key: 'lowToHigh',
+    },
+  ],
+});
 
-const videos = ref([
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '[AS] Ppomo 刮耳膜',
-    viewCount: '5.5万',
-    commentCount: 12,
-    duration: '54:46',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '[AS] Zunbird 超级耐脉王',
-    viewCount: '3.7万',
-    commentCount: 0,
-    duration: '2:59:30',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '秒懂单词: 顿悟 [AS]',
-    viewCount: '6.1万',
-    commentCount: 17,
-    duration: '14:14',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: 'Kevin AS助眠 舒服的触发',
-    viewCount: '2.7万',
-    commentCount: 3,
-    duration: '20:12',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: 'Lumine AS 快节奏升天',
-    viewCount: '1.2万',
-    commentCount: 8,
-    duration: '17:31',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '[AS] 夜深人静的安静时光',
-    viewCount: '3.4万',
-    commentCount: 15,
-    duration: '12:25',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '探索声音的极限 [AS]',
-    viewCount: '8.3万',
-    commentCount: 45,
-    duration: '10:55',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '日常放松时光',
-    viewCount: '5.2万',
-    commentCount: 30,
-    duration: '7:30',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '舒适的触发感受 [AS]',
-    viewCount: '2.1万',
-    commentCount: 10,
-    duration: '15:00',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '甜蜜的耳边声音',
-    viewCount: '1.5万',
-    commentCount: 12,
-    duration: '8:45',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '甜蜜的耳边声音',
-    viewCount: '1.5万',
-    commentCount: 12,
-    duration: '8:45',
-    author: 'author',
-    time: '2021-8-31',
-  },
-  {
-    thumbnail: 'https://via.placeholder.com/320x180?text=视频封面1',
-    title: '甜蜜的耳边声音',
-    viewCount: '1.5万',
-    commentCount: 12,
-    duration: '8:45',
-    author: 'author',
-    time: '2021-8-31',
-  },
-]);
+// 当前选中的 Tab 和筛选项
+const selectedTab = ref('live');
+const selectedFilter = ref('default');
 
-// 用户数据
-const users = ref([
-  {
-    avatar: '@/assets/img/userCenter.png',
-    name: 'AS',
-    level: 'LV5',
-    followers: '327',
-    videos: '3个视频',
-    description: '小说，游戏，动漫',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: 'AS玩家乐',
-    level: 'LV6',
-    followers: '5.5万',
-    videos: '1926个视频',
-    description: '优质游戏监控员',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: '刘书程AS',
-    level: 'LV6',
-    followers: '5.1万',
-    videos: '379个视频',
-    description: '球员发展，技术教练 CBA外援',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: 'As童话',
-    level: 'LV6',
-    followers: '2.8万',
-    videos: '393个视频',
-    description: '童话故事创作者',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: 'AS极客',
-    level: 'LV6',
-    followers: '84.8万',
-    videos: '476个视频',
-    description: '科技术UP主',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: '小雪AS声控助眠',
-    level: 'LV6',
-    followers: '9.5万',
-    videos: '190个视频',
-    description: 'b站唯一一吹号哎 原创 禁止搬运',
-  },
-  {
-    avatar: 'https://via.placeholder.com/320x180?text=视频封面1',
-    name: 'AS天使工房',
-    level: 'LV4',
-    followers: '2.4万',
-    videos: '149个视频',
-    description: '天使工房B站官方账号',
-  },
-]);
+const userList = ref<any>([]);
+const videoList = ref<any>([]);
+const liveRoomList = ref<any>([]);
+const followers = ref<any[]>([]);
+const followings = ref<any[]>([]);
+
+const keyword = ref<any>();
 
 // 切换 Tab
 const selectTab = (tab: string) => {
   selectedTab.value = tab;
+  selectedFilter.value = 'default'; // 切换 Tab 时重置筛选项为 "综合排序
+};
+// 切换筛选项
+const selectFilter = (filterKey: string) => {
+  selectedFilter.value = filterKey;
+  if (selectedTab.value === 'live') {
+    getLiveRoomList(keyword.value, filterKey);
+  }
+  if (selectedTab.value === 'video') {
+    getVideoList(keyword.value, filterKey);
+  }
+  if (selectedTab.value === 'user') {
+    getUserList(keyword.value, filterKey);
+  }
+  // fetchData();
+};
+
+onMounted(() => {
+  keyword.value = route.params.keyword;
+  getLiveRoomList(route.params.keyword);
+  getVideoList(route.params.keyword);
+  getUserList(route.params.keyword);
+  if (userStore.userInfo?.id) {
+    requestFollowingList();
+    requestFollowersList();
+  }
+});
+
+watch(
+  () => userStore.userInfo?.id,
+  () => {
+    if (userStore.userInfo?.id) {
+      requestFollowingList();
+      requestFollowersList();
+    }
+  }
+);
+
+const handleSearch = (keyWord) => {
+  keyword.value = keyWord;
+};
+
+watch(
+  () => keyword.value,
+  () => {
+    selectedFilter.value = 'default';
+    getLiveRoomList(keyword.value);
+    getVideoList(keyword.value);
+    getUserList(keyword.value);
+  }
+);
+
+const getUserList = async (keyWord, filterKey = 'default') => {
+  const res = await fetchUserList({ keyWord, orderBy: filterKey });
+  if (res.code === 200) {
+    userList.value = res.data?.rows;
+    tabs.value[2].num = res.data?.rows.length;
+  }
+};
+const getLiveRoomList = async (keyWord, filterKey = 'default') => {
+  const res = await fetchAllLiveRooms({ keyWord, orderBy: filterKey });
+  if (res.code === 200) {
+    liveRoomList.value = res.data?.rows;
+    tabs.value[0].num = res.data?.rows.length;
+  }
+};
+const getVideoList = async (keyWord, filterKey = 'default') => {
+  const res = await fetchUserVideos({ keyWord, orderBy: filterKey });
+  if (res.code === 200) {
+    videoList.value = res.data?.rows;
+    tabs.value[1].num = res.data?.rows.length;
+  }
+};
+// 请求关注列表
+const requestFollowingList = async () => {
+  const res = await fetchUserFollowingList({
+    userId: userStore.userInfo?.id,
+  });
+  if (res.code === 200) {
+    followings.value = res.data;
+  }
+};
+
+// 请求粉丝列表
+const requestFollowersList = async () => {
+  const res = await fetchUserFollowersList({
+    userId: userStore.userInfo?.id,
+  });
+  if (res.code === 200) {
+    followers.value = res.data;
+  }
 };
 </script>
 
@@ -344,6 +300,29 @@ const selectTab = (tab: string) => {
   &.comment {
     @include setBackground('@/assets/img/comment.png');
   }
+
+  &.empty-data {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-image: url('@/assets/img/empty-data.png');
+  }
+}
+
+.empty-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 70px;
+  color: #575555;
+}
+
+.search {
+  margin-top: 30px;
 }
 
 .tabs {
@@ -390,9 +369,31 @@ const selectTab = (tab: string) => {
   margin-top: 20px;
 }
 
-.content-header {
+.filter-content {
   display: flex;
-  justify-content: flex-end;
+  padding: 0 60px;
+
+  &-item {
+    color: #61666d;
+    background-color: #fff;
+    border: none;
+    display: inline-block;
+    padding: 6px 25px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition-duration: 0.2s;
+
+    &:hover {
+      color: #ffd700;
+    }
+
+    &-active {
+      color: #ffd700;
+      font-weight: 500;
+      background-color: #fff8d1;
+    }
+  }
 }
 
 .filter-btn {
@@ -415,8 +416,17 @@ const selectTab = (tab: string) => {
 .video-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  /* gap: 20px; */
+
   /* justify-content: space-between; */
+  .live_room_card {
+    width: 230px;
+    height: 190px;
+  }
+
+  .video-card {
+    margin: 20px 10px;
+  }
 }
 
 .video-card {

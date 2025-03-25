@@ -36,18 +36,26 @@
             :url="anchorInfo?.avatar"
             :name="anchorInfo?.username"
             :size="55"
-            @click="
-              router.push({
-                name: routerName.my,
-                params: { userId: anchorInfo?.id },
-              })
-            "
+            @click="handleJump(anchorInfo?.id)"
           ></Avatar>
           <div class="detail">
             <div class="top">
               <div class="name">{{ anchorInfo?.username }}</div>
               <div class="follow">
-                <div class="f-left">关注</div>
+                <div
+                  class="unfollow"
+                  v-if="!isMutualFollow"
+                  @click.prevent="handleFollow(anchorInfo)"
+                >
+                  +关注
+                </div>
+                <div
+                  class="followed"
+                  v-else
+                  @click.prevent="handleUnfollow(anchorInfo?.id)"
+                >
+                  取消关注
+                </div>
                 <!-- <div class="f-right">666</div> -->
               </div>
               <!-- <span v-if="NODE_ENV === 'development'">
@@ -71,25 +79,24 @@
               </div>
             </div>
             <div class="bottom">
-              <div
-                class="desc"
-                v-if="liveRoomInfo?.desc?.length"
-              >
-                <FloatTip
-                  :txt="liveRoomInfo?.desc"
-                  :max-len="20"
-                ></FloatTip>
-              </div>
+              <!-- <div class="desc" v-if="liveRoomInfo?.desc?.length">
+                <FloatTip :txt="liveRoomInfo?.desc" :max-len="20"></FloatTip>
+              </div> -->
               <span
                 class="area"
                 @click="
-                  router.push({
-                    name: routerName.area,
-                    query: { id: liveRoomInfo?.areas?.[0]?.id },
-                  })
+                  handleSecondArea(
+                    liveRoomInfo.parent_category_id,
+                    liveRoomInfo.child_category_id
+                  )
                 "
               >
-                {{ liveRoomInfo?.areas?.[0]?.name }}
+                {{
+                  selectedCategory(
+                    liveRoomInfo.parent_category_id,
+                    liveRoomInfo.child_category_id
+                  )
+                }}
               </span>
             </div>
           </div>
@@ -98,35 +105,25 @@
           <div class="top">
             <div class="item">
               <div class="ico eye"></div>
-              666人看过
+              {{ liveRoomInfo.views_count }}人看过
             </div>
             <div class="item">
               <div class="ico like"></div>
-              666点赞
+              {{ dianzanNum }}点赞
             </div>
             <!-- <div class="item">当前在线:{{ liveUserList.length }}人</div> -->
           </div>
-          <div class="bottom">
-            <n-popover
-              placement="bottom"
-              trigger="hover"
-            >
+          <!-- <div class="bottom">
+            <n-popover placement="bottom" trigger="hover">
               <template #trigger>
                 <div class="tag">礼物成就</div>
               </template>
               <div class="popover-list">
                 <template v-if="giftGroupList.length">
-                  <div
-                    class="item"
-                    v-for="(item, index) in giftGroupList"
-                    :key="index"
-                  >
-                    <div
-                      class="ico"
-                      :style="{
-                        backgroundImage: `url(${item.goods?.cover})`,
-                      }"
-                    ></div>
+                  <div class="item" v-for="(item, index) in giftGroupList" :key="index">
+                    <div class="ico" :style="{
+                      backgroundImage: `url(${item.goods?.cover})`,
+                    }"></div>
                     <div class="nums">x{{ item.nums }}</div>
                   </div>
                 </template>
@@ -134,7 +131,7 @@
               </div>
             </n-popover>
             <div class="tag">人气榜</div>
-          </div>
+          </div> -->
         </div>
       </div>
       <div
@@ -200,15 +197,24 @@
           <div class="name">{{ item.name }}</div>
           <div class="price">￥{{ formatMoney(item.price!) }}</div>
         </div>
+        <div class="vertical-separator"></div>
         <div
           class="item"
           @click="handleRecharge"
         >
           <div class="ico wallet"></div>
-          <div class="name">
+          <div
+            class="name"
+            style="color: #9499a0"
+          >
             余额:{{ formatMoney(userStore.userInfo?.wallet?.balance!) }}元
           </div>
-          <div class="price">立即充值</div>
+          <div
+            class="price"
+            style="color: #18191c"
+          >
+            立即充值 >
+          </div>
         </div>
       </div>
       <div
@@ -230,82 +236,71 @@
       <div class="rank-wrap">
         <div class="tab">
           <span
-            :class="`tab_item ${
-              curTab === 'audience' ? 'tab_item_active' : ''
-            }`"
+            :class="`tab_item`"
             @click="handleTabChange('audience')"
-            >房间观众(270)</span
+            >房间观众({{ liveUserList.length || '' }})</span
           >
           <!-- <span> | </span> -->
-          <span
-            :class="`tab_item ${curTab === 'rank' ? 'tab_item_active' : ''}`"
-            @click="handleTabChange('rank')"
-            >排行榜</span
-          >
+          <!-- <span :class="`tab_item ${curTab === 'rank' ? 'tab_item_active' : ''}`"
+            @click="handleTabChange('rank')">排行榜</span> -->
         </div>
         <div class="user-list">
-          <div
-            v-for="(item, index) in liveUserList"
-            :key="index"
-            class="item"
-          >
-            <div class="info">
-              <Avatar
-                :url="item.value.user_avatar"
-                :name="item.value.user_username"
-                :size="25"
-              ></Avatar>
+          <!-- <div v-for="(item, index) in liveUserList" :key="index" class="item">
+            <div class="info" @click="handleJump(item.value.user_id)">
+              <Avatar :url="item.value.user_avatar" :name="item.value.user_username" :size="25"></Avatar>
               <div class="username">
                 {{ item.value.user_username }}
               </div>
+              <div class="score">{{ item.score }}</div>
             </div>
-          </div>
+          </div> -->
+          <LiveRoomRank :rankList="liveUserList" />
+        </div>
+      </div>
+      <div class="gift-notifications">
+        <div
+          v-for="(item, index) in giftNotifications"
+          :key="index"
+        >
+          <templateElement>
+            <!-- 送礼通知动画 -->
+            <div class="item">
+              <transition-group
+                name="gift-animation"
+                tag="div"
+              >
+                <div class="gift-notification">
+                  <div class="gift-notification-content">
+                    <div class="gift-avatar">
+                      <img
+                        :src="item.avatar"
+                        alt="User Avatar"
+                      />
+                    </div>
+                    <div class="gift-info">
+                      <div class="gift-user">
+                        <span class="gift-username">{{ item.username }}</span>
+                        投喂了
+                      </div>
+                      <div class="gift-name">{{ item.giftName }}</div>
+                    </div>
+                    <div class="gift-icon">
+                      <img
+                        :src="item.giftIcon"
+                        alt="Gift Icon"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </transition-group>
+            </div>
+          </templateElement>
         </div>
       </div>
       <div
         ref="danmuListRef"
         class="danmu-list"
       >
-        <div class="gift-notifications">
-          <div
-            v-for="(item, index) in giftNotifications"
-            :key="index"
-          >
-            <templateElement>
-              <!-- 送礼通知动画 -->
-              <div class="item">
-                <transition-group
-                  name="gift-animation"
-                  tag="div"
-                >
-                  <div class="gift-notification">
-                    <div class="gift-notification-content">
-                      <div class="gift-avatar">
-                        <img
-                          src="https://i0.hdslb.com/bfs/live/new_room_cover/f200fd26754a07badc2f3d5e7dba951ef28d5e16.jpg"
-                          alt="User Avatar"
-                        />
-                      </div>
-                      <div class="gift-info">
-                        <div class="gift-user">
-                          <span class="gift-username">{{ item.username }}</span>
-                          打赏了
-                        </div>
-                        <div class="gift-name">{{ item.giftName }}</div>
-                      </div>
-                      <div class="gift-icon">
-                        <img
-                          src="https://resource.hsslive.cn/billd-live/image/c5258ebf3a79c7d67ef8ae95062c8fe4.webp"
-                          alt="Gift Icon"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </transition-group>
-              </div>
-            </templateElement>
-          </div>
-        </div>
         <div
           v-for="(item, index) in damuList"
           :key="index"
@@ -313,13 +308,13 @@
           <template v-if="item.msg_type === DanmuMsgTypeEnum.reward">
             <div class="item">
               <!-- <span>[{{ formatTimeHour(item.send_msg_time!) }}]</span> -->
-              <span> {{ item.user?.username }} 打赏了</span>
+              <span class="name"> {{ item.user?.username }} 投喂了</span>
               <span style="color: rgb(251, 208, 91); margin-left: 5px">{{
                 item.content
               }}</span>
               <div class="gift-icon">
                 <img
-                  src="https://resource.hsslive.cn/billd-live/image/c5258ebf3a79c7d67ef8ae95062c8fe4.webp"
+                  :src="giftIconMap[item.content || '']"
                   alt="Gift Icon"
                 />
               </div>
@@ -327,6 +322,11 @@
           </template>
           <template v-if="item.msg_type === DanmuMsgTypeEnum.danmu">
             <div class="item">
+              <span
+                v-if="liveRoomInfo?.users?.[0].id === item.user_id"
+                class="roomer"
+                >主播</span
+              >
               <span class="name">
                 <Dropdown
                   trigger="hover"
@@ -391,26 +391,22 @@
               <span class="msg">{{ item.username }}离开直播！ </span>
             </div>
           </template>
+          <template v-else-if="item.msg_type === DanmuMsgTypeEnum.dianzan">
+            <div class="item">
+              <span class="msg dianzan">{{ item.username }} 为主播点赞了</span>
+              <div class="good"></div>
+            </div>
+          </template>
         </div>
       </div>
       <!-- 用户进入提示框 -->
-      <div
-        v-if="userEnterMessages.length"
-        class="enter-notification-box"
-      >
-        <transition-group
-          name="enter-animation"
-          tag="div"
-        >
-          <div
-            v-for="(message, index) in userEnterMessages"
-            :key="message.id"
-            class="enter-notification"
-          >
+      <!-- <div v-if="userEnterMessages.length" class="enter-notification-box">
+        <transition-group name="enter-animation" tag="div">
+          <div v-for="(message, index) in userEnterMessages" :key="message.id" class="enter-notification">
             <span>{{ message.username }} 进入直播间</span>
           </div>
         </transition-group>
-      </div>
+      </div> -->
 
       <div
         class="send-msg"
@@ -439,37 +435,44 @@
               {{ item }}
             </div>
           </div>
+          <!-- <div class="ico face" title="表情" @click="handleEmoji"></div>
+          <div class="ico img" title="图片" @click="mockClick">
+            <input ref="uploadRef" type="file" class="input-upload" accept=".webp,.png,.jpg,.jpeg,.gif"
+              @change="uploadChange" />
+          </div> -->
           <div
-            class="ico face"
+            class="ico emoji"
             title="表情"
             @click="handleEmoji"
           ></div>
           <div
-            class="ico img"
-            title="图片"
-            @click="mockClick"
-          >
-            <input
-              ref="uploadRef"
-              type="file"
-              class="input-upload"
-              accept=".webp,.png,.jpg,.jpeg,.gif"
-              @change="uploadChange"
-            />
-          </div>
+            class="ico dianzan"
+            title="点赞"
+            @click="sendDanmuDianzan(roomId)"
+          ></div>
         </div>
-        <textarea
-          ref="danmuIptRef"
-          :placeholder="'发个弹幕吧~'"
-          v-model="danmuStr"
-          class="ipt"
-          @keydown="keydownDanmu"
-        ></textarea>
-        <div
-          class="btn"
-          @click="handleSendDanmu"
-        >
+        <!-- <textarea ref="danmuIptRef" :placeholder="'发个弹幕吧~'" v-model="danmuStr" class="ipt"
+          @keydown="(event) => keydownDanmu(event, danmuStr)"></textarea>
+        <div class="btn" @click="handleSendDanmu">
           发送
+        </div> -->
+        <div class="input-control">
+          <div class="input-chat">
+            <textarea
+              ref="danmuIptRef"
+              :placeholder="'发个弹幕吧~'"
+              v-model="danmuStr"
+              @keydown="(event) => keydownDanmu(event, danmuStr)"
+              type="text"
+            />
+            <div class="limit-size">{{ danmuStr.length }}/20</div>
+          </div>
+          <div
+            class="btn"
+            @click="handleSendDanmu"
+          >
+            发送
+          </div>
         </div>
       </div>
     </div>
@@ -512,11 +515,15 @@ import {
 } from '@/api/giftRecord';
 import { fetchGoodsList } from '@/api/goods';
 import { fetchLiveRoomOnlineUser } from '@/api/live';
-import { fetchFindLiveRoom, fetchLiveRoomBilibili } from '@/api/liveRoom';
+import {
+  createUserLiveView,
+  fetchFindLiveRoom,
+  fetchLiveRoomBilibili,
+} from '@/api/liveRoom';
 import { fetchGetWsMessageList } from '@/api/wsMessage';
 import { URL_QUERY } from '@/constant';
 import { emojiArray } from '@/emoji';
-import { commentAuthTip, loginTip } from '@/hooks/use-login';
+import { loginTip } from '@/hooks/use-login';
 import { useFullScreen, usePictureInPicture } from '@/hooks/use-play';
 import { usePull } from '@/hooks/use-pull';
 import { useUpload } from '@/hooks/use-upload';
@@ -542,7 +549,16 @@ import { useUserStore } from '@/store/user';
 import { ILiveRoom, LiveRoomTypeEnum } from '@/types/ILiveRoom';
 import { IUser } from '@/types/IUser';
 import { formatMoney } from '@/utils';
+import { openToTarget } from 'billd-utils';
 
+import { fetchLiveRoomUserRank } from '@/api/liveRoom';
+import {
+  fetchUserFollow,
+  fetchUserFollowersList,
+  fetchUserFollowingList,
+  fetchUserUnfollow,
+} from '@/api/user';
+import LiveRoomRank from '@/components/LiveRoomRank/index.vue';
 import RechargeCpt from './recharge/index.vue';
 
 const route = useRoute();
@@ -573,6 +589,14 @@ const danmuIptRef = ref<HTMLTextAreaElement>();
 const loopGetLiveUserTimer = ref();
 const isBilibili = ref(false);
 const curTab = ref('audience');
+const followers = ref<any[]>([]);
+const followings = ref<any[]>([]);
+const isMutualFollow = ref(false);
+const giftIconMap = ref<any>({});
+const isMyLiveRoom = ref(false);
+const watchStartTime = ref<number | null>(null); // 记录进入时间（时间戳）
+const watchDuration = ref<number>(0); // 记录观看时长（秒）
+const rankList = ref<any>([]);
 
 const {
   initWs,
@@ -593,8 +617,66 @@ const {
   danmuStr,
 } = usePull();
 
-const { initRoomId, sendDanmuTxt, sendDanmuImg, sendDanmuReward } =
-  useWebsocket();
+const {
+  initRoomId,
+  sendDanmuTxt,
+  sendDanmuImg,
+  sendDanmuReward,
+  sendDanmuDianzan,
+} = useWebsocket();
+// 用户进入直播间，记录进入时间
+onMounted(() => {
+  watchStartTime.value = Date.now();
+  window.addEventListener('beforeunload', handleLeaveRoom);
+});
+
+// 用户离开直播间，计算观看时长并提交观看记录
+onUnmounted(() => {
+  handleLeaveRoom();
+  window.removeEventListener('beforeunload', handleLeaveRoom);
+});
+
+// 计算观看时长并提交记录
+const handleLeaveRoom = async () => {
+  if (
+    watchStartTime.value &&
+    userStore.userInfo?.id &&
+    userStore.userInfo?.id !== anchorInfo.value?.id
+  ) {
+    watchDuration.value = Math.floor(
+      (Date.now() - watchStartTime.value) / 1000
+    ); // 计算秒数
+
+    await createUserLiveView({
+      user_id: userStore.userInfo.id,
+      live_room_id: Number(roomId.value),
+      watched_at: new Date().toISOString(),
+      duration: watchDuration.value,
+    });
+  }
+};
+
+const dianzanNum = computed(() => {
+  const dianzanList = damuList.value.filter(
+    (item) => item.msg_type === DanmuMsgTypeEnum.dianzan
+  );
+  return dianzanList.length;
+});
+
+const selectedCategory = (parent_category_id, child_category_id) => {
+  const parentCategory = appStore.areaList.find(
+    (item) => item.id === parent_category_id
+  );
+  if (parentCategory && parentCategory.children) {
+    const childCategory = parentCategory?.children.find(
+      (item) => item.id === child_category_id
+    );
+    if (parentCategory && childCategory) {
+      return `${parentCategory.name}·${childCategory.name}`;
+    }
+  }
+  return '';
+};
 
 const rtcRtt = computed(() => {
   const arr: any[] = [];
@@ -634,6 +716,7 @@ const rtcBytesReceived = computed(() => {
   return arr.join();
 });
 
+// 初始化
 onMounted(async () => {
   setTimeout(() => {
     scrollTo(0, 0);
@@ -648,7 +731,7 @@ onMounted(async () => {
   initRoomId(roomId.value);
   await handleFindLiveRoomInfo();
   if (!liveRoomInfo.value) return;
-  // handleRefresh();
+  handleRefresh();
   appStore.videoControls.fps = true;
   appStore.videoControls.fullMode = true;
   appStore.videoControls.kbs = true;
@@ -686,12 +769,127 @@ onMounted(async () => {
   handleSendGetLiveUser(Number(roomId.value));
 });
 
+// 判断是否是我的直播间
+const updateIsMyLiveRoom = () => {
+  if (userStore?.userInfo?.live_rooms?.[0]?.id === Number(roomId.value)) {
+    isMyLiveRoom.value = true;
+  } else {
+    isMyLiveRoom.value = false;
+  }
+};
+
+onMounted(async () => {
+  if (userStore?.userInfo?.id) {
+    requestFollowingList(userStore?.userInfo?.id);
+    await requestFollowersList(userStore?.userInfo?.id);
+    checkIsMutualFollow();
+    updateIsMyLiveRoom();
+  }
+});
+
+watch(
+  () => userStore?.userInfo?.id,
+  async () => {
+    if (userStore?.userInfo?.id) {
+      requestFollowingList(userStore?.userInfo?.id);
+      await requestFollowersList(userStore?.userInfo?.id);
+      checkIsMutualFollow();
+      updateIsMyLiveRoom();
+    }
+  }
+);
+
 onUnmounted(() => {
   closeWs();
   closeRtc();
   clearInterval(loopGetLiveUserTimer.value);
 });
 
+// 请求关注列表
+const requestFollowingList = async (id) => {
+  const res = await fetchUserFollowingList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followings.value = res.data;
+  }
+};
+
+// 请求粉丝列表
+const requestFollowersList = async (id) => {
+  const res = await fetchUserFollowersList({
+    userId: id,
+  });
+  if (res.code === 200) {
+    followers.value = res.data;
+  }
+};
+
+// 判断是否关注
+const checkIsMutualFollow = () => {
+  isMutualFollow.value = followings.value.some(
+    (following: any) => following.id === anchorInfo.value?.id
+  );
+};
+
+// 关注用户
+const handleFollow = async (following: any) => {
+  // if (isMutualFollow) {
+  //   return;
+  // }
+  if (isMyLiveRoom.value) {
+    window.$message.warning('自己不能关注自己喔～');
+    return;
+  }
+  const res = await fetchUserFollow({
+    followingId: following?.id,
+    followerId: userStore?.userInfo?.id,
+  });
+  if (res.code === 200) {
+    window.$message.success('关注成功');
+    isMutualFollow.value = true;
+    // if (route.params.id) {
+    //   requestFollowingList(route.params.id);
+    //   requestFollowersList(route.params.id);
+    // }
+  }
+};
+
+// 取消关注
+const handleUnfollow = async (followingId) => {
+  const res = await fetchUserUnfollow({
+    followingId,
+    followerId: userStore?.userInfo?.id,
+  });
+  if (res.code === 200) {
+    window.$message.success('取消关注成功');
+    isMutualFollow.value = false;
+    // if (route.params.id) {
+    //   requestFollowingList(route.params.id);
+    //   requestFollowersList(route.params.id);
+    // }
+  }
+};
+
+// 跳转到二级分区
+function handleSecondArea(parentId, childId) {
+  const url = router.resolve({
+    name: routerName.area,
+    query: { parentAreaId: parentId, areaId: childId },
+  });
+  openToTarget(url.href);
+}
+
+// 跳转到用户主页
+const handleJump = (id) => {
+  const url = router.resolve({
+    name: routerName.user,
+    params: { id },
+  });
+  openToTarget(url.href);
+};
+
+// 获取直播间信息
 async function handleFindLiveRoomInfo() {
   try {
     const res = await fetchFindLiveRoom(Number(roomId.value));
@@ -699,6 +897,7 @@ async function handleFindLiveRoomInfo() {
       if (res.data) {
         liveRoomInfo.value = res.data;
         anchorInfo.value = res.data?.users?.[0];
+        console.log(res.data.live, '~~~~~');
         if (res.data.live) {
           roomLiving.value = true;
         } else {
@@ -728,7 +927,7 @@ async function handleBilibil() {
   });
   console.log(flv?.data?.data?.durl?.[0].url, 'flv');
   console.log(hls?.data?.data?.durl?.[0].url, 'hls');
-  roomLiving.value = true;
+  // roomLiving.value = true;
   appStore.liveLine = LiveLineEnum.hls;
   anchorInfo.value = {
     avatar: roomInfo?.data?.data?.user_cover,
@@ -744,6 +943,7 @@ async function handleBilibil() {
   handleRefresh();
 }
 
+// 获取直播间在线用户
 function handleSendGetLiveUser(liveRoomId: number) {
   clearInterval(loopGetLiveUserTimer.value);
   async function main() {
@@ -752,19 +952,43 @@ function handleSendGetLiveUser(liveRoomId: number) {
       liveUserList.value = res.data;
     }
   }
-  setTimeout(() => {
-    main();
+  setTimeout(async () => {
+    await getUserRank(route.params.roomId);
+    await main();
+    getOnLineRankList();
   }, 500);
-  loopGetLiveUserTimer.value = setInterval(() => {
-    main();
-  }, 1000 * 3);
+  loopGetLiveUserTimer.value = setInterval(async () => {
+    // await getUserRank(route.params.roomId)
+    await main();
+    // getOnLineRankList()
+  }, 1000 * 4);
 }
 
+const getUserRank = async (id) => {
+  const res = await fetchLiveRoomUserRank({ live_room_id: id });
+  if (res.code === 200) {
+    rankList.value = res.data?.rows;
+  }
+};
+
+const getOnLineRankList = () => {
+  if (liveUserList.value?.length > 0) {
+    liveUserList.value.forEach((item) => {
+      const rankItem = rankList.value.find(
+        (ritem) => ritem.id === item.value.user_id
+      );
+      item.score = rankItem?.contribute_score;
+    });
+  }
+};
+
+// 发送弹幕
 function handleSendDanmu() {
-  sendDanmuTxt(danmuStr.value);
+  sendDanmuTxt(danmuStr.value, roomId.value);
   danmuStr.value = '';
 }
 
+// 获取得到的礼物列表
 async function getGiftGroupList() {
   const res = await fetchGiftGroupList({
     live_room_id: Number(roomId.value),
@@ -794,11 +1018,12 @@ async function getGiftRecord() {
   }
 }
 
+// 获取弹幕列表
 async function handleHistoryMsg() {
   try {
     const res = await fetchGetWsMessageList({
       nowPage: 1,
-      pageSize: liveRoomInfo.value?.history_msg_total || 10,
+      pageSize: liveRoomInfo.value?.history_msg_total || 50,
       orderName: 'created_at',
       orderBy: 'desc',
       live_room_id: Number(roomId.value),
@@ -829,6 +1054,7 @@ async function handleHistoryMsg() {
   }
 }
 
+// 弹幕列表滚动到最下面
 watch(
   () => damuList.value.length,
   () => {
@@ -894,9 +1120,9 @@ function mockClick() {
   if (!loginTip()) {
     return;
   }
-  if (!commentAuthTip()) {
-    return;
-  }
+  // if (!commentAuthTip()) {
+  //   return;
+  // }
   uploadRef.value?.click();
 }
 
@@ -925,6 +1151,7 @@ async function uploadChange() {
   }
 }
 
+// 全屏
 function handleFullScreen() {
   const el = remoteVideoRef.value?.childNodes[0];
   if (el) {
@@ -932,6 +1159,7 @@ function handleFullScreen() {
   }
 }
 
+// 画中画
 async function hanldePictureInPicture() {
   if (appStore.videoControlsValue.pipMode) {
     document.exitPictureInPicture();
@@ -943,12 +1171,14 @@ async function hanldePictureInPicture() {
   }
 }
 
+// 刷新
 function handleRefresh() {
   if (liveRoomInfo.value) {
     handlePlay(liveRoomInfo.value);
   }
 }
 
+// 获取礼物列表
 async function getGoodsList() {
   try {
     giftLoading.value = true;
@@ -959,7 +1189,10 @@ async function getGoodsList() {
     });
     if (res.code === 200) {
       giftGoodsList.value = res.data.rows;
-      console.log('-------', res.data.rows);
+      res.data.rows.forEach((item) => {
+        giftIconMap.value[item.name || ''] = item.cover;
+      });
+      console.log(giftIconMap.value, '?????');
     }
   } catch (error) {
     console.log(error);
@@ -1001,6 +1234,10 @@ async function handlePay(item: IGoods) {
   if (!loginTip()) {
     return;
   }
+  if (isMyLiveRoom.value) {
+    window.$message.warning('自己不能为自己投喂礼物喔～');
+    return;
+  }
   try {
     const res = await fetchGiftRecordCreate({
       goodsId: item.id!,
@@ -1009,12 +1246,12 @@ async function handlePay(item: IGoods) {
       isBilibili: false,
     });
     if (res.code === 200) {
-      window.$message.success('打赏成功！');
+      window.$message.success('投喂成功！');
       sendDanmuReward(item.name || '');
       const giftData = {
         id: Date.now(),
-        avatar: '',
-        username: 'zxj',
+        avatar: userStore.userInfo?.avatar,
+        username: userStore.userInfo?.username,
         giftName: item.name,
         giftIcon: item.cover,
       };
@@ -1155,9 +1392,9 @@ setInterval(() => {
     // overflow: hidden;
     box-sizing: border-box;
     width: $w-900;
-    height: 740px;
+    height: 730px;
     border-radius: 6px;
-    background-color: $theme-color-papayawhip;
+    background-color: #ffffff;
     color: #61666d;
     vertical-align: top;
     margin-right: 20px;
@@ -1183,21 +1420,31 @@ setInterval(() => {
             margin-bottom: 5px;
 
             .follow {
-              display: flex;
-              align-items: center;
-              margin-right: 10px;
               margin-left: 10px;
-              height: 20px;
-              border-radius: 12px;
-              background-color: $theme-color-gold;
-              font-size: 12px;
-              cursor: pointer;
 
-              .f-left {
+              .unfollow {
                 display: flex;
                 align-items: center;
-                padding: 0 10px;
-                color: white;
+                padding: 5px 10px;
+                box-sizing: border-box;
+                color: #fff;
+                height: 20px;
+                border-radius: 12px;
+                background-color: $theme-color-gold;
+                font-size: 12px;
+                cursor: pointer;
+              }
+
+              .followed {
+                display: flex;
+                align-items: center;
+                padding: 5px 10px;
+                box-sizing: border-box;
+                background-color: #f5f6f9;
+                color: #9499a0;
+                height: 20px;
+                border-radius: 12px;
+                font-size: 12px;
                 cursor: pointer;
               }
 
@@ -1227,7 +1474,6 @@ setInterval(() => {
             font-size: 14px;
 
             .area {
-              margin: 0 10px;
               color: #9499a0;
               cursor: pointer;
             }
@@ -1243,7 +1489,7 @@ setInterval(() => {
 
         .top {
           display: flex;
-          margin-bottom: 10px;
+          margin-top: 30px;
 
           .item {
             display: flex;
@@ -1330,7 +1576,7 @@ setInterval(() => {
         top: 50%;
         left: 50%;
         z-index: 20;
-        color: white;
+        color: #9f9c9c;
         font-size: 28px;
         transform: translate(-50%, -50%);
       }
@@ -1343,15 +1589,14 @@ setInterval(() => {
       left: 0;
       display: flex;
       align-items: center;
-      justify-content: space-around;
       box-sizing: border-box;
       box-sizing: border-box;
-      padding: 5px 0;
+      padding: 5px 10px;
       height: 100px;
 
-      > :last-child {
+      /* > :last-child {
         position: absolute;
-      }
+      } */
 
       .item {
         display: flex;
@@ -1362,14 +1607,16 @@ setInterval(() => {
         height: 88px;
         text-align: center;
         cursor: pointer;
+        border-radius: 4px;
 
         &:hover {
-          background-color: #ebe0ce;
+          background-color: #ebeae9;
         }
 
         .ico {
           position: relative;
-          margin-top: 12px;
+          margin-top: 6px;
+          margin-bottom: 2px;
           width: 40px;
           height: 40px;
           background-position: center center;
@@ -1377,7 +1624,7 @@ setInterval(() => {
           background-repeat: no-repeat;
 
           &.wallet {
-            background-image: url('@/assets/img/wallet.webp');
+            background-image: url('@/assets/img/live_wallet.png');
           }
 
           .badge {
@@ -1402,14 +1649,30 @@ setInterval(() => {
         }
 
         .name {
-          color: #18191c;
           font-size: 12px;
+          color: #18191c;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          font-family: PingFang SC;
         }
 
         .price {
           color: #9499a0;
           font-size: 12px;
+          margin-top: 2px;
+          font-family: PingFang SC;
         }
+      }
+
+      .vertical-separator {
+        position: absolute;
+        right: 97px;
+        top: 50%;
+        border-left: 1px solid #e3e5e7;
+        width: 1px;
+        height: 50px;
+        transform: translateY(-50%);
       }
     }
 
@@ -1435,52 +1698,40 @@ setInterval(() => {
     position: relative;
     display: inline-block;
     box-sizing: border-box;
-    width: $w-250;
-    height: 740px;
+    width: 300px;
+    height: 730px;
     border-radius: 6px;
-    background-color: $theme-color-papayawhip;
+    background-color: #ffffff;
     color: #9499a0;
+    /* overflow: hidden; */
 
     .rank-wrap {
+      border-bottom: 1px solid #e3e5e7;
+      height: 106px;
+
       .tab {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         height: 30px;
         font-size: 12px;
-        margin-bottom: 10px;
+        width: 100%;
+        margin-top: 5px;
 
         &_item {
           width: 50%;
           display: flex;
           justify-content: center;
           cursor: pointer;
-
-          &:hover {
-            color: #6f6e6e;
-          }
-
-          &_active {
-            color: #000000;
-            font-weight: 500;
-
-            &:hover {
-              color: #000000;
-            }
-          }
-
-          &:first-child {
-            width: 60%;
-            border-right: 1px solid #ccc;
-          }
+          color: #000000;
+          font-weight: 500;
         }
       }
 
       .user-list {
-        overflow-y: scroll;
+        /* overflow-y: scroll; */
         box-sizing: border-box;
         padding: 0 15px;
-        height: 100px;
 
         @extend %customScrollbar;
 
@@ -1509,7 +1760,8 @@ setInterval(() => {
       overflow-y: scroll;
       box-sizing: border-box;
       padding-top: 4px;
-      height: calc(100% - 30px - 100px - 135px);
+      padding-left: 10px;
+      height: calc(100% - 12px - 100px - 135px);
       background-color: #f6f7f8;
       text-align: initial;
       position: relative;
@@ -1519,20 +1771,40 @@ setInterval(() => {
       .item {
         box-sizing: border-box;
         margin-bottom: 4px;
-        padding: 2px 10px;
+        padding: 2px 0;
         white-space: normal;
         word-wrap: break-word;
         font-size: 13px;
         display: flex;
         align-items: center;
 
+        .roomer {
+          font-size: 10px;
+          padding: 0 4px;
+          border-radius: 8px;
+          color: #ff6699;
+          border: 1px solid #ff6699;
+          background-color: transparent;
+          margin-top: 2px;
+        }
+
         .gift-icon {
           margin-left: 5px;
 
           img {
-            width: 20px;
-            height: 20px;
+            width: 30px;
+            height: 30px;
           }
+        }
+
+        .good {
+          width: 30px;
+          height: 30px;
+          opacity: 0.9;
+
+          @extend %containBg;
+
+          @include setBackground('@/assets/img/gift_good.webp');
         }
 
         .reward {
@@ -1543,6 +1815,7 @@ setInterval(() => {
         .name,
         .time {
           color: #9499a0;
+          margin-left: 3px;
 
           &.system {
             color: red;
@@ -1569,6 +1842,12 @@ setInterval(() => {
         .msg {
           margin-top: 4px;
           color: #61666d;
+          margin-left: 3px;
+
+          &.dianzan {
+            color: #9499a0;
+            font-size: 12px;
+          }
 
           &.img {
             img {
@@ -1591,6 +1870,7 @@ setInterval(() => {
       padding: 2px 10px;
       width: 100%;
       height: 135px;
+      background-color: #f6f7f8;
 
       .disableSpeaking {
         cursor: no-drop;
@@ -1620,7 +1900,7 @@ setInterval(() => {
           position: absolute;
           top: 0;
           right: 0;
-          left: 0;
+          left: 5px;
           overflow: scroll;
           box-sizing: border-box;
           padding: 3px;
@@ -1628,6 +1908,14 @@ setInterval(() => {
           height: 160px;
           background-color: #fff;
           transform: translateY(-100%);
+          background-color: #faf4d8;
+          width: 230px;
+          border: 1px solid #e2e2e2;
+          border-radius: 4px;
+
+          &::-webkit-scrollbar {
+            width: 3px;
+          }
 
           @extend %customScrollbar;
 
@@ -1656,13 +1944,50 @@ setInterval(() => {
             opacity: 0;
           }
 
-          &.face {
-            @include setBackground('@/assets/img/msg-face.png');
+          &.emoji {
+            @include setBackground('@/assets/img/emoji.png');
           }
 
-          &.img {
-            @include setBackground('@/assets/img/msg-img.png');
+          &.dianzan {
+            @include setBackground('@/assets/img/dianzan.png');
           }
+        }
+      }
+
+      .input-control {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+
+        .input-chat {
+          width: 100%;
+          position: relative;
+        }
+
+        textarea {
+          height: 56px;
+          width: 100%;
+          resize: none;
+          outline: 0;
+          border: 0;
+          background-color: #fff;
+          border-radius: 4px;
+          padding: 8px 8px 10px 8px;
+          color: #2f3238;
+          overflow: hidden;
+          font-size: 12px;
+          line-height: 19px;
+          box-sizing: border-box;
+          margin-bottom: 2px;
+        }
+
+        .limit-size {
+          position: absolute;
+          right: 10px;
+          bottom: 15px;
+          font-size: 12px;
+          line-height: 19px;
+          color: #c1c1c1;
         }
       }
 
@@ -1686,7 +2011,7 @@ setInterval(() => {
 
       .btn {
         box-sizing: border-box;
-        margin-top: 10px;
+        margin-top: 4px;
         margin-left: auto;
         padding: 4px;
         width: 70px;
@@ -1786,6 +2111,8 @@ setInterval(() => {
 
 .gift-notifications {
   position: absolute;
+  top: 120px;
+  left: 10px;
   z-index: 10;
 }
 
@@ -1795,12 +2122,14 @@ setInterval(() => {
   padding: 5px;
   padding-bottom: 2px;
   /* margin-bottom: 10px; */
-  background: linear-gradient(to right, #4f8dd3, transparent);
+  /* background: linear-gradient(to right, #4f8dd3, transparent); */
+  background: linear-gradient(to right, #f69, transparent);
   /* 背景渐变从左到右 */
   color: white;
   border-radius: 30px;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+  margin-bottom: 10px;
 
   animation: slide-in-out 4s forwards;
   position: relative;
@@ -1818,6 +2147,7 @@ setInterval(() => {
   height: 35px;
   border-radius: 50%;
   margin-right: 10px;
+  object-fit: cover;
   /* margin-top: 5px; */
 }
 

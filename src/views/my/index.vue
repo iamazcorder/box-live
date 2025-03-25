@@ -23,6 +23,7 @@
           "
           :isLive="isLive"
           @avatarUpdated="handleAvatarUpdate"
+          @click="() => isLive && joinRoom()"
         >
         </Avatar>
         <div class="details">
@@ -82,7 +83,7 @@
         >
           +关注
         </div>
-        <div class="btn gray">发消息</div>
+        <!-- <div class="btn gray">发消息</div> -->
       </div>
     </div>
 
@@ -143,9 +144,12 @@ import {
   fetchUserFollowingList,
   fetchUserUnfollow,
 } from '@/api/user';
+import { fetchUserHasLiveRoom } from '@/api/userLiveRoom';
 import { ILive } from '@/interface';
+import { routerName } from '@/router';
 import { useUserStore } from '@/store/user';
 import { IUser } from '@/types/IUser';
+import { openToTarget } from 'billd-utils';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -153,7 +157,7 @@ const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 const emit = defineEmits();
-const tabs = ref([{ label: '直播回放', routeName: 'playback' }]);
+const tabs = ref([{ label: '直播片段', routeName: 'playback' }]);
 
 const searchQuery = ref('');
 const followings = ref<any[]>([]);
@@ -162,6 +166,7 @@ const userInfo = ref<IUser>();
 const getUserLoading = ref(false);
 const isCancelPopupVisible = ref(false);
 const liveRoomList = ref<ILive[]>([]);
+const liveRoomInfo = ref<any>();
 
 // 判断当前选中的 Tab
 const isTabActive = (routeName: string) => route.name === routeName;
@@ -174,6 +179,7 @@ const selectTab = (routeName: string) => {
 onMounted(async () => {
   if (route.params.id) {
     getData();
+    getLiveRoomInfo();
   }
   await getLiveRoomList();
 });
@@ -183,6 +189,7 @@ watch(
   () => {
     if (route.params.id) {
       getData();
+      getLiveRoomInfo();
     }
   }
 );
@@ -317,6 +324,22 @@ const handleUnfollow = async (followingId) => {
     }
   }
 };
+
+const getLiveRoomInfo = async () => {
+  const res = await fetchUserHasLiveRoom(Number(route.params.id));
+  if (res.code === 200) {
+    liveRoomInfo.value = res.data.live_room;
+  }
+};
+
+function joinRoom() {
+  const url = router.resolve({
+    name: routerName.pull,
+    params: { roomId: liveRoomInfo.value?.id },
+    // query: { [URL_QUERY.isBilibili]: isBilibili },
+  });
+  openToTarget(url.href);
+}
 
 async function getLiveRoomList() {
   try {

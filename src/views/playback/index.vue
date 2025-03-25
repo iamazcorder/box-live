@@ -2,7 +2,10 @@
   <div class="video-gallery-page">
     <div class="left">
       <!-- 筛选栏 -->
-      <div class="filter-bar">
+      <div
+        class="filter-bar"
+        v-if="publishedClips.length > 0"
+      >
         <!-- 主筛选项 -->
         <div class="filter-group">
           <button
@@ -38,27 +41,18 @@
 
       <!-- 视频列表 -->
       <div class="video-grid">
-        <div
-          v-for="(video, index) in videos"
+        <VideoCard
+          v-for="(video, index) in publishedClips"
           :key="index"
-          class="video-card"
-        >
-          <div class="thumbnail">
-            <img
-              :src="video.thumbnail"
-              alt="视频封面"
-            />
-            <div class="duration">{{ video.duration }}</div>
-          </div>
-          <div class="info">
-            <div class="title">{{ video.title }}</div>
-            <div class="meta">
-              <span>{{ video.views }} 次观看</span>
-              <span> · </span>
-              <span>{{ video.date }}</span>
-            </div>
-          </div>
-        </div>
+          :video="video"
+        />
+      </div>
+      <div
+        class="empty-wrap"
+        v-if="publishedClips.length === 0"
+      >
+        <div class="ico empty-data"></div>
+        这里还没有视频呀～
       </div>
     </div>
     <div class="right">
@@ -67,17 +61,30 @@
         <div class="content">
           <template v-if="isMe && !isLive">
             <div class="live-tip">欢迎回来！期待你的分享时刻，快来直播吧～</div>
-            <div class="live-link">前往我的直播间&gt</div>
+            <div
+              class="live-link"
+              @click="joinRoom"
+            >
+              前往我的直播间&gt
+            </div>
           </template>
           <template v-if="isOther && !isLive">
             <div class="live-tip">主播不在，开播的时候会在动态通知你哦~</div>
-            <div class="live-link">前往TA的直播间&gt</div>
+            <div
+              class="live-link"
+              @click="joinRoom"
+            >
+              前往TA的直播间&gt
+            </div>
           </template>
           <template v-if="isLive">
-            <div class="live-cover">
+            <div
+              class="live-cover"
+              @click="joinRoom"
+            >
               <div class="live-cover-img">
                 <img
-                  src="https://i0.hdslb.com/bfs/live/new_room_cover/484ae1f5696f9d8221f477f773e6b506535d8089.jpg@.avif"
+                  :src="liveRoomInfo.cover_img"
                   class="b-img__inner"
                   alt="living cover"
                 />
@@ -91,7 +98,12 @@
                 直播中
               </div>
             </div>
-            <div class="live-title">{{ liveRoom?.name }}</div>
+            <div
+              class="live-title"
+              @click="joinRoom"
+            >
+              {{ liveRoom?.name }}
+            </div>
           </template>
         </div>
       </div>
@@ -123,11 +135,15 @@
 
 <script lang="ts" setup>
 import { fetchLiveList } from '@/api/live';
+import { fetchUserVideos } from '@/api/liveRoom';
 import { fetchFindUser } from '@/api/user';
+import { fetchUserHasLiveRoom } from '@/api/userLiveRoom';
+import VideoCard from '@/components/VideoCard/index.vue';
 import { ILive } from '@/interface';
 import router, { routerName } from '@/router';
 import { useUserStore } from '@/store/user';
 import { IUser } from '@/types/IUser';
+import { openToTarget } from 'billd-utils';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -144,6 +160,7 @@ const selectedCategory = ref('全部类型 55');
 const getUserLoading = ref(false);
 const userInfo = ref<IUser>();
 const liveRoomList = ref<ILive[]>([]);
+const publishedClips = ref<any>([]);
 
 // 视频数据
 const videos = ref([
@@ -215,11 +232,15 @@ const videos = ref([
 // 是否展开更多筛选
 const isExpanded = ref(false);
 
+const liveRoomInfo = ref<any>();
+
 watch(
   () => route.params.id,
   () => {
     if (route.params.id) {
       handleUserInfo(route.params.id);
+      getLiveRoomInfo();
+      getPublishedClips();
     }
   }
 );
@@ -227,9 +248,33 @@ watch(
 onMounted(() => {
   if (route.params.id) {
     handleUserInfo(route.params.id);
+    getLiveRoomInfo();
+    getPublishedClips();
   }
   getLiveRoomList();
 });
+
+const getPublishedClips = async () => {
+  const res = await fetchUserVideos({ user_id: route.params.id });
+  if (res.code === 200) {
+    publishedClips.value = res.data?.rows;
+  }
+};
+
+const getLiveRoomInfo = async () => {
+  const res = await fetchUserHasLiveRoom(Number(route.params.id));
+  if (res.code === 200) {
+    liveRoomInfo.value = res.data.live_room;
+  }
+};
+
+function joinRoom() {
+  const url = router.resolve({
+    name: routerName.pull,
+    params: { roomId: liveRoomInfo.value?.id },
+  });
+  openToTarget(url.href);
+}
 
 const isLive = computed(() => {
   return liveRoomList.value.some(
@@ -320,12 +365,6 @@ async function getLiveRoomList() {
     console.log(error);
   }
 }
-
-const goLiveRoom = () => {
-  if (isLive.value) {
-    console.log('go live room');
-  }
-};
 </script>
 
 <style lang="scss" scoped>
@@ -348,6 +387,25 @@ const goLiveRoom = () => {
       width: 20px;
       height: 20px;
     }
+
+    &.empty-data {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
+  .empty-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 90px;
+    color: #575555;
   }
 
   .left {
@@ -437,60 +495,6 @@ const goLiveRoom = () => {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-
-    .video-card {
-      width: 200px;
-      background-color: #fff;
-      border: 1px solid #e3e8ec;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-      .thumbnail {
-        position: relative;
-
-        img {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-
-        .duration {
-          position: absolute;
-          bottom: 5px;
-          right: 5px;
-          background: rgba(0, 0, 0, 0.7);
-          color: #fff;
-          padding: 2px 6px;
-          font-size: 12px;
-          border-radius: 4px;
-        }
-      }
-
-      .info {
-        padding: 10px;
-
-        .title {
-          font-size: 14px;
-          font-weight: bold;
-          color: #333;
-          margin-bottom: 6px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        .meta {
-          font-size: 12px;
-          color: #666;
-
-          span {
-            margin-right: 5px;
-          }
-        }
-      }
-    }
   }
 
   .right {
@@ -534,10 +538,11 @@ const goLiveRoom = () => {
             position: relative;
 
             img {
-              width: 100%;
-              height: 100%;
-              display: inline-block;
-              vertical-align: middle;
+              width: 200px;
+              height: 120px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              object-fit: cover;
             }
           }
 
@@ -584,6 +589,10 @@ const goLiveRoom = () => {
           margin-top: 8px;
           font-size: 14px;
           color: #18191c;
+
+          &:hover {
+            color: #ffd700;
+          }
         }
 
         .live-link {

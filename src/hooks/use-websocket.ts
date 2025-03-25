@@ -52,8 +52,8 @@ import {
   setVideoTrackContentHints,
 } from '@/utils';
 import {
-  WebSocketClass,
   prettierReceiveWsMsg,
+  WebSocketClass,
 } from '@/utils/network/webSocket';
 
 export const useWebsocket = () => {
@@ -83,7 +83,7 @@ export const useWebsocket = () => {
   const connectStatus = ref<WsConnectStatusEnum>();
   const loopHeartbeatTimer = ref();
   const loopGetLiveUserTimer = ref();
-  const liveUserList = ref<ILiveUser[]>([]);
+  const liveUserList = ref<any>([]);
   const roomId = ref('');
   const roomLiving = ref(false);
   const isAnchor = ref(false);
@@ -103,47 +103,58 @@ export const useWebsocket = () => {
   const keepRtcLivingDelay = 5000;
 
   watch(
-    () => roomLiving.value,
-    (newval) => {
-      if (newval) {
-        appStore.playing = true;
-      } else {
-        appStore.playing = false;
-      }
-    },
-    {
-      immediate: true,
+    () => roomId.value,
+    () => {
+      console.log('roomId change', roomId.value, '<<<<<');
     }
   );
 
+  // 监听房间是否正在直播状态变化，改变应用的播放状态
+  watch(
+    () => roomLiving.value,
+    (newval) => {
+      if (newval) {
+        appStore.playing = true; // 开始播放
+      } else {
+        appStore.playing = false; // 停止播放
+      }
+    },
+    {
+      immediate: true, // 立即执行监听回调
+    }
+  );
+
+  // 在组件卸载时清理定时器
   onUnmounted(() => {
-    clearInterval(loopHeartbeatTimer.value);
-    clearInterval(loopGetLiveUserTimer.value);
+    clearInterval(loopHeartbeatTimer.value); // 清除心跳定时器
+    clearInterval(loopGetLiveUserTimer.value); // 清除获取用户定时器
   });
 
+  // 计算当前WebSocket连接的socketId
   const mySocketId = computed(() => {
-    return networkStore.wsMap.get(roomId.value)?.socketIo?.id || '-1';
+    return networkStore.wsMap.get(roomId.value)?.socketIo?.id || '-1'; // 获取WebSocket连接的socket ID
   });
 
-  function sendDanmuTxt(txt: string) {
+  // 发送文本类型的弹幕
+  function sendDanmuTxt(txt: string, roomId: string) {
     if (!loginTip()) {
       return;
     }
-    if (!commentAuthTip()) {
-      return;
-    }
+    // if (!commentAuthTip()) {
+    //   return;
+    // }
     if (!txt.trim().length) {
       window.$message.warning('请输入弹幕内容！');
       return;
     }
-    const instance = networkStore.wsMap.get(roomId.value);
+    const instance = networkStore.wsMap.get(roomId);
 
     if (!instance) return;
     const messageData: WsMessageType['data'] = {
       content: txt,
       content_type: WsMessageContentTypeEnum.txt,
       msg_type: DanmuMsgTypeEnum.danmu,
-      live_room_id: Number(roomId.value),
+      live_room_id: Number(roomId),
       is_bilibili: isBilibili.value
         ? WsMessageIsBilibiliEnum.yes
         : WsMessageIsBilibiliEnum.no,
@@ -154,7 +165,7 @@ export const useWebsocket = () => {
       data: messageData,
     });
   }
-
+  // 发送图片类型的弹幕
   function sendDanmuImg(url: string) {
     if (!loginTip()) {
       return;
@@ -184,14 +195,14 @@ export const useWebsocket = () => {
       data: messageData,
     });
   }
-
+  // 发送送礼类型的弹幕
   function sendDanmuReward(txt: string) {
     if (!loginTip()) {
       return;
     }
-    if (!commentAuthTip()) {
-      return;
-    }
+    // if (!commentAuthTip()) {
+    //   return;
+    // }
     if (!txt.trim().length) {
       window.$message.warning('请输入弹幕内容！');
       return;
@@ -213,9 +224,38 @@ export const useWebsocket = () => {
       data: messageData,
     });
   }
+  // 发送点赞类型的弹幕
+  function sendDanmuDianzan(roomId: string) {
+    if (!loginTip()) {
+      return;
+    }
+    // if (!commentAuthTip()) {
+    //   return;
+    // }
+    // if (!txt.trim().length) {
+    //   window.$message.warning('请输入弹幕内容！');
+    //   return;
+    // }
+    const instance = networkStore.wsMap.get(roomId);
+    if (!instance) return;
+    const messageData: WsMessageType['data'] = {
+      content: '点赞',
+      content_type: WsMessageContentTypeEnum.txt,
+      msg_type: DanmuMsgTypeEnum.dianzan,
+      live_room_id: Number(roomId),
+      is_bilibili: isBilibili.value
+        ? WsMessageIsBilibiliEnum.yes
+        : WsMessageIsBilibiliEnum.no,
+    };
+    instance.send({
+      requestId: getRandomString(8),
+      msgType: WsMsgTypeEnum.message,
+      data: messageData,
+    });
+  }
 
   function handleHeartbeat() {}
-
+  // 处理开始直播的逻辑
   function handleStartLive({
     name,
     type,
@@ -386,7 +426,7 @@ export const useWebsocket = () => {
       }, keepRtcLivingDelay);
     }
   }
-
+  // 发送用户加入请求
   function sendJoin() {
     const instance = networkStore.wsMap.get(roomId.value);
     if (!instance) return;
@@ -399,11 +439,12 @@ export const useWebsocket = () => {
       },
     });
   }
-
+  // 初始化接收 WebSocket 消息
   function initReceive() {
+    // 获取当前房间的 WebSocket 实例
     const ws = networkStore.wsMap.get(roomId.value);
     if (!ws?.socketIo) return;
-    // websocket连接成功
+    // 连接成功时的回调
     ws.socketIo.on(WsConnectStatusEnum.connect, () => {
       prettierReceiveWsMsg(WsConnectStatusEnum.connect, ws.socketIo);
       handleHeartbeat();
@@ -414,7 +455,7 @@ export const useWebsocket = () => {
       sendJoin();
     });
 
-    // websocket连接断开
+    // 连接断开时的回调
     ws.socketIo.on(WsConnectStatusEnum.disconnect, (err) => {
       prettierReceiveWsMsg(WsConnectStatusEnum.disconnect, ws);
       console.log('websocket连接断开', err);
@@ -423,7 +464,7 @@ export const useWebsocket = () => {
       ws.update();
     });
 
-    // 收到livePkKey
+    // 收到 livePkKey 消息时的回调
     ws.socketIo.on(WsMsgTypeEnum.livePkKey, (data: WsLivePkKeyType['data']) => {
       console.log('收到livePkKey', data);
       const url = router.resolve({
@@ -457,18 +498,16 @@ export const useWebsocket = () => {
         ]),
       }).catch(() => {});
     });
-
-    // 收到srsOffer
+    // 收到 srsOffer 消息时的回调
     ws.socketIo.on(WsMsgTypeEnum.srsOffer, (data: WsOfferType['data']) => {
       console.log('收到srsOffer', data);
     });
 
-    // 收到srsAnswer
+    // 收到 srsAnswer 消息时的回调
     ws.socketIo.on(WsMsgTypeEnum.srsAnswer, (data: WsAnswerType['data']) => {
       console.log('收到srsAnswer', data);
     });
-
-    // 收到srsCandidate
+    // 收到 srsCandidate 消息时的回调
     ws.socketIo.on(
       WsMsgTypeEnum.srsCandidate,
       (data: WsCandidateType['data']) => {
@@ -785,6 +824,7 @@ export const useWebsocket = () => {
 
     // 其他用户加入房间
     ws.socketIo.on(WsMsgTypeEnum.otherJoin, (data: WsOtherJoinType['data']) => {
+      console.log('otherJoin', data, '???');
       prettierReceiveWsMsg(WsMsgTypeEnum.otherJoin, data);
       const danmu: IWsMessage = {
         username: data.join_user_info?.username,
@@ -967,6 +1007,7 @@ export const useWebsocket = () => {
     sendDanmuTxt,
     sendDanmuImg,
     sendDanmuReward,
+    sendDanmuDianzan,
     keepRtcLivingTimer,
     isBilibili,
     connectStatus,

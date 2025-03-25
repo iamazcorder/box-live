@@ -277,11 +277,15 @@ export function usePush() {
     }
   }
 
-  function keydownDanmu(event: KeyboardEvent) {
+  function keydownDanmu(event: KeyboardEvent, danmu) {
+    // 如果字符长度大于最大限制，阻止输入
+    if (danmu.length >= 20 && event.key !== 'Backspace') {
+      event.preventDefault(); // 阻止默认行为
+    }
     const key = event.key.toLowerCase();
     if (key === 'enter') {
       event.preventDefault();
-      sendDanmuTxt(danmuStr.value);
+      sendDanmuTxt(danmu, roomId.value);
       danmuStr.value = '';
     }
   }

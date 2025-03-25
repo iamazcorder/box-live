@@ -134,7 +134,7 @@
             </n-tab-pane>
           </n-tabs>
         </n-card>
-        <div class="other-login">
+        <!-- <div class="other-login">
           <span>第三方登录：</span>
           <div style="display: flex">
             <div
@@ -156,7 +156,7 @@
               />
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </Teleport>

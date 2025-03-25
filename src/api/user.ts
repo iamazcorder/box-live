@@ -57,7 +57,7 @@ export function fetchFindUser(userId: number) {
   return request.get(`/user/find/${userId}`);
 }
 
-export function fetchUserList(params: { orderName: string; orderBy: string }) {
+export function fetchUserList(params) {
   return request.get<IPaging<IUser>>('/user/list', { params });
 }
 
@@ -117,4 +117,27 @@ export function getFollowedUsersWithLiveRecords(params) {
 // 获取用户关注的没有开播过的用户
 export function getUsersWhoNeverStreamed(params) {
   return request.get('/user_follows/following/no_live', { params });
+}
+
+// 创建搜索记录
+export function createSearchHistory({ user_id, search_keyword }) {
+  return request.post('/user_serach_history/create', {
+    user_id,
+    search_keyword,
+  });
+}
+
+// 获取搜索记录
+export function getSearchHistory(params) {
+  return request.get('/user_serach_history/list', { params });
+}
+
+// 删除搜索记录
+export function deleteSearchHistory(params) {
+  return request.put('/user_serach_history/delete', params);
+}
+
+// 清空搜索记录
+export function clearSearchHistory(params) {
+  return request.put('/user_serach_history/clearHistory', params);
 }

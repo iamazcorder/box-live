@@ -104,12 +104,14 @@ onUnmounted(() => {
   padding-bottom: 10px;
   width: 100%;
   height: 100%;
-
+  padding: 0 20px;
   @extend %customScrollbar;
+
   .loading {
     width: 100%;
     text-align: center;
   }
+
   .bottom-ref {
     // width: 10px;
     // height: 10px;

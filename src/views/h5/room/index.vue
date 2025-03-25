@@ -379,7 +379,7 @@ watch(
 );
 
 function handleSendDanmu() {
-  sendDanmuTxt(danmuStr.value);
+  sendDanmuTxt(danmuStr.value, roomId.value);
   danmuStr.value = '';
 }
 

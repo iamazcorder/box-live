@@ -1,52 +1,52 @@
 <template>
   <div class="rank-wrap">
-    <div class="type-list">
-      <div
-        v-for="(item, index) in rankTypeList"
-        :key="index"
-        :class="{ item: 1, active: item.type === currRankType }"
-        @click="changeCurrRankType(item.type)"
-      >
-        <!-- {{ t(item.label) }} -->
-        <img
-          v-if="item.type === RankTypeEnum.liveRoom"
-          src="@/assets/img/popularRank_active.png"
-          alt=""
-          class="img_1"
-        />
-        <img
-          v-if="item.type === RankTypeEnum.user"
-          src="@/assets/img/userRank_active.png"
-          alt=""
-          class="img_2"
-        />
+    <div class="rank-content">
+      <div class="type-list">
+        <div
+          v-for="(item, index) in rankTypeList"
+          :key="index"
+          :class="{ item: true, active: item.type === currRankType }"
+          @click="changeCurrRankType(item.type)"
+        >
+          <div
+            v-if="item.type === RankTypeEnum.liveRoom"
+            class="ico popularity"
+          />
+          <div
+            v-if="item.type === RankTypeEnum.user"
+            class="ico user"
+          />
+          <span class="rank-label">{{ item.label }}</span>
+        </div>
       </div>
-    </div>
 
-    <div
-      v-if="rankList.length"
-      class="rank-list"
-      v-loading="loading"
-    >
-      <div class="tip">
-        <div v-if="currRankType === RankTypeEnum.liveRoom">
-          <span class="tip-item">
-            1.按用户的直播数据进行综合评定，数据在每自然月最后一日的23点59分59秒清零。</span
-          >
-          <span class="tip-item">
-            2.系统根据用户的直播次数、观看人数、点赞数、直播评论数、粉丝数量以及获得的礼物数量等指标来进行排序。</span
-          >
+      <div
+        v-if="rankList.length"
+        class="rank-list"
+        v-loading="loading"
+      >
+        <div class="tip">
+          <div v-if="currRankType === RankTypeEnum.liveRoom">
+            <div class="tip-item">
+              📌
+              1.按用户的直播数据进行综合评定，数据在每自然月最后一日的23点59分59秒清零。
+            </div>
+            <div class="tip-item">
+              📌
+              2.系统根据用户的直播次数、观看人数、点赞数、直播评论数、粉丝数量以及获得的礼物数量等指标来进行排序。
+            </div>
+          </div>
+          <div v-if="currRankType === RankTypeEnum.user">
+            <div class="tip-item">
+              📌
+              1.按用户在平台上的活跃度进行综合评定，数据在每自然月最后一日的23点59分59秒清零。
+            </div>
+            <div class="tip-item">
+              📌
+              2.用户通过发送弹幕、观看直播、点赞直播、打赏礼物、每日签到等行为，可提升排名指标。
+            </div>
+          </div>
         </div>
-        <div v-if="currRankType === RankTypeEnum.user">
-          <span class="tip-item">
-            1.按用户在平台上的活跃度进行综合评定，数据在每自然月最后一日的23点59分59秒清零。</span
-          >
-          <span class="tip-item">
-            2.用户通过发送弹幕、观看直播、点赞直播、打赏礼物、每日签到等行为，可提升排名指标。</span
-          >
-        </div>
-      </div>
-      <div class="list-wrapper">
         <div class="top">
           <div
             v-for="(item, index) in [
@@ -73,31 +73,27 @@
             </div>
             <div class="decorate"></div>
             <div class="username">{{ item.users[0]?.username }}</div>
-            <div class="rank">
+            <div
+              class="ico"
+              :class="`no${item.rank}`"
+            ></div>
+            <!-- <div class="rank">
               <i>0{{ item.rank }}</i>
-              <div
-                v-if="item.live?.live && currRankType === RankTypeEnum.liveRoom"
-                class="living"
-                @click="handleJoin(item.live)"
-              >
+              <div class="ico" :class="`no${item.rank}`"></div>
+              <div v-if="item.live?.live && currRankType === RankTypeEnum.liveRoom" class="living"
+                @click="handleJoin(item.live)">
                 {{ t('common.living') }}
               </div>
-            </div>
-            <div
-              class="wallet"
-              v-if="currRankType === RankTypeEnum.wallet"
-            >
+            </div> -->
+            <!-- <div class="wallet" v-if="currRankType === RankTypeEnum.wallet">
               <span>{{ t('common.wallet') }}: </span>
               <span>{{ formatMoney(item.balance) }}￥</span>
             </div>
-            <div
-              class="signin"
-              v-if="currRankType === RankTypeEnum.signin"
-            >
+            <div class="signin" v-if="currRankType === RankTypeEnum.signin">
               <span>
                 {{ t('rank.accumulatedSignin', { nums: item.signin_nums }) }}
               </span>
-            </div>
+            </div> -->
           </div>
         </div>
         <div class="top50-list">
@@ -109,7 +105,8 @@
             class="top50-item"
           >
             <div class="rank">
-              <i>{{ item.rank >= 10 ? item.rank : '0' + item.rank }}</i>
+              <!-- {{ item.rank >= 10 ? item.rank : '0' + item.rank }} -->
+              {{ item.rank }}
             </div>
             <div
               class="left"
@@ -154,12 +151,12 @@
           </div>
         </div>
       </div>
-    </div>
-    <div
-      class="null"
-      v-if="!rankList.length && !loading"
-    >
-      暂无数据
+      <div
+        class="null"
+        v-if="!rankList.length && !loading"
+      >
+        暂无数据
+      </div>
     </div>
   </div>
 </template>
@@ -188,16 +185,12 @@ export interface IRankType {
 const rankTypeList = ref<IRankType[]>([
   {
     type: RankTypeEnum.liveRoom,
-    label: 'rank.liveRank',
+    label: '人气榜',
   },
   {
     type: RankTypeEnum.user,
-    label: 'rank.userRank',
+    label: '用户榜',
   },
-  // {
-  //   type: RankTypeEnum.blog,
-  //   label: '博客用户',
-  // },
 ]);
 
 const mockDataNums = 4;
@@ -283,21 +276,12 @@ const mockRank: {
 const rankList = ref(mockRank);
 
 function handleJump(item) {
-  // if (userStore.userInfo?.id === item.id) {
-  //   router.push({
-  //     name: routerName.my,
-  //   });
-  // } else {
-  //   router.push({
-  //     name: routerName.user,
-  //     params: { id: item.id },
-  //   });
-  // }
   if (item?.id) {
-    router.push({
+    const url = router.resolve({
       name: routerName.user,
       params: { id: item.id },
     });
+    openToTarget(url.href);
   }
 }
 
@@ -383,13 +367,13 @@ async function getLiveRoomList() {
   loading.value = false;
 }
 
-async function getUserList() {
+async function getUserList(orderBy = '') {
   try {
     loading.value = true;
     const res = await fetchUserList({
-      orderName: 'updated_at',
-      orderBy: 'desc',
-      ...pageParams,
+      // orderName: 'updated_at',
+      orderBy,
+      // ...pageParams,
     });
     if (res.code === 200) {
       const length = res.data.rows.length;
@@ -459,7 +443,7 @@ function changeCurrRankType(type: RankTypeEnum) {
   currRankType.value = type;
   switch (type) {
     case RankTypeEnum.liveRoom:
-      getLiveRoomList();
+      getUserList('popularity');
       break;
     case RankTypeEnum.user:
       getUserList();
@@ -481,74 +465,100 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.ico {
+  margin: 0 auto;
+  width: 60px;
+  height: 60px;
+  opacity: 0.9;
+
+  @extend %containBg;
+
+  &.no1 {
+    @include setBackground('@/assets/img/rank-no1.png');
+  }
+
+  &.no2 {
+    @include setBackground('@/assets/img/rank-no2.png');
+  }
+
+  &.no3 {
+    @include setBackground('@/assets/img/rank-no3.png');
+  }
+
+  &.popularity {
+    width: 30px;
+    height: 30px;
+    @include setBackground('@/assets/img/popularity.png');
+  }
+
+  &.user {
+    width: 30px;
+    height: 30px;
+    @include setBackground('@/assets/img/rank-user.png');
+  }
+}
+
 .rank-wrap {
-  box-sizing: border-box;
-  padding-top: 10px;
-  height: 135vh;
-  background-color: #f4f4f4;
-  overflow-y: scroll;
+  background: #f8f9fb;
+
+  .rank-content {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
 
   .type-list {
     display: flex;
-    align-items: center;
-    margin-left: 500px;
-    margin-top: 20px;
+    justify-content: center;
+    gap: 20px;
     margin-bottom: 20px;
+    align-items: center;
 
     .item {
-      margin: 0 10px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 20px;
-      line-height: 40px;
-      filter: grayscale(1);
       cursor: pointer;
+      padding: 12px 25px;
+      border-radius: 8px;
+      background: #e3e8ee;
+      transition: 0.3s;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      color: #404040;
 
       &.active {
-        filter: grayscale(0);
+        background: #ffcc00;
+        color: #fff;
       }
-    }
 
-    .img_1 {
-      width: 190px;
-      height: 150px;
-      margin-right: 20px;
-    }
-
-    .img_2 {
-      width: 250px;
-      height: 150px;
+      .rank-icon {
+        width: 24px;
+        height: 24px;
+      }
     }
   }
 
   .tip {
-    width: 300px;
-    background-color: #fff;
-    border-radius: 16px;
-    margin-left: 50px;
-    display: inline-block;
-    position: absolute;
-    top: 300px;
-    left: 100px;
-    padding: 20px;
-
-    &-item {
-      display: block;
-      padding: 9px 27px;
-      border-radius: 8px;
-      font-size: 12px;
-      background: snow;
-      color: #ff4c4c;
-
-      &:first-child {
-        margin-bottom: 10px;
-      }
-    }
+    background: #fff5cc;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0 auto;
   }
 
   .rank-list {
-    /* display: flex; */
-    width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* width: 800px; */
+    margin: 0 auto;
     /* justify-content: space-between; */
 
     .living-tag {
@@ -720,14 +730,19 @@ onMounted(() => {
         }
 
         .rank {
-          box-sizing: border-box;
+          /* box-sizing: border-box;
           margin-right: 20px;
           width: 80px;
           border-radius: 40px;
           background-color: #84f9da;
           color: white;
           text-align: center;
-          font-size: 20px;
+          font-size: 20px; */
+          color: #ffd200;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-weight: 600;
+          font-size: 25px;
+          width: 50px;
         }
 
         .left {

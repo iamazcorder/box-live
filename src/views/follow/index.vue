@@ -42,7 +42,10 @@
           </div>
           <Dropdown class="follow-status">
             <template #btn>
-              <button class="btn">
+              <button
+                class="btn"
+                @click.stop
+              >
                 <div class="icon-menu"></div>
                 已关注
               </button>
@@ -51,7 +54,7 @@
               <div class="list">
                 <a
                   class="item"
-                  @click="handleUnfollow(user.id)"
+                  @click.stop="handleUnfollow(user.id)"
                 >
                   取消关注
                 </a>
@@ -62,10 +65,11 @@
       </div>
     </div>
     <div
+      class="empty-wrap"
       v-else
-      class="empty"
     >
-      暂无关注用户~
+      <div class="ico empty-data"></div>
+      还没有关注的用户呀～
     </div>
   </div>
 </template>
@@ -164,6 +168,33 @@ const handleUnfollow = async (followingId) => {
 <style lang="scss" scoped>
 .follow-page {
   font-family: Arial, sans-serif;
+
+  .ico {
+    width: 15px;
+    height: 15px;
+    opacity: 0.9;
+
+    @extend %containBg;
+
+    &.empty-data {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
+  .empty-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+    color: #575555;
+  }
 
   .header {
     display: flex;
@@ -281,7 +312,7 @@ const handleUnfollow = async (followingId) => {
         }
 
         .list {
-          width: 100px;
+          width: 98px;
           padding: 15px 5px;
 
           .item {

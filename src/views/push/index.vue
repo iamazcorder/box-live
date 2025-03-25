@@ -135,16 +135,41 @@
           v-if="appStore.allTrack.filter((item) => !item.hidden).length <= 0"
           class="add-wrap"
         >
-          <n-space>
-            <n-button
-              v-for="(item, index) in allMediaTypeList"
-              :key="index"
-              class="item"
-              @click="handleStartMedia(item)"
-            >
+          <div class="add-wrap_top">
+            <img
+              src="https://s1.hdslb.com/bfs/static/blive/web-hime/static/add_materials.889718e0.png"
+              activity-name="添加直播素材"
+              @click="showSelectMediaModalCpt = true"
+            />
+          </div>
+          <div class="add-wrap_bottom">
+            <img
+              class="pointer w-85px mr-15px"
+              src="https://s1.hdslb.com/bfs/static/blive/web-hime/static/screen2.72c15a3b.png"
+              is-main-activity="1"
+              activity-name="添加窗口"
+              @click="handleStartMedia(allMediaTypeList[MediaTypeEnum.screen])"
+            />
+            <img
+              class="pointer w-85px mr-15px"
+              src="https://s1.hdslb.com/bfs/static/blive/web-hime/static/camera2.c0deb764.png"
+              is-main-activity="1"
+              activity-name="添加摄像头"
+              @click="handleStartMedia(allMediaTypeList[MediaTypeEnum.camera])"
+            />
+            <img
+              class="pointer w-85px"
+              src="https://s1.hdslb.com/bfs/static/blive/web-hime/static/more.9b2d46a4.png"
+              is-main-activity="1"
+              activity-name="添加直播素材"
+              @click="showSelectMediaModalCpt = true"
+            />
+          </div>
+          <!-- <n-space>
+            <n-button v-for="(item, index) in allMediaTypeList" :key="index" class="item" @click="handleStartMedia(item)">
               {{ item.txt }}
             </n-button>
-          </n-space>
+          </n-space> -->
         </div>
       </div>
 
@@ -166,53 +191,55 @@
           ></div>
           <div class="detail">
             <div class="top">
-              <div
-                class="name"
-                v-if="appStore.liveRoomInfo"
-              >
+              <div class="top_left">
                 <div
-                  class="name_val"
-                  v-if="!showEditNameInput"
+                  class="name"
+                  v-if="appStore.liveRoomInfo"
                 >
-                  {{ appStore.liveRoomInfo.name }}
-                </div>
-                <div
-                  class="name_edit"
-                  v-else
-                >
-                  <div class="name_edit_input">
-                    <input
-                      type="text"
-                      v-model="appStore.liveRoomInfo.name"
-                      placeholder="搜索直播回放"
-                    />
-                    <div class="ico search"></div>
+                  <div
+                    class="name_val"
+                    v-if="!showEditNameInput"
+                  >
+                    {{ liveRoomInfo.name }}
                   </div>
-                  <button
-                    @click="changeLiveRoomName"
-                    class="name_edit_btn name_edit_confirm"
+                  <div
+                    class="name_edit"
+                    v-else
                   >
-                    确定
-                  </button>
-                  <button
-                    @click="changeLiveRoomName"
-                    class="name_edit_btn name_edit_cancel"
-                  >
-                    取消
-                  </button>
+                    <div class="name_edit_input">
+                      <input
+                        type="text"
+                        v-model="title"
+                        placeholder="请输入直播标题"
+                      />
+                      <div class="ico search"></div>
+                    </div>
+                    <button
+                      @click="handleSaveTitle"
+                      class="name_edit_btn name_edit_confirm"
+                    >
+                      确定
+                    </button>
+                    <button
+                      @click="handleCancelSaveTitle"
+                      class="name_edit_btn name_edit_cancel"
+                    >
+                      取消
+                    </button>
+                  </div>
+                  <div
+                    class="ico edit"
+                    @click="showEditNameInput = true"
+                    v-if="!showEditNameInput"
+                  ></div>
                 </div>
-                <div
-                  class="ico edit"
-                  @click="showEditNameInput = true"
-                  v-if="!showEditNameInput"
-                ></div>
-              </div>
-              <div class="area">
-                <div
-                  class="area_btn"
-                  @click="showModal = true"
-                >
-                  {{ selectedCategory }}
+                <div class="area">
+                  <div
+                    class="area_btn"
+                    @click="showModal = true"
+                  >
+                    {{ selectedCategory }}
+                  </div>
                 </div>
               </div>
               <!-- <div class="rtc-info">
@@ -232,11 +259,11 @@
                 </span> -->
                 <div class="item">
                   <div class="ico eye"></div>
-                  666人看过
+                  {{ liveRoomInfo.views_count }}人看过
                 </div>
                 <div class="item">
                   <div class="ico like"></div>
-                  666点赞
+                  {{ dianzanNum }}点赞
                 </div>
               </div>
             </div>
@@ -244,7 +271,7 @@
               <div class="rtc-config">
                 <div class="item-list">
                   <div class="item">
-                    <div class="txt">码率：</div>
+                    <div class="txt">码率设置：</div>
                     <div class="down small">
                       <n-select
                         size="small"
@@ -260,7 +287,7 @@
                     </div>
                   </div> -->
                   <div class="item">
-                    <div class="txt">分辨率：</div>
+                    <div class="txt">分辨率设置：</div>
                     <div class="down big">
                       <n-select
                         size="small"
@@ -357,7 +384,9 @@
               curTab === 'audience' ? 'tab_item_active' : ''
             }`"
             @click="handleTabChange('audience')"
-            >房间观众(270)</span
+            >房间观众{{
+              liveUserList?.length && `(${liveUserList?.length})`
+            }}</span
           >
           <!-- <span> | </span> -->
           <span
@@ -371,6 +400,7 @@
             v-for="(item, index) in liveUserList"
             :key="index"
             class="item"
+            @click="handleJump(item.value.user_id)"
           >
             <div class="info">
               <Avatar
@@ -397,45 +427,99 @@
               :key="index"
               class="item"
             >
+              <template v-if="item.msg_type === DanmuMsgTypeEnum.reward">
+                <div class="item">
+                  <!-- <span>[{{ formatTimeHour(item.send_msg_time!) }}]</span> -->
+                  <span class="name"> {{ item.user?.username }} 投喂了</span>
+                  <span style="color: rgb(251, 208, 91); margin-left: 5px">{{
+                    item.content
+                  }}</span>
+                  <div class="gift-icon">
+                    <img
+                      :src="giftIconMap[item.content || '']"
+                      alt="Gift Icon"
+                    />
+                  </div>
+                </div>
+              </template>
               <template v-if="item.msg_type === DanmuMsgTypeEnum.danmu">
-                <!-- <span class="time">
-                  [{{ formatTimeHour(item.send_msg_time!) }}]
-                </span> -->
-                <span class="name">
-                  {{ item.username }}
-                  <!-- [{{
-                    item.user?.roles?.map((v) => v.role_name).join()
-                  }}] -->
-                </span>
-                <span>：</span>
-                <span
-                  class="msg"
-                  v-if="item.content_type === WsMessageContentTypeEnum.txt"
-                >
-                  {{ item.content }}
-                </span>
-                <div
-                  class="msg img"
-                  v-else
-                >
-                  <img
-                    v-lazy="item.content"
-                    alt=""
-                    @load="handleScrollTop"
-                  />
+                <div class="item">
+                  <span
+                    v-if="liveRoomInfo?.users?.[0].id === item.user_id"
+                    class="roomer"
+                    >主播</span
+                  >
+                  <span class="name">
+                    <Dropdown
+                      trigger="hover"
+                      positon="left"
+                    >
+                      <template #btn>
+                        <!-- <span class="time">
+                      [{{ formatTimeHour(item.send_msg_time!) }}]
+                    </span> -->
+                        <span class="username">{{ item.username }}</span>
+                        <!-- <span class="role">
+                      [{{ item.user?.roles?.map((v) => v.role_name).join() }}]
+                    </span> -->
+                      </template>
+                      <!-- <template #list>
+                        <div class="list">
+                          <div class="item">{{ item.username }}</div>
+                          <div class="item operator" @click="handleDisableSpeakingUser()">
+                            禁言
+                          </div>
+                          <div class="item operator" @click="handleCancelDisableSpeakingUser()">
+                            解除禁言
+                          </div>
+                        </div>
+                      </template> -->
+                    </Dropdown>
+                  </span>
+                  <span>：</span>
+                  <span
+                    class="msg"
+                    v-if="item.content_type === WsMessageContentTypeEnum.txt"
+                  >
+                    {{ item.content }}
+                  </span>
+                  <div
+                    class="msg img"
+                    v-else
+                  >
+                    <img
+                      :src="item.content"
+                      alt=""
+                      @load="handleScrollTop"
+                    />
+                  </div>
                 </div>
               </template>
               <template
                 v-else-if="item.msg_type === DanmuMsgTypeEnum.otherJoin"
               >
-                <span class="name system">系统通知：</span>
-                <span class="msg">{{ item.username }}进入直播！</span>
+                <div class="item">
+                  <span class="name system">系统通知：</span>
+                  <span class="msg">{{ item.username }}进入直播！ </span>
+                </div>
               </template>
               <template
                 v-else-if="item.msg_type === DanmuMsgTypeEnum.userLeaved"
               >
-                <span class="name system">系统通知：</span>
-                <span class="msg">{{ item.username }}离开直播！</span>
+                <div class="item">
+                  <span class="name system">系统通知：</span>
+                  <span class="msg">{{ item.username }}离开直播！ </span>
+                </div>
+              </template>
+              <template v-else-if="item.msg_type === DanmuMsgTypeEnum.dianzan">
+                <div class="item">
+                  <span class="msg dianzan"
+                    >{{ item.username }} 为主播点赞了</span
+                  >
+                  <div class="good">
+                    <!-- <img src="" alt="Gift Icon" /> -->
+                  </div>
+                </div>
               </template>
             </div>
           </div>
@@ -459,32 +543,30 @@
               </div>
             </div>
             <div
-              class="ico face"
+              class="ico emoji"
               title="表情"
               @click="showEmoji = !showEmoji"
             ></div>
             <div
-              class="ico img"
-              title="图片"
-              @click="mockClick"
-            >
-              <input
-                ref="uploadRef"
-                type="file"
-                class="input-upload"
-                accept=".webp,.png,.jpg,.jpeg,.gif"
-                @change="uploadChange"
-              />
-            </div>
+              class="ico dianzan"
+              title="点赞"
+              @click="sendDanmuDianzan(roomId)"
+            ></div>
+            <!-- <div class="ico img" title="图片" @click="mockClick">
+              <input ref="uploadRef" type="file" class="input-upload" accept=".webp,.png,.jpg,.jpeg,.gif"
+                @change="uploadChange" />
+            </div> -->
           </div>
           <div class="input-control">
-            <input
-              v-model="danmuStr"
-              class="ipt"
-              @keydown="keydownDanmu"
-              placeholder="和观众聊聊吧~"
-              type="text"
-            />
+            <div class="input-chat">
+              <textarea
+                v-model="danmuStr"
+                @keydown="(event) => keydownDanmu(event, danmuStr)"
+                placeholder="和观众聊聊吧~"
+                type="text"
+              />
+              <div class="limit-size">{{ danmuStr.length }}/20</div>
+            </div>
             <div
               class="btn"
               @click="handleSendDanmu"
@@ -528,6 +610,7 @@
 </template>
 
 <script lang="ts" setup>
+import { emojiArray } from '@/emoji';
 import {
   Camera,
   Close,
@@ -540,7 +623,7 @@ import {
   VolumeMuteOutline,
 } from '@vicons/ionicons5';
 import { AVRecorder } from '@webav/av-recorder';
-import { copyToClipBoard } from 'billd-utils';
+import { copyToClipBoard, openToTarget } from 'billd-utils';
 import { fabric } from 'fabric';
 import {
   computed,
@@ -554,8 +637,7 @@ import {
 } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { fetchLiveRoomOnlineUser } from '@/api/live';
-import { fetchUpdateMyLiveRoom } from '@/api/liveRoom';
+import { createLiveRoomRecording, fetchUpdateMyLiveRoom } from '@/api/liveRoom';
 import { fetchGetWsMessageList } from '@/api/wsMessage';
 import { mediaTypeEnumMap, THEME_COLOR, URL_QUERY } from '@/constant';
 import { commentAuthTip, loginTip } from '@/hooks/use-login';
@@ -566,6 +648,7 @@ import { useUpload } from '@/hooks/use-upload';
 import { useWebsocket } from '@/hooks/use-websocket';
 import {
   DanmuMsgTypeEnum,
+  GoodsTypeEnum,
   MediaTypeEnum,
   WsMessageContentTypeEnum,
   WsMessageIsFileEnum,
@@ -592,7 +675,10 @@ import {
   setVideoTrackContentHints,
 } from '@/utils';
 
+import { fetchGoodsList } from '@/api/goods';
+import { fetchLiveRoomOnlineUser } from '@/api/live';
 import { fetchUserHasLiveRoom } from '@/api/userLiveRoom';
+import router, { routerName } from '@/router';
 import MediaModalCpt from './mediaModal/index.vue';
 import OpenMicophoneTipCpt from './openMicophoneTip/index.vue';
 import SelectMediaModalCpt from './selectMediaModal/index.vue';
@@ -632,7 +718,7 @@ const {
   liveUserList,
 } = usePush();
 
-const { sendDanmuTxt, sendDanmuImg } = useWebsocket();
+const { sendDanmuTxt, sendDanmuImg, sendDanmuDianzan } = useWebsocket();
 
 const addMediaOkMap = ref(new Map());
 const currentMediaType = ref(MediaTypeEnum.camera);
@@ -680,6 +766,7 @@ const loopGetLiveUserTimer = ref();
 const curTab = ref('audience');
 
 const liveRoomInfo = ref<any>({});
+const title = ref('');
 const showEditNameInput = ref(false);
 // 直播一级分区
 const parentCategory = ref<any>({});
@@ -687,6 +774,10 @@ const parentCategory = ref<any>({});
 const childCategory = ref<any>({});
 // 控制分区弹窗显示的状态
 const showModal = ref(false);
+const giftIconMap = ref<any>({});
+const giftGoodsList = ref<any>([]);
+const recordedChunks = ref<any>([]);
+const globalAudioContext = ref<any>(null);
 
 watch(
   () => userStore.userInfo?.id,
@@ -703,6 +794,42 @@ onMounted(() => {
   }
 });
 
+const dianzanNum = computed(() => {
+  const dianzanList = damuList.value.filter(
+    (item) => item.msg_type === DanmuMsgTypeEnum.dianzan
+  );
+  return dianzanList.length;
+});
+
+async function getGoodsList() {
+  try {
+    // giftLoading.value = true;
+    const res = await fetchGoodsList({
+      type: GoodsTypeEnum.gift,
+      orderName: 'created_at',
+      orderBy: 'desc',
+    });
+    if (res.code === 200) {
+      giftGoodsList.value = res.data.rows;
+      res.data.rows.forEach((item) => {
+        giftIconMap.value[item.name || ''] = item.cover;
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    // giftLoading.value = false;
+  }
+}
+
+const handleJump = (id) => {
+  const url = router.resolve({
+    name: routerName.user,
+    params: { id },
+  });
+  openToTarget(url.href);
+};
+
 const getLiveRoomInfo = async () => {
   const res = await fetchUserHasLiveRoom(Number(userStore.userInfo?.id));
   if (res.code === 200) {
@@ -713,12 +840,29 @@ const getLiveRoomInfo = async () => {
 
 const updateLiveRoomInfo = (liveRoom) => {
   liveRoomInfo.value.name = liveRoom.name;
+  title.value = liveRoom.name;
   parentCategory.value = appStore.areaList.find(
     (item) => item.id === liveRoom?.parent_category_id
   );
   childCategory.value = parentCategory.value.children.find(
     (item) => item.id === liveRoom?.child_category_id
   );
+};
+
+const handleSaveTitle = async () => {
+  const res = await fetchUpdateMyLiveRoom({ name: title.value });
+  if (res.code === 200) {
+    window.$message.success('标题设置成功');
+    liveRoomInfo.value.name = title.value;
+    showEditNameInput.value = false;
+  } else {
+    window.$message.error('标题设置失败，请稍后重试');
+  }
+};
+
+const handleCancelSaveTitle = () => {
+  title.value = liveRoomInfo.value.name;
+  showEditNameInput.value = false;
 };
 
 // 显示的分区文字
@@ -959,7 +1103,7 @@ async function changeLiveRoomArea() {
 }
 // 发送弹幕
 function handleSendDanmu() {
-  sendDanmuTxt(danmuStr.value);
+  sendDanmuTxt(danmuStr.value, roomId.value);
   danmuStr.value = '';
 }
 // 处理输入框中内容的拼接
@@ -1138,6 +1282,7 @@ watch(
 );
 
 onMounted(() => {
+  getGoodsList();
   worker.value = new Worker('worker.js');
   setTimeout(() => {
     scrollTo(0, 0);
@@ -1249,102 +1394,71 @@ function renderFrame() {
   });
 }
 
-function handleNullAudio() {
-  // 创建AudioContext对象
-  const audioContext = new window.AudioContext();
-
-  // 创建输入和输出节点
-  const source = audioContext.createBufferSource();
-  const destination = audioContext.createMediaStreamDestination();
-
-  // 连接输入和输出节点
-  source.connect(destination);
-
-  // 播放空白音频
-  source.start();
-
-  // 获取音频流
-  const stream = destination.stream;
-
-  // 检查是否已经获取到音频流
-  if (stream) {
-    console.log('已创建空的直播音频流');
-    const video = createVideo({
-      appendChild: false,
-    });
-    video.srcObject = stream;
-    nullAudioStream.value = stream;
-  } else {
-    console.error('无法创建空的直播音频流');
-  }
-}
-
-function handleMixedAudio() {
-  const allAudioTrack = appStore.allTrack.filter((item) => item.audio === 1);
-  const nullAudio = nullAudioStream.value?.getAudioTracks()[0];
-  if (nullAudio) {
-    allAudioTrack.push({
-      openEye: true,
-      id: getRandomEnglishString(6),
-      audio: 2,
-      video: 1,
-      mediaName: '占位空音频',
-      type: MediaTypeEnum.webAudio,
-      track: nullAudio,
-      trackid: nullAudio.id,
-      stream: nullAudioStream.value,
-      streamid: nullAudioStream.value?.id,
-      hidden: false,
-      muted: false,
-      scaleInfo: {},
-    });
-  }
-  const audioCtx = new AudioContext();
-  if (canvasVideoStream.value?.getAudioTracks()[0]) {
-    canvasVideoStream.value.removeTrack(
-      canvasVideoStream.value.getAudioTracks()[0]
-    );
-  }
-  const res: { source: MediaStreamAudioSourceNode; gainNode: GainNode }[] = [];
-  allAudioTrack.forEach((item) => {
-    if (!audioCtx || !item.stream) return;
-    const source = audioCtx.createMediaStreamSource(item.stream);
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = (item.volume || 0) / 100;
-    source.connect(gainNode);
-    res.push({ source, gainNode });
-    // console.log('混流', item.stream?.id, item.stream);
-  });
-  const destination = audioCtx.createMediaStreamDestination();
-  res.forEach((item) => {
-    item.source.connect(item.gainNode);
-    item.gainNode.connect(destination);
-  });
-  if (webaudioVideo.value) {
-    webaudioVideo.value.remove();
-  }
-  webaudioVideo.value = createVideo({
-    appendChild: false,
-    muted: true,
-  });
-  bodyAppendChildElArr.value.push(webaudioVideo.value);
-  webaudioVideo.value.className = 'web-audio-video';
-  webaudioVideo.value!.srcObject = destination.stream;
-  const resAudio = destination.stream.getAudioTracks()[0];
-  canvasVideoStream.value?.addTrack(resAudio);
-  networkStore.rtcMap.forEach((rtc) => {
-    const sender = rtc.peerConnection
-      ?.getSenders()
-      .find((sender) => sender.track?.id === resAudio.id);
-    if (!sender) {
-      rtc.peerConnection
-        ?.getSenders()
-        ?.find((sender) => sender.track?.kind === 'audio')
-        ?.replaceTrack(resAudio);
-    }
-  });
-}
-
+// function handleMixedAudio() {
+//   const allAudioTrack = appStore.allTrack.filter((item) => item.audio === 1);
+//   const nullAudio = nullAudioStream.value?.getAudioTracks()[0];
+//   if (nullAudio) {
+//     allAudioTrack.push({
+//       openEye: true,
+//       id: getRandomEnglishString(6),
+//       audio: 2,
+//       video: 1,
+//       mediaName: '占位空音频',
+//       type: MediaTypeEnum.webAudio,
+//       track: nullAudio,
+//       trackid: nullAudio.id,
+//       stream: nullAudioStream.value,
+//       streamid: nullAudioStream.value?.id,
+//       hidden: false,
+//       muted: false,
+//       scaleInfo: {},
+//     });
+//   }
+//   const audioCtx = new AudioContext();
+//   if (canvasVideoStream.value?.getAudioTracks()[0]) {
+//     canvasVideoStream.value.removeTrack(
+//       canvasVideoStream.value.getAudioTracks()[0]
+//     );
+//   }
+//   const res: { source: MediaStreamAudioSourceNode; gainNode: GainNode }[] = [];
+//   allAudioTrack.forEach((item) => {
+//     if (!audioCtx || !item.stream) return;
+//     const source = audioCtx.createMediaStreamSource(item.stream);
+//     const gainNode = audioCtx.createGain();
+//     gainNode.gain.value = (item.volume || 0) / 100;
+//     source.connect(gainNode);
+//     res.push({ source, gainNode });
+//     // console.log('混流', item.stream?.id, item.stream);
+//   });
+//   const destination = audioCtx.createMediaStreamDestination();
+//   res.forEach((item) => {
+//     item.source.connect(item.gainNode);
+//     item.gainNode.connect(destination);
+//   });
+//   if (webaudioVideo.value) {
+//     webaudioVideo.value.remove();
+//   }
+//   webaudioVideo.value = createVideo({
+//     appendChild: false,
+//     muted: true,
+//   });
+//   bodyAppendChildElArr.value.push(webaudioVideo.value);
+//   webaudioVideo.value.className = 'web-audio-video';
+//   webaudioVideo.value!.srcObject = destination.stream;
+//   const resAudio = destination.stream.getAudioTracks()[0];
+//   canvasVideoStream.value?.addTrack(resAudio);
+//   networkStore.rtcMap.forEach((rtc) => {
+//     const sender = rtc.peerConnection
+//       ?.getSenders()
+//       .find((sender) => sender.track?.id === resAudio.id);
+//     if (!sender) {
+//       rtc.peerConnection
+//         ?.getSenders()
+//         ?.find((sender) => sender.track?.kind === 'audio')
+//         ?.replaceTrack(resAudio);
+//     }
+//   });
+// }
 function handleEndLive() {
   clearLoop();
   endLive();
@@ -1360,10 +1474,11 @@ function clearLoop() {
 }
 
 async function handleHistoryMsg() {
+  if (damuList.value?.length > 0) return;
   try {
     const res = await fetchGetWsMessageList({
       nowPage: 1,
-      pageSize: appStore.liveRoomInfo?.history_msg_total || 10,
+      pageSize: appStore.liveRoomInfo?.history_msg_total || 100,
       orderName: 'created_at',
       orderBy: 'desc',
       live_room_id: Number(roomId.value),
@@ -1402,21 +1517,208 @@ function handleScreenshot() {
   a.dispatchEvent(event);
 }
 
+/**
+ * 处理视频录制的函数
+ * 该函数会检查浏览器是否支持视频录制，并在用户允许的情况下开始或停止录制。
+ */
+// async function handleRecordVideo() {
+//   // 检查当前环境是否支持 VideoDecoder 和 AudioEncoder
+//   if (!window.VideoDecoder || !window.AudioEncoder) {
+//     window.$message.warning(`当前环境不支持录制视频`);
+//     return;
+//   }
+
+//   // 初始化音频录制
+//   initAudio();
+
+//   try {
+//     // 如果当前未录制，则开始录制
+//     if (!recording.value) {
+//       // 生成建议的文件名，格式为 billd直播录制-时间戳.mp4
+//       suggestedName.value = `billd直播录制-${+new Date()}.mp4`;
+
+//       // 使用 showSaveFilePicker 让用户选择保存路径
+//       const fileHandle = await window.showSaveFilePicker({
+//         suggestedName: suggestedName.value, // 默认文件名
+//       });
+
+//       // 获取文件写入对象
+//       const writer = await fileHandle.createWritable();
+
+//       // 创建 AVRecorder 实例，克隆 canvasVideoStream 进行录制
+//       avRecorder = new AVRecorder(canvasVideoStream.value!.clone(), {});
+
+//       // 开始录制
+//       await avRecorder.start();
+
+//       // 记录录制开始的时间戳
+//       const startTime = +new Date();
+
+//       // 设置定时器，每秒更新录制时长显示
+//       recordVideoTimer.value = setInterval(() => {
+//         // 计算录制的时间
+//         const res = formatDownTime2({
+//           endTime: +new Date(), // 当前时间
+//           startTime, // 录制开始时间
+//           showMillisecond: true, // 是否显示毫秒
+//           addZero: true, // 是否补零（如 01:02:03）
+//         });
+
+//         // 根据计算结果更新录制时间显示
+//         if (res.d) {
+//           recordVideoTime.value = `${res.d}天${res.h}:${res.m}:${res.s}`;
+//         } else {
+//           recordVideoTime.value = `${res.h}:${res.m}:${res.s}`;
+//         }
+//       }, 1000);
+
+//       console.log(avRecorder.outputStream, '////')
+
+//       // 将 AVRecorder 录制的输出流写入文件
+//       avRecorder.outputStream?.pipeTo(writer).catch(console.error);
+//     } else {
+//       // 如果已经在录制，则停止录制
+//       clearInterval(recordVideoTimer.value); // 清除定时器
+//       recordVideoTime.value = '00:00:00'; // 重置录制时间显示
+
+//       // 停止录制并保存文件
+//       await avRecorder?.stop();
+
+//       // 提示用户文件已成功保存
+//       window.$message.success(`录制文件: ${suggestedName.value} 已保存到本地`);
+
+//       // 释放 avRecorder 资源
+//       avRecorder = null;
+//     }
+
+//     // 切换录制状态
+//     recording.value = !recording.value;
+//   } catch (error) {
+//     console.log(error);
+//     recording.value = false; // 发生错误时，确保 recording 状态被重置
+//   }
+// }
+
+function handleNullAudio() {
+  // // 创建AudioContext对象
+  // const audioContext = new window.AudioContext({ sampleRate: 48000 });
+  // 仅在 AudioContext 为空时创建，并确保采样率符合要求
+  if (!globalAudioContext.value) {
+    globalAudioContext.value = new window.AudioContext({ sampleRate: 48000 });
+  }
+
+  const audioContext = globalAudioContext.value;
+  const source = audioContext.createBufferSource();
+  const destination = audioContext.createMediaStreamDestination();
+
+  source.connect(destination);
+  source.start();
+
+  const stream = destination.stream;
+
+  if (stream) {
+    console.log('已创建空的直播音频流');
+    const video = createVideo({ appendChild: false });
+    video.srcObject = stream;
+    nullAudioStream.value = stream;
+  } else {
+    console.error('无法创建空的直播音频流');
+  }
+}
+
+function handleMixedAudio() {
+  if (!globalAudioContext.value) {
+    globalAudioContext.value = new AudioContext({ sampleRate: 48000 });
+  }
+  const audioCtx = globalAudioContext.value;
+
+  const allAudioTrack = appStore.allTrack.filter((item) => item.audio === 1);
+  const nullAudio = nullAudioStream.value?.getAudioTracks()[0];
+
+  if (nullAudio) {
+    allAudioTrack.push({
+      openEye: true,
+      id: getRandomEnglishString(6),
+      audio: 2,
+      video: 1,
+      mediaName: '占位空音频',
+      type: MediaTypeEnum.webAudio,
+      track: nullAudio,
+      trackid: nullAudio.id,
+      stream: nullAudioStream.value,
+      streamid: nullAudioStream.value?.id,
+      hidden: false,
+      muted: false,
+      scaleInfo: {},
+    });
+  }
+
+  if (canvasVideoStream.value?.getAudioTracks()[0]) {
+    canvasVideoStream.value.removeTrack(
+      canvasVideoStream.value.getAudioTracks()[0]
+    );
+  }
+
+  const res: any = [];
+  allAudioTrack.forEach((item) => {
+    if (!audioCtx || !item.stream) return;
+    const source = audioCtx.createMediaStreamSource(item.stream);
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = (item.volume || 0) / 100;
+    source.connect(gainNode);
+    res.push({ source, gainNode });
+  });
+
+  const destination = audioCtx.createMediaStreamDestination();
+  res.forEach((item) => {
+    item.source.connect(item.gainNode);
+    item.gainNode.connect(destination);
+  });
+
+  if (webaudioVideo.value) {
+    webaudioVideo.value.remove();
+  }
+  webaudioVideo.value = createVideo({
+    appendChild: false,
+    muted: true,
+  });
+  bodyAppendChildElArr.value.push(webaudioVideo.value);
+  webaudioVideo.value.className = 'web-audio-video';
+  webaudioVideo.value!.srcObject = destination.stream;
+
+  const resAudio = destination.stream.getAudioTracks()[0];
+  canvasVideoStream.value?.addTrack(resAudio);
+
+  networkStore.rtcMap.forEach((rtc) => {
+    const sender = rtc.peerConnection
+      ?.getSenders()
+      .find((sender) => sender.track?.id === resAudio.id);
+    if (!sender) {
+      rtc.peerConnection
+        ?.getSenders()
+        ?.find((sender) => sender.track?.kind === 'audio')
+        ?.replaceTrack(resAudio);
+    }
+  });
+}
+
 async function handleRecordVideo() {
   if (!window.VideoDecoder || !window.AudioEncoder) {
     window.$message.warning(`当前环境不支持录制视频`);
     return;
   }
+
   initAudio();
+
   try {
     if (!recording.value) {
       suggestedName.value = `billd直播录制-${+new Date()}.mp4`;
-      const fileHandle = await window.showSaveFilePicker({
-        suggestedName: suggestedName.value,
-      });
-      const writer = await fileHandle.createWritable();
+
+      // 创建 AVRecorder
       avRecorder = new AVRecorder(canvasVideoStream.value!.clone(), {});
+
       await avRecorder.start();
+
       const startTime = +new Date();
       recordVideoTimer.value = setInterval(() => {
         const res = formatDownTime2({
@@ -1425,20 +1727,64 @@ async function handleRecordVideo() {
           showMillisecond: true,
           addZero: true,
         });
+
         if (res.d) {
           recordVideoTime.value = `${res.d}天${res.h}:${res.m}:${res.s}`;
         } else {
           recordVideoTime.value = `${res.h}:${res.m}:${res.s}`;
         }
       }, 1000);
-      avRecorder.outputStream?.pipeTo(writer).catch(console.error);
+      // 监听 outputStream 数据
+      if (avRecorder.outputStream) {
+        collectStreamData(avRecorder.outputStream);
+      }
     } else {
       clearInterval(recordVideoTimer.value);
       recordVideoTime.value = '00:00:00';
+
       await avRecorder?.stop();
-      window.$message.success(`录制文件: ${suggestedName.value} 已保存到本地`);
+
+      // 录制停止后，将 `recordedChunks` 转换为 `Blob`
+      if (recordedChunks.value.length > 0) {
+        const videoBlob = new Blob(recordedChunks.value, { type: 'video/mp4' });
+
+        // **获取视频时长**
+        getVideoDuration(videoBlob).then((duration) => {
+          console.log(`🎥 录制时长: ${formatDuration(duration)}`);
+
+          const videoFile = new File([videoBlob], suggestedName.value, {
+            type: 'video/mp4',
+          });
+
+          createLiveRoomRecording({
+            live_room_id: liveRoomInfo.value.id,
+            title: `直播录制-${+new Date()}`,
+            parent_category_id: liveRoomInfo.value.parent_category_id,
+            child_category_id: liveRoomInfo.value.child_category_id,
+            videoFile: videoFile,
+            duration: duration, // ⬅️ 传给后端
+          })
+            .then(() => {
+              window.$message.success(`录制文件已成功上传至服务器`);
+            })
+            .catch((error) => {
+              console.error('上传视频失败:', error);
+              window.$message.error('视频上传失败');
+            });
+
+          // 清空 recordedChunks
+          recordedChunks.value = [];
+        });
+
+        // 清空 recordedChunks
+        recordedChunks.value = [];
+      } else {
+        console.error('没有捕获到视频数据，无法上传');
+      }
+
       avRecorder = null;
     }
+
     recording.value = !recording.value;
   } catch (error) {
     console.log(error);
@@ -1446,10 +1792,58 @@ async function handleRecordVideo() {
   }
 }
 
+/** 获取视频时长 */
+function getVideoDuration(videoBlob) {
+  return new Promise((resolve) => {
+    const tempVideo = document.createElement('video');
+    tempVideo.preload = 'metadata';
+
+    // 监听 `loadedmetadata` 事件
+    tempVideo.onloadedmetadata = () => {
+      resolve(tempVideo.duration);
+    };
+
+    tempVideo.src = URL.createObjectURL(videoBlob);
+  });
+}
+
+/** 格式化时长（秒 → 00:00:00） */
+function formatDuration(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${hours > 0 ? `${hours}:` : ''}${String(minutes).padStart(
+    2,
+    '0'
+  )}:${String(secs).padStart(2, '0')}`;
+}
+
+/**
+ * 监听 outputStream 并收集数据块
+ * @param {ReadableStream} stream - AVRecorder 的输出流
+ */
+async function collectStreamData(stream) {
+  const reader = stream.getReader();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    recordedChunks.value.push(value);
+  }
+}
+
+/**
+ * 初始化音频处理函数
+ * 该函数用于确保音频正确初始化，仅在首次调用时执行
+ */
 function initAudio() {
-  if (initAudioFlag.value) return;
-  initAudioFlag.value = true;
+  if (initAudioFlag.value) return; // 如果已经初始化过，则直接返回
+  initAudioFlag.value = true; // 标记音频已初始化
+
+  // 处理空音频（可能用于避免音轨丢失）
   handleNullAudio();
+
+  // 处理混合音频（可能用于混合麦克风和系统音频）
   handleMixedAudio();
 }
 
@@ -1692,28 +2086,107 @@ function changeCanvasStyle() {
   fabricCanvas.value.upperCanvasEl.style.height = `${wrapSize.height}px`;
 }
 
-function initCanvas() {
-  const resolutionHeight =
-    currentResolutionRatio.value / window.devicePixelRatio;
-  const resolutionWidth =
+// function initCanvas() {
+//   const resolutionHeight =
+//     currentResolutionRatio.value / window.devicePixelRatio;
+//   const resolutionWidth =
+//     (currentResolutionRatio.value / window.devicePixelRatio) *
+//     appStore.videoRatio;
+//   const wrapWidth = containerRef.value!.getBoundingClientRect().width;
+//   // const wrapWidth = 1920;
+//   const ratio = wrapWidth / resolutionWidth;
+//   const wrapHeight = resolutionHeight * ratio;
+//   console.log(wrapHeight, '～～～～～～～～～')
+//   // const wrapHeight = 1080;
+//   // lower-canvas: 实际的canvas画面，也就是pushCanvasRef
+//   // upper-canvas: 操作时候的canvas
+//   const ins = markRaw(new fabric.Canvas(pushCanvasRef.value!));
+//   ins.setWidth(resolutionWidth);
+//   ins.setHeight(resolutionHeight);
+//   ins.setBackgroundColor('#1b1b1b', () => {
+//     console.log('setBackgroundColor回调');
+//   });
+//   wrapSize.width = wrapWidth;
+//   wrapSize.height = wrapHeight;
+//   fabricCanvas.value = ins;
+//   renderFrame();
+//   changeCanvasStyle();
+// }
+function updateCanvasSize(isShareScreen = false) {
+  console.log('update~~~~', isShareScreen);
+  // 限制最大宽高，避免画布过大
+  const maxWidth = 1280; // 最大宽度
+  const maxHeight = 525; // 最大高度
+
+  // 获取页面可视区域宽高
+  let pageWidth = document.documentElement.clientWidth;
+  let pageHeight = document.documentElement.clientHeight;
+  // pageWidth = 2330;
+  // pageHeight = 478;
+  // if (isShareScreen) {
+  //   pageWidth = 1330;
+  //   pageHeight = 478;
+  // }
+
+  // 计算当前分辨率的原始宽高
+  let resolutionHeight = currentResolutionRatio.value / window.devicePixelRatio;
+  let resolutionWidth =
     (currentResolutionRatio.value / window.devicePixelRatio) *
     appStore.videoRatio;
-  const wrapWidth = containerRef.value!.getBoundingClientRect().width;
-  // const wrapWidth = 1920;
-  const ratio = wrapWidth / resolutionWidth;
-  const wrapHeight = resolutionHeight * ratio;
-  // const wrapHeight = 1080;
-  // lower-canvas: 实际的canvas画面，也就是pushCanvasRef
-  // upper-canvas: 操作时候的canvas
-  const ins = markRaw(new fabric.Canvas(pushCanvasRef.value!));
-  ins.setWidth(resolutionWidth);
-  ins.setHeight(resolutionHeight);
-  ins.setBackgroundColor('black', () => {
-    console.log('setBackgroundColor回调');
-  });
+
+  // 计算宽高缩放比例，防止画布过大
+  let widthRatio = pageWidth / resolutionWidth;
+  let heightRatio = pageHeight / resolutionHeight;
+
+  // 控制 Canvas 最大尺寸，防止超出 maxWidth 和 maxHeight
+  // if (resolutionWidth * widthRatio > maxWidth) {
+  //   widthRatio = maxWidth / resolutionWidth;
+  // }
+  if (resolutionHeight * heightRatio > maxHeight) {
+    heightRatio = maxHeight / resolutionHeight;
+  }
+
+  // 选择最小缩放比例，保持画布等比例缩放
+  const ratio = Math.min(widthRatio, heightRatio);
+  // const ratio = widthRatio;
+
+  // 计算最终的 `wrapWidth` 和 `wrapHeight`
+  let wrapWidth = resolutionWidth * ratio;
+  let wrapHeight = resolutionHeight * ratio;
+
+  if (isShareScreen) {
+    wrapWidth = resolutionWidth * ratio;
+    wrapHeight = resolutionHeight * ratio - 50;
+  }
+
+  // 更新 Canvas 画布大小
+  const ins = fabricCanvas.value;
+  if (ins) {
+    ins.setWidth(wrapWidth);
+    ins.setHeight(wrapHeight);
+    ins.calcOffset(); // 重新计算偏移量，防止拖拽错位
+    ins.setBackgroundColor('#1b1b1b', () => {
+      console.log('setBackgroundColor回调');
+    });
+  }
+
+  // 更新全局画布尺寸
   wrapSize.width = wrapWidth;
   wrapSize.height = wrapHeight;
+  changeCanvasStyle();
+}
+
+// 初始化 Canvas 并设置监听
+function initCanvas() {
+  const ins = markRaw(new fabric.Canvas(pushCanvasRef.value!));
   fabricCanvas.value = ins;
+  updateCanvasSize(false);
+
+  // // 监听窗口大小变化，实时更新 Canvas 尺寸
+  // window.addEventListener("resize", () => {
+  //   updateCanvasSize(false, 'resize');
+  // });
+
   renderFrame();
   changeCanvasStyle();
 }
@@ -2118,6 +2591,9 @@ function setScaleInfo({ track, canvasDom, scale = 1 }) {
 
 async function addMediaOk(val: AppRootState['allTrack'][0]) {
   showMediaModalCpt.value = false;
+  // if (val.type === MediaTypeEnum.screen) {
+  //   updateCanvasSize(true);
+  // }
   if (val.type === MediaTypeEnum.screen) {
     const event = await handleDisplayMedia({
       video: {
@@ -2127,6 +2603,7 @@ async function addMediaOk(val: AppRootState['allTrack'][0]) {
       audio: true,
     });
     if (!event) return;
+    updateCanvasSize(true);
     const videoTrack: AppRootState['allTrack'][0] = {
       id: getRandomEnglishString(6),
       openEye: true,
@@ -2814,13 +3291,39 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
         top: 50%;
         left: 50%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: space-around;
         padding: 10px 20px;
-        width: 50%;
         border-radius: 6px;
-        background-color: white;
+        /* background-color: white; */
         transform: translate(-50%, -50%);
+
+        &_top {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+
+          img {
+            width: 100px;
+            cursor: pointer;
+          }
+        }
+
+        &_bottom {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 10px;
+
+          img {
+            cursor: pointer;
+            width: 85px;
+
+            &:nth-child(2) {
+              margin: 0 15px;
+            }
+          }
+        }
       }
     }
 
@@ -2864,6 +3367,11 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
             align-items: center;
             justify-content: space-between;
             color: #18191c;
+
+            &_left {
+              display: flex;
+              align-items: center;
+            }
 
             .name {
               display: flex;
@@ -2987,6 +3495,11 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
                   align-items: center;
                   padding-right: 10px;
 
+                  .txt {
+                    color: #18191c;
+                    font-size: 13px;
+                  }
+
                   .down {
                     &.small {
                       width: 85px;
@@ -3031,7 +3544,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
-    width: 230px;
+    width: 220px;
     border-radius: 6px;
     background-color: white;
     color: #9499a0;
@@ -3045,7 +3558,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       position: relative;
       box-sizing: border-box;
       /* margin-bottom: 10px; */
-      padding: 10px;
+      padding: 15px;
       width: 100%;
       height: 100%;
       /* flex: 1; */
@@ -3053,6 +3566,8 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
 
       .title {
         text-align: initial;
+        color: #18191c;
+        font-size: 14px;
       }
 
       .list {
@@ -3126,7 +3641,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
     justify-content: space-between;
     box-sizing: border-box;
     margin-left: 10px;
-    width: 230px;
+    width: 240px;
     border-radius: 6px;
     /* background-color: white; */
     color: #9499a0;
@@ -3139,6 +3654,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       border-radius: 6px;
       margin-bottom: 10px;
       background-color: rgba(255, 255, 255, 0.9);
+      padding: 5px 0;
 
       .tab {
         display: flex;
@@ -3277,7 +3793,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
       position: relative;
       flex: 1;
       box-sizing: border-box;
-      padding: 10px 10px 0px;
+      padding: 15px 15px 0px;
       width: 100%;
       border-radius: 6px;
       background-color: rgba(255, 255, 255, 0.9);
@@ -3285,11 +3801,20 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
 
       .title {
         margin-bottom: 10px;
+        color: #18191c;
+        font-size: 14px;
       }
 
       .list {
         overflow: scroll;
-        height: 150px;
+        height: 240px;
+
+        &::-webkit-scrollbar {
+          width: 5px;
+          /* 隐藏垂直滚动条 */
+          height: 0;
+          /* 隐藏水平滚动条 */
+        }
 
         @extend %customScrollbar;
 
@@ -3300,6 +3825,37 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
           white-space: normal;
           word-wrap: break-word;
           font-size: 13px;
+          display: flex;
+          align-items: center;
+
+          .roomer {
+            font-size: 10px;
+            padding: 0 4px;
+            border-radius: 8px;
+            color: #ff6699;
+            border: 1px solid #ff6699;
+            background-color: transparent;
+            margin-top: 2px;
+          }
+
+          .gift-icon {
+            margin-left: 5px;
+
+            img {
+              width: 30px;
+              height: 30px;
+            }
+          }
+
+          .good {
+            width: 30px;
+            height: 30px;
+            opacity: 0.9;
+
+            @extend %containBg;
+
+            @include setBackground('@/assets/img/gift_good.webp');
+          }
 
           .name {
             color: #9499a0;
@@ -3319,6 +3875,11 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
                 width: 80%;
               }
             }
+
+            &.dianzan {
+              color: #9499a0;
+              font-size: 12px;
+            }
           }
         }
       }
@@ -3329,11 +3890,11 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
         left: 10px;
         box-sizing: border-box;
         padding: 4px 0;
-        width: 100%;
+        width: 90%;
 
         .control {
           display: flex;
-          margin: 4px 0;
+          margin: 6px 0;
 
           .emoji-list {
             position: absolute;
@@ -3344,11 +3905,19 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
             box-sizing: border-box;
             padding: 3px;
             padding-right: 0;
-            height: 160px;
+            height: 170px;
             background-color: #fff;
             transform: translateY(-100%);
+            width: 200px;
+            background-color: #faf4d8;
+            border: 1px solid #e2e2e2;
+            border-radius: 4px;
 
             @extend %customScrollbar;
+
+            &::-webkit-scrollbar {
+              width: 3px;
+            }
 
             .item {
               display: inline-flex;
@@ -3375,19 +3944,51 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
               opacity: 0;
             }
 
-            &.face {
-              @include setBackground('@/assets/img/msg-face.png');
+            &.emoji {
+              @include setBackground('@/assets/img/emoji.png');
             }
 
-            &.img {
-              @include setBackground('@/assets/img/msg-img.png');
+            &.dianzan {
+              @include setBackground('@/assets/img/dianzan.png');
             }
           }
         }
 
         .input-control {
           display: flex;
-          align-items: center;
+          flex-direction: column;
+          align-items: flex-end;
+
+          .input-chat {
+            width: 100%;
+            position: relative;
+          }
+
+          textarea {
+            height: 56px;
+            width: 100%;
+            resize: none;
+            outline: 0;
+            border: 0;
+            background-color: #ececec;
+            border-radius: 4px;
+            padding: 8px 8px 10px 8px;
+            color: #2f3238;
+            overflow: hidden;
+            font-size: 12px;
+            line-height: 19px;
+            box-sizing: border-box;
+            margin-bottom: 2px;
+          }
+
+          .limit-size {
+            position: absolute;
+            right: 10px;
+            bottom: 15px;
+            font-size: 12px;
+            line-height: 19px;
+            color: #c1c1c1;
+          }
         }
 
         .ipt {
@@ -3412,7 +4013,7 @@ function handleStartMedia(item: { type: MediaTypeEnum; txt: string }) {
           /* margin-top: 10px; */
           /* margin-left: auto; */
           /* padding: 4px; */
-          padding: 8px 13px;
+          padding: 6px 15px;
           /* width: 50px; */
           border-radius: 4px;
           background-color: $theme-color-gold;

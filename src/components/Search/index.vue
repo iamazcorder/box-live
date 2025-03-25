@@ -4,9 +4,20 @@
       <form
         id="nav-searchform"
         class="nav-search-form"
-        :class="{ 'is-focus': isFocused, 'is-actived': isActived }"
+        :class="{
+          'is-focus': isFocused && inHead,
+          'is-actived': isActived,
+          'is-outhead-focus': isFocused && !inHead,
+          'is-outhead-actived': isActived && !inHead,
+        }"
+        :style="`height: ${inHead ? '40px' : '48px'}; padding: ${
+          inHead ? '0 48px 0 4px' : '0 0 0 4px'
+        }`"
       >
-        <div class="nav-search-content">
+        <div
+          class="nav-search-content"
+          :style="`height: ${inHead ? '32px' : '40px'}`"
+        >
           <input
             v-model="query"
             class="nav-search-input"
@@ -16,11 +27,15 @@
             maxlength="100"
             x-webkit-speech=""
             x-webkit-grammar="builtin:translate"
-            placeholder="电吉他伴奏"
-            title="电吉他伴奏"
+            placeholder="输入关键词搜索"
+            title="输入关键词搜索"
+            :style="`background: ${
+              inHead ? 'transparent' : isFocused || isActived ? '#fff' : ''
+            }`"
             @focus="handleFocus"
             @blur="handleBlur"
             @mousedown="handleActive"
+            @keydown.enter="handleSearch"
           />
           <!-- 清除按钮 -->
           <div
@@ -47,6 +62,7 @@
         <div
           class="nav-search-btn"
           @click="handleSearch"
+          v-if="inHead"
         >
           <svg
             width="17"
@@ -63,18 +79,26 @@
             ></path>
           </svg>
         </div>
+        <div
+          class="search-btn"
+          @click="handleSearch"
+          v-else
+        >
+          搜索
+        </div>
       </form>
       <div
         class="search-panel"
         v-if="showSearchPanel"
         @mousedown.stop
+        :style="`width: ${inHead ? '99.4%' : '99.7%'}`"
       >
         <div class="history">
           <div class="header">
             <div class="title">搜索历史</div>
             <div
               class="clear"
-              @click="clearHistory"
+              @click="clearUserSearch"
             >
               清空
             </div>
@@ -86,11 +110,12 @@
                 class="history-item"
                 v-for="(item, index) in visibleHistory"
                 :key="index"
+                @click.stop.prevent="handleSelectHistory(item.search_keyword)"
               >
-                <div class="text">{{ item }}</div>
+                <div class="text">{{ item.search_keyword }}</div>
                 <div
                   class="close"
-                  @click="removeHistory(item)"
+                  @click.stop.prevent="deleteUserSearch(item.id)"
                 >
                   <svg
                     viewBox="0 0 1024 1024"
@@ -145,8 +170,29 @@
   </div>
 </template>
 <script lang="ts" setup>
+import {
+  clearSearchHistory,
+  createSearchHistory,
+  deleteSearchHistory,
+  getSearchHistory,
+} from '@/api/user';
 import router, { routerName } from '@/router';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useUserStore } from '@/store/user';
+import { openToTarget } from 'billd-utils';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+const userStore = useUserStore();
+
+const props = withDefaults(
+  defineProps<{
+    inHead: boolean;
+  }>(),
+  {
+    inHead: true,
+  }
+);
+
+const emits = defineEmits(['search']);
 
 // 搜索框的绑定数据
 const query = ref('');
@@ -156,6 +202,17 @@ const showSearchPanel = ref(false); // 控制搜索面板显示
 const isHovered = ref(false);
 const isFocused = ref(false);
 const isActived = ref(false); // 添加 isActived 状态，用于标记是否激活
+
+onMounted(() => {
+  getUserSearch();
+});
+
+watch(
+  () => userStore.userInfo?.id,
+  () => {
+    getUserSearch();
+  }
+);
 
 // 输入框事件
 const handleFocus = () => {
@@ -181,37 +238,69 @@ const clearInput = () => {
 
 const handleSearch = () => {
   if (query) {
-    router.push({
-      name: routerName.search,
-      params: { keyword: query.value },
-    });
+    createUserSearch();
+    if (props.inHead) {
+      const url = router.resolve({
+        name: routerName.search,
+        params: { keyword: query.value.trim() },
+      });
+      openToTarget(url.href);
+    } else {
+      emits('search', query.value.trim());
+    }
+  }
+};
+
+const handleSelectHistory = (keyword) => {
+  query.value = keyword;
+};
+
+const createUserSearch = async () => {
+  try {
+    if (userStore.userInfo?.id && query.value.trim()) {
+      createSearchHistory({
+        user_id: userStore.userInfo?.id,
+        search_keyword: query.value.trim(),
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getUserSearch = async () => {
+  if (userStore.userInfo?.id) {
+    const res = await getSearchHistory({ user_id: userStore.userInfo?.id });
+    if (res.code === 200) {
+      searchHistory.value = res.data?.rows;
+    }
+  }
+};
+
+const deleteUserSearch = async (id) => {
+  const res = await deleteSearchHistory({ id });
+  if (res.code === 200) {
+    window.$message.success('删除成功');
+    getUserSearch();
+  } else {
+    window.$message.error('删除失败，请稍后重试');
+  }
+};
+
+const clearUserSearch = async () => {
+  if (userStore.userInfo?.id) {
+    const res = await clearSearchHistory({ user_id: userStore.userInfo?.id });
+    if (res.code === 200) {
+      window.$message.success('清空搜索记录成功');
+      getUserSearch();
+    } else {
+      window.$message.error('清空搜索记录失败，请稍后重试');
+    }
   }
 };
 
 // 搜索历史数据
-const searchHistory = ref([
-  'docker安装redis',
-  '矩阵范数m1',
-  '矩阵范数',
-  '极大似然估计',
-  '连续型随机变量',
-  '矩阵范数',
-  '极大似然估计',
-  '连续型随机变量',
-  '矩阵范数',
-  '极大似然估计',
-  '连续型随机变量',
-]);
-
-// 清空搜索历史
-const clearHistory = () => {
-  searchHistory.value = [];
-};
-
-// 删除特定的搜索历史项
-const removeHistory = (item: string) => {
-  searchHistory.value = searchHistory.value.filter((i) => i !== item);
-};
+const searchHistory = ref<any>([]);
 
 // 最大显示的历史记录数
 const maxVisible = 6;
@@ -258,7 +347,7 @@ onBeforeUnmount(() => {
   position: relative;
   margin: 0 auto;
   min-width: 350px;
-  max-width: 500px;
+  max-width: 600px;
 }
 
 #nav-searchform {
@@ -298,11 +387,26 @@ onBeforeUnmount(() => {
   border-bottom-right-radius: 0;
 }
 
+#nav-searchform.is-outhead-focus {
+  border: 1px solid #e3e5e7;
+  border-bottom: none;
+  background: #ffffff;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 #nav-searchform.is-actived .nav-search-content,
 #nav-searchform.is-focus .nav-search-content {
   background-color: #e3e5e7;
   /* transition: background-color 0.3s; */
   color: #18191c;
+}
+
+#nav-searchform.is-outhead-actived .nav-search-content,
+#nav-searchform.is-outhead-focus .nav-search-content {
+  background-color: #fff;
+  color: #18191c;
+  /* transition: background-color 0.3s; */
 }
 
 #nav-searchform:hover {
@@ -386,6 +490,26 @@ onBeforeUnmount(() => {
   &:hover {
     background-color: #f0f0f0;
     /* hover时的背景颜色 */
+  }
+}
+
+.search-btn {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  background-color: #ffd700;
+  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  position: absolute;
+  top: 5px;
+  right: 7px;
+
+  &:hover {
+    background-color: #fde559;
   }
 }
 

@@ -38,6 +38,7 @@ import { getHostnameUrl } from '@/utils';
 import { getLastBuildDate, setLastBuildDate } from '@/utils/localStorage/app';
 import { getToken } from '@/utils/localStorage/user';
 import { ICategory } from './interface';
+import { fetchUserFollowingList } from './api/user';
 
 const { checkUpdate } = useCheckUpdate();
 const appStore = useAppStore();
@@ -112,6 +113,19 @@ async function handleGlobalMsgMyList() {
 
 async function getAreaList() {
   const res = await fetchCategoryList({});
+  if (res.code === 200) {
+    const list: ICategory[] = res.data;
+    const areaTagsMap = {};
+    res.data.forEach((item) => {
+      areaTagsMap[item.id] = item.children;
+    });
+    appStore.areaList = list;
+    appStore.areaTagsMap = areaTagsMap;
+  }
+}
+
+async function getUserFollowingList() {
+  const res = await fetchUserFollowingList({});
   if (res.code === 200) {
     const list: ICategory[] = res.data;
     const areaTagsMap = {};

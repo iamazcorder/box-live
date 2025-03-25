@@ -5,67 +5,72 @@
 
     <!-- 白色框 -->
     <div class="content-box">
-      <!-- 清除历史按钮 -->
-      <div class="action-bar">
-        <button
-          class="clear-history"
-          @click="clearHistory"
-        >
-          清除历史
-        </button>
-      </div>
-
-      <!-- 历史记录 -->
-      <div class="history-list">
-        <div
-          class="history-card"
-          v-for="(item, index) in historyList"
-          :key="index"
-        >
-          <div class="cover-img">
-            <a
-              href="//live.bilibili.com/7734200"
-              target="_blank"
-            >
-              <img
-                :title="item.name"
-                alt="Anchor Avatar"
-                role="image"
-                :src="item.cover"
-              />
-            </a>
+      <div class="head">
+        <div class="tabs">
+          <div
+            class="tabs_item"
+            :class="curTab === 'live' ? 'tabs_item-active' : ''"
+            @click="curTab = 'live'"
+          >
+            直播
           </div>
-          <div class="room-info clear-float">
-            <div
-              :title="item.title"
-              class="room-title f-left"
-            >
-              {{ item.title }}
-            </div>
-            <div class="room-area f-right">{{ item.area }}</div>
-          </div>
-          <div class="up-info clear-float">
-            <div class="up-uname f-left clear-float">
-              <div class="ico imy"></div>
-              <span class="f-left">{{ item.name }}</span>
-            </div>
-            <div class="room-status f-right">
-              <span
-                class="on-live"
-                v-if="item.isLive"
-                >直播中</span
-              >
-              <span v-if="!item.isLive">未开播</span>
-            </div>
+          <div
+            class="tabs_item"
+            :class="curTab === 'video' ? 'tabs_item-active' : ''"
+            @click="curTab = 'video'"
+          >
+            视频
           </div>
         </div>
+        <!-- 清除历史按钮 -->
+        <div class="action-bar">
+          <button
+            class="clear-history"
+            @click="clearHistory"
+          >
+            清除历史
+          </button>
+        </div>
+      </div>
+
+      <!-- 直播历史记录 -->
+      <div
+        class="history-list"
+        v-if="curTab === 'live'"
+      >
+        <HistoryLiveCard
+          v-for="item in historyLiveList"
+          :historyData="item"
+          :key="item.id"
+          :isLive="checkIsLive(item.live_room_id)"
+        />
+      </div>
+
+      <!-- 视频历史记录 -->
+      <div
+        class="history-list"
+        v-if="curTab === 'video'"
+      >
+        <HistoryVideoCard
+          v-for="item in historyVideoList"
+          :historyData="item"
+          :key="item.id"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { fetchLiveList } from '@/api/live';
+import { fetchLiveViews, fetchVideoViews } from '@/api/liveRoom';
+import HistoryLiveCard from '@/components/HistoryLiveCard/index.vue';
+import HistoryVideoCard from '@/components/HistoryVideoCard/index.vue';
+import { useUserStore } from '@/store/user';
+import { onMounted, ref, watch } from 'vue';
+
+const userStore = useUserStore();
+const curTab = ref('live');
 
 // 假数据
 const historyList = ref([
@@ -87,17 +92,70 @@ const historyList = ref([
   },
 ]);
 
+const historyVideoList = ref<any>([]);
+const historyLiveList = ref<any>([]);
+const liveRoomList = ref<any>([]);
+
+onMounted(() => {
+  getLiveViews();
+  getVideoViews();
+  getLiveRoomList();
+});
+
+watch(
+  () => userStore.userInfo?.id,
+  () => {
+    getLiveViews();
+    getVideoViews();
+  }
+);
+
 // 清除历史
 const clearHistory = () => {
   historyList.value = [];
   alert('历史记录已清除！');
+};
+
+const getVideoViews = async () => {
+  if (userStore.userInfo?.id) {
+    const res = await fetchVideoViews({ user_id: userStore.userInfo?.id });
+    if (res.code === 200) {
+      historyVideoList.value = res.data?.rows;
+    }
+  }
+};
+
+const getLiveViews = async () => {
+  if (userStore.userInfo?.id) {
+    const res = await fetchLiveViews({ user_id: userStore.userInfo?.id });
+    if (res.code === 200) {
+      historyLiveList.value = res.data?.rows;
+    }
+  }
+};
+
+async function getLiveRoomList() {
+  try {
+    const res = await fetchLiveList({});
+    if (res.code === 200) {
+      liveRoomList.value = res.data.rows;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const checkIsLive = (live_room_id) => {
+  if (!live_room_id) {
+    return false;
+  }
+  return liveRoomList.value.find((item) => item?.live_room_id === live_room_id);
 };
 </script>
 
 <style lang="scss" scoped>
 .view-history-page {
   background-color: #f5f6f9;
-  min-height: 100vh;
 
   /* 页面标题 */
   .title {
@@ -111,13 +169,43 @@ const clearHistory = () => {
     background-color: #fff;
     border: 1px solid #e3e8ec;
     border-radius: 12px;
-    padding: 20px;
+    min-height: 620px;
+
+    .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e3e8ec;
+      padding: 10px 0 0 30px;
+
+      .tabs {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        &_item {
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          color: #333;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
+
+          &-active {
+            color: #ffd700;
+            font-weight: bold;
+            border-bottom: 2px solid #ffd700;
+          }
+        }
+      }
+    }
 
     /* 清除历史按钮 */
     .action-bar {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 20px;
+      margin-right: 10px;
+      margin-top: -5px;
 
       .clear-history {
         padding: 6px 16px;
@@ -140,12 +228,12 @@ const clearHistory = () => {
     .history-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
+      padding: 0 10px 10px;
     }
 
     .history-card {
       display: inline-block;
-      margin: 15px 10px 0;
+      margin: 15px 5px 0;
       padding: 8px;
       width: 198px;
       height: 188px;

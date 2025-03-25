@@ -22,7 +22,7 @@
     <!-- 关注列表 -->
     <div
       class="follow-list"
-      v-if="followers.length !== 0"
+      v-if="followers.length > 0"
     >
       <div
         v-for="(user, index) in followers"
@@ -54,7 +54,7 @@
                 {{ isMutualFollow(user) ? '已互粉' : '回关' }}
               </button>
             </template>
-            <template
+            <templates
               #list
               v-if="isMutualFollow(user)"
             >
@@ -66,16 +66,17 @@
                   取消关注
                 </a>
               </div>
-            </template>
+            </templates>
           </Dropdown>
         </div>
       </div>
     </div>
     <div
+      class="empty-wrap"
       v-else
-      class="empty"
     >
-      暂无粉丝数据～
+      <div class="ico empty-data"></div>
+      这里还没有粉丝呀～
     </div>
   </div>
 </template>
@@ -204,12 +205,31 @@ const handleJump = (id) => {
 .follow-page {
   font-family: Arial, sans-serif;
 
-  .empty {
+  .ico {
+    width: 15px;
+    height: 15px;
+    opacity: 0.9;
+
+    @extend %containBg;
+
+    &.empty-data {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
+  .empty-wrap {
+    width: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 20px;
-    height: 80px;
+    margin-top: 70px;
+    color: #575555;
   }
 
   .header {
@@ -341,7 +361,7 @@ const handleJump = (id) => {
         }
 
         .list {
-          width: 100px;
+          width: 98px;
           padding: 15px 5px;
           /* border: 1px solid #ccc;
           border-radius: 15px; */

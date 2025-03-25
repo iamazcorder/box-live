@@ -1,6 +1,10 @@
 // TIP: ctrl+cmd+t,生成函数注释
 import { computeBox, getRangeRandom, judgeType } from 'billd-utils';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import sparkMD5 from 'spark-md5';
+
+dayjs.extend(localizedFormat);
 
 /**
  * ios日期兼容
@@ -729,6 +733,25 @@ export function timeAgo(lastLiveTime: string): string {
   return `${month}月${day}日`;
 }
 
+export function formatHistoryTime(timeStr: string): string {
+  const now = dayjs();
+  const time = dayjs(timeStr);
+
+  if (time.isSame(now, 'day')) {
+    return `今天 ${time.format('HH:mm')}`;
+  }
+
+  if (time.isSame(now.subtract(1, 'day'), 'day')) {
+    return `昨天 ${time.format('HH:mm')}`;
+  }
+
+  if (time.year() === now.year()) {
+    return time.format('MM-DD HH:mm');
+  }
+
+  return time.format('YYYY-MM-DD HH:mm');
+}
+
 // 格式化日期
 export function formatDate(date: string): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -740,4 +763,39 @@ export function formatDate(date: string): string {
   };
   const liveDate = new Date(date);
   return liveDate.toLocaleString('zh-CN', options);
+}
+
+export function formatDuration(seconds: number): string {
+  if (isNaN(seconds) || seconds < 0) {
+    return '00:00'; // 处理非法输入
+  }
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const sec = Math.floor(seconds % 60);
+
+  // 如果小于 1 小时，返回 MM:SS
+  if (hours === 0) {
+    return `${String(minutes).padStart(2, '0')}:${String(sec).padStart(
+      2,
+      '0'
+    )}`;
+  }
+
+  // 如果大于 1 小时，返回 HH:MM:SS
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+    2,
+    '0'
+  )}:${String(sec).padStart(2, '0')}`;
+}
+
+export function formatDateTime(dateTimeString) {
+  const date = new Date(dateTimeString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }

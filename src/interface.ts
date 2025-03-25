@@ -751,6 +751,7 @@ export enum DanmuMsgTypeEnum {
   system,
   redbag,
   reward,
+  dianzan,
 }
 
 export interface ILiveUser {

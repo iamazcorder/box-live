@@ -50,6 +50,7 @@
           <div
             v-if="currentLive?.live_room"
             ref="remoteVideoRef"
+            class="remote-video"
           ></div>
           <template v-if="currentLive?.live_room">
             <div class="video-controls">
@@ -395,11 +396,11 @@ import ReservationNotification from '@/components/ReservationNotification/index.
 import { getFollowedUsersWithLiveRecords } from '@/api/user';
 import { sliderList, URL_QUERY } from '@/constant';
 import { usePull } from '@/hooks/use-pull';
+import { useWebsocket } from '@/hooks/use-websocket';
 import { ILive, LiveLineEnum, SwitchEnum } from '@/interface';
 import { routerName } from '@/router';
 import { useAppStore } from '@/store/app';
 import { useUserStore } from '@/store/user';
-import { LiveRoomTypeEnum } from '@/types/ILiveRoom';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -426,13 +427,42 @@ const hoveredIndex = ref(-1);
 
 const pageParams = reactive({ page: 0, page_size: 30, platform: 'web' });
 const { t } = useI18n();
+// const {
+//   videoWrapRef,
+//   videoLoading,
+//   videoResolution,
+//   handleStopDrawing,
+//   handlePlay,
+// } = usePull();
+
 const {
-  videoWrapRef,
-  videoLoading,
-  videoResolution,
-  handleStopDrawing,
+  initWs,
+  initRtcReceive,
+  initPull,
+  closeWs,
+  closeRtc,
+  keydownDanmu,
   handlePlay,
+  videoWrapRef,
+  msgIsFile,
+  mySocketId,
+  videoResolution,
+  videoLoading,
+  handleStopDrawing,
+  roomLiving,
+  damuList,
+  liveUserList,
+  danmuStr,
 } = usePull();
+
+const {
+  initRoomId,
+  sendDanmuTxt,
+  sendDanmuImg,
+  sendDanmuReward,
+  sendDanmuDianzan,
+} = useWebsocket();
+
 const isBottom = ref(false);
 const rootMargin = {
   bottom: 600,
@@ -441,8 +471,9 @@ const rootMargin = {
   right: 0,
 };
 const liveUsers = ref<any[]>([]);
+const roomId = ref('');
 
-onMounted(() => {
+onMounted(async () => {
   const intersectionObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((item) => {
@@ -460,11 +491,75 @@ onMounted(() => {
   );
   intersectionObserver.observe(loadMoreRef.value!);
   handleSlideList();
-  getLiveRoomList();
-  videoWrapRef.value = videoWrapTmpRef.value;
+  await getLiveRoomList();
+  init(topLiveRoomList.value?.[0]?.live_room_id);
+  // videoWrapRef.value = videoWrapTmpRef.value;
   if (userStore?.userInfo?.id) {
     getRecordList();
   }
+});
+
+const init = async (live_room_id) => {
+  roomId.value = String(live_room_id);
+  initPull({ roomId: roomId.value, autolay: true });
+  initRoomId(roomId.value);
+  handleRefresh();
+  videoWrapRef.value = remoteVideoRef.value;
+  videoWrapTmpRef.value = remoteVideoRef.value;
+  initWs({
+    roomId: roomId.value,
+    isBilibili: false,
+    isAnchor: false,
+  });
+  initRtcReceive();
+};
+
+// 初始化
+onMounted(async () => {
+  // roomId.value = route.params.roomId as string;
+  // initPull({ roomId: roomId.value, autolay: true });
+  // if (route.query[URL_QUERY.isBilibili] === '1') {
+  //   isBilibili.value = true;
+  //   const res = await fetchLiveRoomBilibili();
+  //   roomId.value = `${res.data.id!}`;
+  // }
+  // initRoomId(roomId.value);
+  // await handleFindLiveRoomInfo();
+  // if (!liveRoomInfo.value) return;
+  // // handleRefresh();
+  // appStore.videoControls.fps = true;
+  // appStore.videoControls.fullMode = true;
+  // appStore.videoControls.kbs = true;
+  // appStore.videoControls.line = true;
+  // appStore.videoControls.networkSpeed = true;
+  // appStore.videoControls.pageFullMode = true;
+  // appStore.videoControls.pipMode = true;
+  // appStore.videoControls.renderMode = LiveRenderEnum.video;
+  // appStore.videoControls.resolution = true;
+  // appStore.videoControls.speed = true;
+  // videoWrapRef.value = remoteVideoRef.value;
+  // handleHistoryMsg();
+  // getGoodsList();
+  // if (topRef.value && bottomRef.value && remoteVideoRef.value) {
+  //   const res =
+  //     bottomRef.value.getBoundingClientRect().top -
+  //     (topRef.value.getBoundingClientRect().top +
+  //       topRef.value.getBoundingClientRect().height);
+  //   height.value = res;
+  // }
+  // if (isBilibili.value) {
+  //   initWs({ roomId: roomId.value, isBilibili: true, isAnchor: false });
+  // } else {
+  //   initWs({
+  //     roomId: roomId.value,
+  //     isBilibili: false,
+  //     isAnchor: false,
+  //   });
+  //   initRtcReceive();
+  // }
+  // getGiftRecord();
+  // getGiftGroupList();
+  // handleSendGetLiveUser(Number(roomId.value));
 });
 
 watch(
@@ -552,15 +647,16 @@ function playLive(item: ILive) {
 
 function changeLive(item: ILive) {
   if (item.id === currentLive.value?.id) return;
-  if (
-    ![
-      LiveRoomTypeEnum.wertc_live,
-      LiveRoomTypeEnum.wertc_meeting_one,
-      LiveRoomTypeEnum.wertc_meeting_two,
-    ].includes(item.live_room!.type!)
-  ) {
-    appStore.liveLine = LiveLineEnum.hls;
-  }
+  init(item?.live_room_id);
+  // if (
+  //   ![
+  //     LiveRoomTypeEnum.wertc_live,
+  //     LiveRoomTypeEnum.wertc_meeting_one,
+  //     LiveRoomTypeEnum.wertc_meeting_two,
+  //   ].includes(item.live_room!.type!)
+  // ) {
+  //   appStore.liveLine = LiveLineEnum.hls;
+  // }
   playLive(item);
 }
 
@@ -731,6 +827,32 @@ const getRecordList = async () => {
           background-size: cover;
           filter: blur(5px);
           inset: 0;
+        }
+
+        .remote-video {
+          position: relative;
+          width: 100%;
+          height: 100%;
+
+          :deep(video) {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: block;
+            margin: 0 auto;
+            height: calc(100% - 80px - 100px);
+            transform: translate(-50%, -50%);
+          }
+
+          :deep(canvas) {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: block;
+            margin: 0 auto;
+            height: calc(100% - 80px - 100px);
+            transform: translate(-50%, -50%);
+          }
         }
 
         :deep(canvas) {
@@ -1569,7 +1691,8 @@ const getRecordList = async () => {
       text-align: center;
 
       &:hover {
-        background-color: #ccc;
+        border: 1px solid #ffd700;
+        color: #ffd700;
       }
     }
   }

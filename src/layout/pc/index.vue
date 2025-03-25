@@ -36,7 +36,7 @@ onMounted(() => {
 });
 
 const handleShowSideBar = () => {
-  if (route.path === '/') {
+  if (route.path === '/' || route.path === '/area') {
     isShowSideBar.value = true;
   } else {
     isShowSideBar.value = false;
