@@ -208,19 +208,3 @@ const handleWithdraw = () => {
   margin-top: 10px;
 }
 </style>
-
-@startuml participant 观众 as Viewer participant 前端 as Frontend participant
-WebSocket as SignalingServer participant LiveRoomController as Controller
-participant LiveRoomService as Service participant 数据库 as Database ==
-观众拉流 == Viewer -> Frontend: 加入直播间 activate Viewer activate Frontend
-Frontend -> Controller: 请求直播间信息 activate Controller Controller ->
-Service: getRoomInfo(roomId) activate Service Service -> Database: 查询房间信息
-activate Database Database --> Service: 返回房间信息 deactivate Database Service
---> Controller: 返回房间信息 deactivate Service Controller --> Frontend:
-返回房间信息 deactivate Controller Frontend -> Frontend: 创建 RTCPeerConnection
-Frontend -> SignalingServer: 请求拉流（WebSocket） activate SignalingServer
-SignalingServer -> Frontend: 转发 SDP Offer 和 ICE 候选 deactivate
-SignalingServer Frontend -> Frontend: 设置远程 SDP Frontend -> Frontend:
-添加远端 ICE 候选 Frontend -> Frontend: 完成 P2P 连接 Frontend -> Frontend: 触发
-ontrack 事件（接收流） Frontend -> Frontend: 将流绑定到
-<video></video>
