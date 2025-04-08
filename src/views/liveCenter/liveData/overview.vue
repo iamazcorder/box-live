@@ -1,6 +1,13 @@
 <template>
   <div class="title">数据总览</div>
-  <div class="content-container">
+  <VerifyCard
+    :audit_info="userStore.auditInfo"
+    v-if="userStore.auditInfo?.status !== 1"
+  />
+  <div
+    class="content-container"
+    v-else
+  >
     <div class="header">
       <div class="subtitle">核心数据</div>
       <div class="time-selector">
@@ -44,7 +51,8 @@
       >
         <div class="name">{{ item.name }}</div>
         <div class="value">
-          <div class="num">{{ cardData[item.key] }}</div>
+          <!-- <div class="num">{{ cardData[item.key] }}</div> -->
+          <div class="num">XXXX</div>
           <div class="unit">{{ item.unit }}</div>
         </div>
       </div>
@@ -79,8 +87,11 @@
 
 <script lang="ts" setup>
 import LineChart from '@/components/LineChart/index.vue';
+import { useUserStore } from '@/store/user';
 import type { EChartsOption } from 'echarts';
 import { computed, ref, watchEffect } from 'vue';
+
+const userStore = useUserStore();
 
 const timeOptions = ['前7日', '前30日'];
 const selectedTime = ref('前7日');

@@ -3,8 +3,16 @@
     <!-- 页面标题 -->
     <div class="page-title">屏蔽词设置</div>
 
+    <VerifyCard
+      :audit_info="userStore.auditInfo"
+      v-if="userStore.auditInfo?.status !== 1"
+    />
+
     <!-- 白底框 -->
-    <div class="content-container">
+    <div
+      class="content-container"
+      v-else
+    >
       <!-- 输入框和提交按钮 -->
       <div class="input-group">
         <input
@@ -53,7 +61,10 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store/user';
 import { ref } from 'vue';
+
+const userStore = useUserStore();
 
 // 输入框的值
 const inputValue = ref('');

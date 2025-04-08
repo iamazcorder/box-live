@@ -3,154 +3,160 @@
     <!-- 页面标题 -->
     <div class="page-title">直播片段</div>
 
-    <div class="tip">
-      直播片段仅保留
-      <span style="color: red">14</span>
-      天，请尽快操作。
-    </div>
+    <VerifyCard
+      :audit_info="userStore.auditInfo"
+      v-if="userStore.auditInfo?.status !== 1"
+    />
+    <div v-else>
+      <div class="tip">
+        直播片段仅保留
+        <span style="color: red">14</span>
+        天，请尽快操作。
+      </div>
 
-    <!-- Tab 切换 -->
-    <div class="content-container">
-      <div
-        v-for="item in replayList"
-        :key="item.id"
-        :span="8"
-      >
-        <div class="video-card">
-          <video
-            class="video-player"
-            controls
-          >
-            <source
-              :src="item.url"
-              type="video/mp4"
-            />
-            您的浏览器不支持 HTML5 视频。
-          </video>
-          <div class="video-info">
-            <div class="title">{{ item.title }}</div>
-            <div class="bottom">
-              <div class="time">{{ formatDateTime(item.created_at) }}</div>
-              <div style="display: flex; align-items: center; gap: 10px">
-                <div class="ico download"></div>
-                <div
-                  class="upload-btn"
-                  @click="openUploadDialog(item)"
-                  v-if="!checkIsPublish(item.url)"
-                >
-                  发布
-                </div>
-                <div
-                  class="upload-btn upload-btn_done"
-                  v-else
-                >
-                  已投稿
-                </div>
-                <div
-                  class="delete-btn"
-                  @click="deleteVideo(item.id)"
-                >
-                  删除
+      <!-- Tab 切换 -->
+      <div class="content-container">
+        <div
+          v-for="item in replayList"
+          :key="item.id"
+          :span="8"
+        >
+          <div class="video-card">
+            <video
+              class="video-player"
+              controls
+            >
+              <source
+                :src="item.url"
+                type="video/mp4"
+              />
+              您的浏览器不支持 HTML5 视频。
+            </video>
+            <div class="video-info">
+              <div class="title">{{ item.title }}</div>
+              <div class="bottom">
+                <div class="time">{{ formatDateTime(item.created_at) }}</div>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <div class="ico download"></div>
+                  <div
+                    class="upload-btn"
+                    @click="openUploadDialog(item)"
+                    v-if="!checkIsPublish(item.url)"
+                  >
+                    发布
+                  </div>
+                  <div
+                    class="upload-btn upload-btn_done"
+                    v-else
+                  >
+                    已投稿
+                  </div>
+                  <div
+                    class="delete-btn"
+                    @click="deleteVideo(item.id)"
+                  >
+                    删除
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 投稿弹窗 -->
-    <el-dialog
-      v-model="showUploadDialog"
-      title="发布直播片段"
-      width="500px"
-      center
-    >
-      <div class="dialog-content">
-        <!-- 直播标题 -->
-        <div class="form-group">
-          <label for="liveTitle">稿件标题</label>
-          <input
-            id="liveTitle"
-            type="text"
-            v-model="currentVideo.title"
-            placeholder="请输入稿件标题"
-            style="width: 300px"
-          />
-        </div>
-
-        <!-- 直播描述 -->
-        <div class="form-group">
-          <label for="liveTitle">稿件描述</label>
-          <input
-            id="liveTitle"
-            type="text"
-            v-model="currentVideo.desc"
-            placeholder="请输入稿件描述"
-            style="width: 300px"
-          />
-        </div>
-
-        <!-- 分区-->
-        <div class="form-group">
-          <label for="liveTitle">稿件分区</label>
-          <div
-            class="category-text"
-            @click="showCategoryModal = true"
-          >
-            {{ selectedCategory }}
-          </div>
-        </div>
-
-        <!-- 封面上传 -->
-        <div class="form-group">
-          <label>稿件封面</label>
-          <div
-            class="cover-upload"
-            v-if="currentVideo.cover"
-          >
-            <img
-              :src="currentVideo.cover"
-              alt="封面预览"
+      <!-- 投稿弹窗 -->
+      <el-dialog
+        v-model="showUploadDialog"
+        title="发布直播片段"
+        width="500px"
+        center
+      >
+        <div class="dialog-content">
+          <!-- 直播标题 -->
+          <div class="form-group">
+            <label for="liveTitle">稿件标题</label>
+            <input
+              id="liveTitle"
+              type="text"
+              v-model="currentVideo.title"
+              placeholder="请输入稿件标题"
+              style="width: 300px"
             />
           </div>
-          <div
-            class="empty-wrap"
-            v-else
-          >
-            <div class="ico empty-data"></div>
-            这里还没有图片哟～
+
+          <!-- 直播描述 -->
+          <div class="form-group">
+            <label for="liveTitle">稿件描述</label>
+            <input
+              id="liveTitle"
+              type="text"
+              v-model="currentVideo.desc"
+              placeholder="请输入稿件描述"
+              style="width: 300px"
+            />
           </div>
-          <div
-            type="button"
-            @click="triggerCoverUpload"
-            class="btn"
-          >
-            更换封面
+
+          <!-- 分区-->
+          <div class="form-group">
+            <label for="liveTitle">稿件分区</label>
+            <div
+              class="category-text"
+              @click="showCategoryModal = true"
+            >
+              {{ selectedCategory }}
+            </div>
+          </div>
+
+          <!-- 封面上传 -->
+          <div class="form-group">
+            <label>稿件封面</label>
+            <div
+              class="cover-upload"
+              v-if="currentVideo.cover"
+            >
+              <img
+                :src="currentVideo.cover"
+                alt="封面预览"
+              />
+            </div>
+            <div
+              class="empty-wrap"
+              v-else
+            >
+              <div class="ico empty-data"></div>
+              这里还没有图片哟～
+            </div>
+            <div
+              type="button"
+              @click="triggerCoverUpload"
+              class="btn"
+            >
+              更换封面
+            </div>
           </div>
         </div>
-      </div>
-      <template #footer>
-        <div
-          class="btn confirm-btn"
-          @click="submitUpload"
-        >
-          确认投稿
-        </div>
-      </template>
-    </el-dialog>
-    <!-- 控制弹窗的显示 -->
-    <CategoryBox
-      :isVisible="showCategoryModal"
-      @update:isVisible="handleCategorySelect"
-    />
-    <!-- 隐藏文件选择框 -->
-    <input
-      type="file"
-      ref="fileInput"
-      class="file-input"
-      @change="handleFileChange"
-    />
+        <template #footer>
+          <div
+            class="btn confirm-btn"
+            @click="submitUpload"
+          >
+            确认投稿
+          </div>
+        </template>
+      </el-dialog>
+      <!-- 控制弹窗的显示 -->
+      <CategoryBox
+        :isVisible="showCategoryModal"
+        @update:isVisible="handleCategorySelect"
+      />
+      <!-- 隐藏文件选择框 -->
+      <input
+        type="file"
+        ref="fileInput"
+        class="file-input"
+        @change="handleFileChange"
+      />
+    </div>
   </div>
 </template>
 

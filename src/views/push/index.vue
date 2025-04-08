@@ -430,7 +430,8 @@
               <template v-if="item.msg_type === DanmuMsgTypeEnum.reward">
                 <div class="item">
                   <!-- <span>[{{ formatTimeHour(item.send_msg_time!) }}]</span> -->
-                  <span class="name"> {{ item.user?.username }} 投喂了</span>
+                  <!-- <span class="name"> {{ item.user?.username }} 投喂了</span> -->
+                  <span class="name">XXX 投喂了</span>
                   <span style="color: rgb(251, 208, 91); margin-left: 5px">{{
                     item.content
                   }}</span>
@@ -513,9 +514,10 @@
               </template>
               <template v-else-if="item.msg_type === DanmuMsgTypeEnum.dianzan">
                 <div class="item">
-                  <span class="msg dianzan"
+                  <!-- <span class="msg dianzan"
                     >{{ item.username }} 为主播点赞了</span
-                  >
+                  > -->
+                  <span class="msg dianzan">XXX 为主播点赞了</span>
                   <div class="good">
                     <!-- <img src="" alt="Gift Icon" /> -->
                   </div>

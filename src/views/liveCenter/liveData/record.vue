@@ -1,6 +1,13 @@
 <template>
   <div class="title">场次数据</div>
-  <div class="content-container">
+  <VerifyCard
+    :audit_info="userStore.auditInfo"
+    v-if="userStore.auditInfo?.status !== 1"
+  />
+  <div
+    class="content-container"
+    v-else
+  >
     <table class="custom-table">
       <thead>
         <tr>
@@ -19,9 +26,10 @@
         >
           <td>{{ row.time }}</td>
           <td>{{ row.category }}</td>
-          <td>{{ formatDuration(row.duration) }}</td>
+          <!-- <td>{{ formatDuration(row.duration) }}</td> -->
+          <td>{{ row.duration }}</td>
           <td>{{ row.danmuCount }}</td>
-          <td>{{ row.income }}元</td>
+          <td>{{ row.income }}</td>
           <td>{{ row.newFans }}</td>
         </tr>
       </tbody>
@@ -30,50 +38,69 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store/user';
 import { ref } from 'vue';
+
+const userStore = useUserStore();
 
 // 模拟直播场次数据
 const sessionData = ref([
   {
-    time: '03-02 16:37~16:37',
-    category: '自习室',
-    duration: 10000,
-    danmuCount: 120,
-    income: 70,
-    newFans: 4,
+    time: 'XXXX',
+    category: 'XXXX',
+    duration: 'XXXX',
+    danmuCount: 'XXXX',
+    income: 'XXXX',
+    newFans: 'XXXX',
   },
   {
-    time: '02-08 16:46~16:46',
-    category: '主机游戏',
-    duration: 3000,
-    danmuCount: 64,
-    income: 34,
-    newFans: 6,
+    time: 'XXXX',
+    category: 'XXXX',
+    duration: 'XXXX',
+    danmuCount: 'XXXX',
+    income: 'XXXX',
+    newFans: 'XXXX',
   },
-  {
-    time: '02-08 16:46~16:46',
-    category: '无畏契约',
-    duration: 1000,
-    danmuCount: 37,
-    income: 56,
-    newFans: 2,
-  },
-  {
-    time: '02-08 16:46~16:46',
-    category: '英雄联盟',
-    duration: 6000,
-    danmuCount: 70,
-    income: 12,
-    newFans: 0,
-  },
-  {
-    time: '02-06 15:11~15:11',
-    category: '生活杂谈',
-    duration: 7500,
-    danmuCount: 90,
-    income: 58,
-    newFans: 5,
-  },
+  // {
+  //   time: '03-02 16:37~16:37',
+  //   category: '自习室',
+  //   duration: 10000,
+  //   danmuCount: 120,
+  //   income: 70,
+  //   newFans: 4,
+  // },
+  // {
+  //   time: '02-08 16:46~16:46',
+  //   category: '主机游戏',
+  //   duration: 3000,
+  //   danmuCount: 64,
+  //   income: 34,
+  //   newFans: 6,
+  // },
+  // {
+  //   time: '02-08 16:46~16:46',
+  //   category: '无畏契约',
+  //   duration: 1000,
+  //   danmuCount: 37,
+  //   income: 56,
+  //   newFans: 2,
+  // },
+  // {
+  //   time: '02-08 16:46~16:46',
+  //   category: '英雄联盟',
+  //   duration: 6000,
+  //   danmuCount: 70,
+  //   income: 12,
+  //   newFans: 0,
+  // },
+  // {
+  //   time: '02-06 15:11~15:11',
+  //   category: '生活杂谈',
+  //   duration: 7500,
+  //   danmuCount: 90,
+  //   income: 58,
+  //   newFans: 5,
+  // },
 ]);
 
 // 处理查看明细点击事件

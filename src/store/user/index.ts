@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia';
 
-import { fetchUserInfo, fetchUsernameLogin } from '@/api/user';
+import {
+  fetchUserInfo,
+  fetchUsernameLogin,
+  getLiveAnchorAudit,
+} from '@/api/user';
 import { fetchMyWallet } from '@/api/wallet';
 import { IAuth, IRole } from '@/interface';
 import { IUser } from '@/types/IUser';
@@ -8,6 +12,7 @@ import cache from '@/utils/cache';
 
 type UserRootState = {
   userInfo?: IUser;
+  auditInfo?: any;
   token?: string | null;
   roles?: IRole[];
   auths?: IAuth[];
@@ -20,11 +25,15 @@ export const useUserStore = defineStore('user', {
       roles: undefined,
       userInfo: undefined,
       auths: undefined,
+      auditInfo: undefined,
     };
   },
   actions: {
     setUserInfo(res: UserRootState['userInfo']) {
       this.userInfo = res;
+    },
+    setAuditInfo(res: UserRootState['auditInfo']) {
+      this.auditInfo = res;
     },
     setToken(res: UserRootState['token'], exp: number) {
       cache.setStorageExp('token', res, exp);
@@ -70,6 +79,16 @@ export const useUserStore = defineStore('user', {
         this.setUserInfo(data);
         this.setRoles(data.roles);
         this.setAuths(data.auths);
+        this.getAuditInfo(data?.id);
+        return { code, data };
+      } catch (error) {
+        return error;
+      }
+    },
+    async getAuditInfo(user_id) {
+      try {
+        const { code, data } = await getLiveAnchorAudit({ user_id });
+        this.setAuditInfo(data);
         return { code, data };
       } catch (error) {
         return error;

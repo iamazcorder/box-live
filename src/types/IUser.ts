@@ -144,6 +144,8 @@ export interface IUser {
   remark?: string;
   batch_create_user?: IUser[];
 
+  is_host?: boolean;
+
   qq_users?: IQqUser[];
   wechat_users?: IWechatUser[];
   github_users?: IGithubUser[];

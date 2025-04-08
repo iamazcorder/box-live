@@ -2,195 +2,206 @@
   <div class="start-live-page">
     <!-- 页面标题 -->
     <div class="page-title">预告设置</div>
-    <!-- 白底框 -->
-    <div class="content-container">
-      <!-- 开播设置表单 -->
-      <!-- 直播标题 -->
-      <div class="form-group">
-        <label for="liveTitle">预告标题</label>
-        <input
-          id="liveTitle"
-          type="text"
-          v-model="form.title"
-          placeholder="请输入预告标题"
-          style="width: 300px"
-        />
-      </div>
-
-      <!-- 直播日期 -->
-      <div class="form-group">
-        <label for="date">直播时间</label>
-        <el-date-picker
-          v-model="form.date"
-          type="datetime"
-          placeholder="请选择直播日期"
-          :clearable="true"
-          format="YYYY-MM-DD HH:mm"
-          class="input medium-input"
-          style="height: 38px"
-          @change="handleDateChange"
-        />
-      </div>
-
-      <!-- 封面上传 -->
-      <div class="form-group">
-        <label>预告封面</label>
-        <div class="cover-upload">
+    <VerifyCard
+      :audit_info="userStore.auditInfo"
+      v-if="userStore.auditInfo?.status !== 1"
+    />
+    <div v-else>
+      <!-- 白底框 -->
+      <div class="content-container">
+        <!-- 开播设置表单 -->
+        <!-- 直播标题 -->
+        <div class="form-group">
+          <label for="liveTitle">预告标题</label>
           <input
-            type="file"
-            id="coverInput"
-            @change="handleCoverChange"
-            hidden
+            id="liveTitle"
+            type="text"
+            v-model="form.title"
+            placeholder="请输入预告标题"
+            style="width: 300px"
           />
-          <img
-            :src="form.cover"
-            alt="封面预览"
-            v-if="form.cover"
+        </div>
+
+        <!-- 直播日期 -->
+        <div class="form-group">
+          <label for="date">直播时间</label>
+          <el-date-picker
+            v-model="form.date"
+            type="datetime"
+            placeholder="请选择直播日期"
+            :clearable="true"
+            format="YYYY-MM-DD HH:mm"
+            class="input medium-input"
+            style="height: 38px"
+            @change="handleDateChange"
           />
-          <div
-            class="empty-cover"
-            v-else
-          >
-            <div class="ico empty"></div>
-            这里还没有图片啦～
-          </div>
-          <button
-            type="button"
-            @click="triggerCoverUpload"
-          >
-            上传封面
-          </button>
         </div>
-      </div>
 
-      <!-- 保存按钮 -->
-      <div class="form-actions">
-        <button @click="handleSave">发布</button>
-      </div>
-    </div>
-
-    <div class="content-container">
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 10px;
-        "
-      >
-        <div class="title">我的预告</div>
-        <div
-          class="multi-operate"
-          @click="handleShowMultiDelete"
-        >
-          {{ showMultiDelete ? '返回' : '批量操作' }}
-        </div>
-      </div>
-      <div class="operate">
-        <div
-          v-if="showMultiDelete"
-          class="check-box"
-        >
-          <!-- 自定义全选复选框 -->
-          <div
-            class="custom-checkbox"
-            @click="handleSelectAll"
-          >
-            <span :class="{ checked: selectAll }">
-              <div
-                class="ico selected"
-                v-if="selectAll"
-              ></div>
-            </span>
-            <span>全选</span>
-            <div class="selected-num">
-              已选择
-              <div>{{ selectedPreviews?.length }}</div>
-              个预告
+        <!-- 封面上传 -->
+        <div class="form-group">
+          <label>预告封面</label>
+          <div class="cover-upload">
+            <input
+              type="file"
+              id="coverInput"
+              @change="handleCoverChange"
+              hidden
+            />
+            <img
+              :src="form.cover"
+              alt="封面预览"
+              v-if="form.cover"
+            />
+            <div
+              class="empty-cover"
+              v-else
+            >
+              <!-- <div class="ico empty"></div> -->
+              <!-- 这里还没有图片啦～ -->
+              预告封面
             </div>
+            <button
+              type="button"
+              @click="triggerCoverUpload"
+            >
+              上传封面
+            </button>
           </div>
         </div>
 
-        <!-- 批量删除按钮 -->
-        <div
-          class="batch-delete-container"
-          v-if="showMultiDelete"
-        >
-          <button
-            :disabled="selectedPreviews.length === 0"
-            @click="handleBatchDelete"
-          >
-            批量删除
-          </button>
+        <!-- 保存按钮 -->
+        <div class="form-actions">
+          <button @click="handleSave">发布</button>
         </div>
       </div>
 
-      <div class="content-box">
+      <div class="content-container">
         <div
-          class="notification-grid"
-          v-if="livePreviews.length"
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          "
         >
+          <div class="title">我的预告</div>
           <div
-            v-for="(preview, index) in livePreviews"
-            :key="preview.id"
-            class="notification-item-wrap"
+            class="multi-operate"
+            @click="handleShowMultiDelete"
           >
-            <!-- 自定义复选框 -->
+            {{ showMultiDelete ? '返回' : '批量操作' }}
+          </div>
+        </div>
+        <div class="operate">
+          <div
+            v-if="showMultiDelete"
+            class="check-box"
+          >
+            <!-- 自定义全选复选框 -->
             <div
               class="custom-checkbox"
-              @click="togglePreviewSelection(preview.id)"
-              v-if="showMultiDelete"
+              @click="handleSelectAll"
             >
-              <span :class="{ checked: selectedPreviews.includes(preview.id) }">
+              <span :class="{ checked: selectAll }">
                 <div
                   class="ico selected"
-                  v-if="selectedPreviews.includes(preview.id)"
+                  v-if="selectAll"
                 ></div>
               </span>
+              <span>全选</span>
+              <div class="selected-num">
+                已选择
+                <div>{{ selectedPreviews?.length }}</div>
+                个预告
+              </div>
             </div>
+          </div>
 
-            <div class="notification-item">
-              <img
+          <!-- 批量删除按钮 -->
+          <div
+            class="batch-delete-container"
+            v-if="showMultiDelete"
+          >
+            <button
+              :disabled="selectedPreviews.length === 0"
+              @click="handleBatchDelete"
+            >
+              批量删除
+            </button>
+          </div>
+        </div>
+
+        <div class="content-box">
+          <div
+            class="notification-grid"
+            v-if="livePreviews.length"
+          >
+            <div
+              v-for="(preview, index) in livePreviews"
+              :key="preview.id"
+              class="notification-item-wrap"
+            >
+              <!-- 自定义复选框 -->
+              <div
+                class="custom-checkbox"
+                @click="togglePreviewSelection(preview.id)"
+                v-if="showMultiDelete"
+              >
+                <span
+                  :class="{ checked: selectedPreviews.includes(preview.id) }"
+                >
+                  <div
+                    class="ico selected"
+                    v-if="selectedPreviews.includes(preview.id)"
+                  ></div>
+                </span>
+              </div>
+
+              <div class="notification-item">
+                <!-- <img
                 :src="preview.cover_image"
                 alt="直播封面"
                 class="cover-image"
-              />
-              <div class="info">
-                <div class="title">{{ preview.title }}</div>
-                <div class="details">
-                  <span class="time"
+              /> -->
+                <div class="cover-image-bg">预告封面</div>
+                <div class="info">
+                  <div class="title">{{ preview.title }}</div>
+                  <div class="details">
+                    <!-- <span class="time"
                     >开播时间: {{ formatDate(preview.preview_date) }}</span
-                  >
-                  <div
-                    :class="`ico ${
-                      curEnterPreview === index ? 'delete_active' : 'delete'
-                    }`"
-                    v-if="!showMultiDelete"
-                    @mouseenter="handleMouseEnter(index)"
-                    @mouseleave="handleMouseLeave"
-                    @click="handleDelete(preview)"
-                  ></div>
+                  > -->
+                    <span class="time">开播时间: XXXX</span>
+                    <div
+                      :class="`ico ${
+                        curEnterPreview === index ? 'delete_active' : 'delete'
+                      }`"
+                      v-if="!showMultiDelete"
+                      @mouseenter="handleMouseEnter(index)"
+                      @mouseleave="handleMouseLeave"
+                      @click="handleDelete(preview)"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div
-          class="empty-box"
-          v-else
-        >
-          <div class="ico empty"></div>
-          你还没有发布预告哟～
+          <div
+            class="empty-box"
+            v-else
+          >
+            <div class="ico empty"></div>
+            你还没有发布预告哟～
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 隐藏文件选择框 -->
-    <input
-      type="file"
-      ref="fileInput"
-      class="file-input"
-      @change="handleFileChange"
-    />
+      <!-- 隐藏文件选择框 -->
+      <input
+        type="file"
+        ref="fileInput"
+        class="file-input"
+        @change="handleFileChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -201,7 +212,6 @@ import {
   fetchLiveRoomPreviewList,
 } from '@/api/liveRoom';
 import { useUserStore } from '@/store/user';
-import { formatDate } from '@/utils/index';
 import { ElMessageBox } from 'element-plus';
 import { onMounted, ref, watch } from 'vue';
 
@@ -679,6 +689,17 @@ const handleSave = async () => {
         border-radius: 8px;
         object-fit: cover;
         margin-bottom: 10px;
+        &-bg {
+          background-color: #eaeaea;
+          color: #666;
+          width: 100%;
+          margin-bottom: 10px;
+          height: 140px;
+          display: flex;
+          border-radius: 8px;
+          justify-content: center;
+          align-items: center;
+        }
       }
 
       .info {

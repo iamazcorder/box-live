@@ -11,10 +11,7 @@
           :key="item.value?.user_id"
           class="rank-item"
         >
-          <img
-            :src="item.value.user_avatar"
-            class="avatar"
-          />
+          <Avatar :size="30"></Avatar>
           <div class="right">
             <div class="rank-badge">榜{{ index + 1 }}</div>
             <div class="username">{{ item.value.user_username }}</div>
@@ -168,7 +165,8 @@ const fakeRankList = [
       live_room_id: 14,
       live_room_name: '',
       user_id: 11,
-      user_username: '杰克小兔',
+      // user_username: '杰克小兔',
+      user_username: '用户名',
       user_avatar:
         'https://i1.hdslb.com/bfs/face/72fafe063819f7ebc77d37353c8aa12e085e488b.jpg',
       score: '32',
@@ -181,7 +179,9 @@ const fakeRankList = [
       live_room_id: 21,
       live_room_name: '',
       user_id: 18,
-      user_username: '福气小柴',
+      // user_username: '福气小柴',
+      user_username: '用户名',
+
       user_avatar:
         'https://i0.hdslb.com/bfs/face/292443231d7adfdcffdede646b9f6ede0bdb16ac.jpg',
       score: '20',
@@ -194,7 +194,9 @@ const fakeRankList = [
       live_room_id: 19,
       live_room_name: '',
       user_id: 18,
-      user_username: 'zxyy',
+      // user_username: 'zxyy',
+      user_username: '用户名',
+
       user_avatar: 'http://localhost:8080/img/avatar4.webp',
       score: '12',
     },
@@ -373,6 +375,7 @@ const toggleExpanded = () => {
   .right {
     display: flex;
     flex-direction: column;
+    margin-left: 5px;
   }
 }
 

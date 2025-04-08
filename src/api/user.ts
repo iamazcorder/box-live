@@ -141,3 +141,17 @@ export function deleteSearchHistory(params) {
 export function clearSearchHistory(params) {
   return request.put('/user_serach_history/clearHistory', params);
 }
+
+// 创建主播审核记录
+export function createLiveAnchorAudit({ user_id, id_number, real_name }) {
+  return request.post('/liveAnchorAudit/create', {
+    user_id,
+    id_number,
+    real_name,
+  });
+}
+
+// 获取主播审核记录
+export function getLiveAnchorAudit(params) {
+  return request.get('/liveAnchorAudit/get_audit_info', { params });
+}

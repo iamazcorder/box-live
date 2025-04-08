@@ -1,86 +1,95 @@
 <template>
   <div class="title">直播收益</div>
+  <VerifyCard
+    :audit_info="userStore.auditInfo"
+    v-if="userStore.auditInfo?.status !== 1"
+  />
+  <div v-else>
+    <!-- 收益记录 -->
+    <div class="content-container">
+      <div class="subtitle">收益记录</div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>送礼时间</th>
+            <th>礼物名称</th>
+            <th>价值 (元)</th>
+            <th>送礼人</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(record, index) in giftRecords"
+            :key="index"
+          >
+            <td>{{ record.time }}</td>
+            <td>{{ record.giftName }}</td>
+            <td>{{ record.value }}</td>
+            <td>{{ record.sender }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- 提现记录 -->
+    <div class="content-container">
+      <div class="subtitle">提现记录</div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>提现时间</th>
+            <th>提现金额 (元)</th>
+            <th>提现状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(record, index) in withdrawRecords"
+            :key="index"
+          >
+            <td>{{ record.time }}</td>
+            <td>{{ record.value }}</td>
+            <td>{{ record.status }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <!-- 收益记录 -->
-  <div class="content-container">
-    <div class="subtitle">收益记录</div>
-    <table class="custom-table">
-      <thead>
-        <tr>
-          <th>送礼时间</th>
-          <th>礼物名称</th>
-          <th>价值 (元)</th>
-          <th>送礼人</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(record, index) in giftRecords"
-          :key="index"
+    <!-- 收益提现 -->
+    <div class="content-container">
+      <div class="subtitle">收益提现</div>
+      <div class="withdraw-container">
+        <div class="balance-info">
+          <span>当前收益：</span>
+          <strong class="balance">{{ totalEarnings }} 元</strong>
+          <!-- <strong class="balance">XXXX 元</strong> -->
+        </div>
+        <button
+          class="withdraw-btn"
+          :disabled="totalEarnings < 10"
+          @click="handleWithdraw"
         >
-          <td>{{ record.time }}</td>
-          <td>{{ record.giftName }}</td>
-          <td>{{ record.value }}</td>
-          <td>{{ record.sender }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <!-- 提现记录 -->
-  <div class="content-container">
-    <div class="subtitle">提现记录</div>
-    <table class="custom-table">
-      <thead>
-        <tr>
-          <th>提现时间</th>
-          <th>提现金额 (元)</th>
-          <th>提现状态</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(record, index) in withdrawRecords"
-          :key="index"
+          提现
+        </button>
+        <p
+          v-if="totalEarnings < 10"
+          class="withdraw-tip"
         >
-          <td>{{ record.time }}</td>
-          <td>{{ record.value }}</td>
-          <td>{{ record.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- 收益提现 -->
-  <div class="content-container">
-    <div class="subtitle">收益提现</div>
-    <div class="withdraw-container">
-      <div class="balance-info">
-        <span>当前收益：</span>
-        <strong class="balance">{{ totalEarnings }} 元</strong>
+          满 10 元可提现
+        </p>
       </div>
-      <button
-        class="withdraw-btn"
-        :disabled="totalEarnings < 10"
-        @click="handleWithdraw"
-      >
-        提现
-      </button>
-      <p
-        v-if="totalEarnings < 10"
-        class="withdraw-tip"
-      >
-        满 10 元可提现
-      </p>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store/user';
 import { ref } from 'vue';
+
+const userStore = useUserStore();
 
 // 模拟送礼记录数据
 const giftRecords = ref([
-  { time: '03-02 16:37', giftName: '小花花', value: 1, sender: 'zxyy' },
+  // { time: 'XXXX', giftName: 'XXXX', value: 'XXXX', sender: 'XXXX' },
   { time: '03-02 16:37', giftName: '草莓蛋糕', value: 1, sender: 'zxyy' },
   { time: '03-02 16:37', giftName: '心愿水晶球', value: 1, sender: 'zxyy' },
   {
@@ -99,6 +108,7 @@ const giftRecords = ref([
 ]);
 
 const withdrawRecords = ref([
+  { time: 'XXXX', value: 'XXXX', status: '提现中/成功/失败' },
   { time: '03-02 16:37', value: 1, status: '提现中' },
   { time: '03-02 16:37', value: 1, status: '提现成功' },
   { time: '03-02 16:37', value: 1, status: '提现成功' },
@@ -134,7 +144,7 @@ const handleWithdraw = () => {
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 20px;
-  min-height: 300px;
+  /* min-height: 300px; */
 }
 
 .subtitle {

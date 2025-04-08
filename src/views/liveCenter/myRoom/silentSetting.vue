@@ -3,8 +3,16 @@
     <!-- 页面标题 -->
     <div class="page-title">禁言设置</div>
 
+    <VerifyCard
+      :audit_info="userStore.auditInfo"
+      v-if="userStore.auditInfo?.status !== 1"
+    />
+
     <!-- 白底框 -->
-    <div class="tab-container">
+    <div
+      class="tab-container"
+      v-else
+    >
       <!-- 选项卡 -->
       <div class="tabs">
         <div
@@ -88,7 +96,10 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store/user';
 import { ref } from 'vue';
+
+const userStore = useUserStore();
 
 // 选项卡
 const tabs = ref(['禁言名单管理', '全局禁言']);

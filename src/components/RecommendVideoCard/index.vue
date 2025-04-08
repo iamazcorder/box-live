@@ -151,6 +151,21 @@ const handleGoVideo = (id) => {
       border-radius: 6px;
     }
 
+    .empty {
+      width: 100%;
+      height: auto;
+      display: block;
+      width: 145px;
+      height: 90px;
+      border-radius: 6px;
+      background-color: #eaeaea;
+      font-size: 14px;
+      color: #666;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .duration {
       position: absolute;
       font-size: 13px;

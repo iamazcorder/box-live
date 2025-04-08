@@ -19,14 +19,17 @@
               alt="Live Preview"
               class="live-preview-image"
             />
+            <!-- <div class="empty-cover">预告封面</div> -->
           </div>
           <div class="live-preview-info">
             <div class="live-title">{{ live.title }}</div>
             <div class="live-username">
               主播: <span>{{ live.user?.username }}</span>
+              <!-- 主播: <span>{{ live.username }}</span> -->
             </div>
             <div class="live-time">
               开播时间: {{ formatDate(live.preview_date) }}
+              <!-- 开播时间: {{ live.startTime }} -->
             </div>
             <button
               class="reserve-btn-done"
@@ -60,14 +63,17 @@
               alt="Live Preview"
               class="live-preview-image"
             />
+            <!-- <div class="empty-cover">预告封面</div> -->
           </div>
           <div class="live-preview-info">
-            <h3 class="live-title">{{ live.title }}</h3>
+            <div class="live-title">{{ live.title }}</div>
             <p class="live-username">
               主播: <span>{{ live.user?.username }}</span>
+              <!-- 主播: <span>{{ live.username }}</span> -->
             </p>
             <p class="live-time">
               开播时间: {{ formatDate(live.preview_date) }}
+              <!-- 开播时间: {{ live.startTime }} -->
             </p>
             <button
               class="reserve-btn-done"
@@ -116,7 +122,7 @@ import {
   fetchLiveRoomPreviewList,
 } from '@/api/liveRoom';
 import { useUserStore } from '@/store/user';
-import { formatDate } from '@/utils/index';
+import { formatDate } from '@/utils';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const userStore = useUserStore();
@@ -124,9 +130,9 @@ const userStore = useUserStore();
 const livePreviews = ref<any[]>([
   {
     id: 1,
-    title: '英雄联盟全球总决赛',
-    username: '电竞达人',
-    startTime: '2025-01-22T19:00:00',
+    title: 'XXXXXX',
+    username: 'XXXXXX',
+    startTime: 'XXXXXX',
     coverImage:
       'https://i1.hdslb.com/bfs/live/903683e4f2b2fd3226b73ea4fceec915c8578669.jpg@1e_1c_100q.webp',
   },
@@ -275,6 +281,7 @@ const totalPages = computed(() => {
 const currentPageData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
+  // return livePreviews.value.slice(start, end);
   return livePreviews.value.slice(start, end);
 });
 
@@ -423,6 +430,16 @@ const isAppoint = (previewId: number) => {
   position: relative;
   width: 100%;
   height: 180px;
+  .empty-cover {
+    background-color: #d4d3d3;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: #3b3b3b;
+  }
 }
 
 .live-preview-image {

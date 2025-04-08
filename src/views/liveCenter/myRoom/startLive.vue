@@ -2,110 +2,125 @@
   <div class="start-live-page">
     <!-- 页面标题 -->
     <div class="page-title">开播设置</div>
-    <div style="display: flex; gap: 20px">
-      <!-- 直播标题 -->
-      <div class="content-container">
-        <div class="title">直播标题</div>
-        <input
-          id="liveTitle"
-          type="text"
-          v-model="title"
-          placeholder="请输入直播标题"
-          style="width: 300px"
-        />
-        <button
-          type="submit"
-          @click="handleSaveTitle"
-        >
-          保存
-        </button>
-      </div>
-      <!-- 分区选择 -->
-      <div class="content-container">
-        <div class="title">直播分区</div>
-        <div
-          class="category-text"
-          @click="showModal = true"
-        >
-          {{ selectedCategory }}
-        </div>
-        <!-- <div class="category-select" @click="showModal = true">{{ selectedCategory }}</div> -->
-        <button
-          type="submit"
-          @click="handleSaveCategory"
-        >
-          保存
-        </button>
-      </div>
-    </div>
-    <!-- 直播公告 -->
-    <div class="content-container">
-      <div class="title">主播公告</div>
-      <input
-        id="liveTitle"
-        v-model="announcement"
-        placeholder="说说下次开播的时间和内容吧～"
-        style="width: 100%"
-        maxlength="60"
-        clearable
-      />
-      <div class="tip">Tips：未填写内容时，主播公告将隐藏</div>
-      <button
-        type="submit"
-        @click="handleSaveAnnouncement"
-      >
-        保存
-      </button>
-    </div>
-    <div style="display: flex; gap: 20px">
-      <!-- 直播封面 -->
-      <div class="content-container">
-        <div class="title">直播封面</div>
-        <div class="cover-upload">
-          <!-- <input type="file" id="coverInput" @change="handleCoverChange" hidden /> -->
-          <img
-            :src="cover || placeholderCover"
-            alt="封面预览"
+    <VerifyCard
+      :audit_info="userStore.auditInfo"
+      v-if="userStore.auditInfo?.status !== 1"
+    />
+    <div v-else>
+      <div style="display: flex; gap: 20px">
+        <!-- 直播标题 -->
+        <div class="content-container">
+          <div class="title">直播标题</div>
+          <input
+            id="liveTitle"
+            type="text"
+            v-model="title"
+            placeholder="请输入直播标题"
+            style="width: 300px"
           />
           <button
-            type="button"
-            @click="triggerCoverUpload"
+            type="submit"
+            @click="handleSaveTitle"
           >
-            更换封面
+            保存
+          </button>
+        </div>
+        <!-- 分区选择 -->
+        <div class="content-container">
+          <div class="title">直播分区</div>
+          <div
+            class="category-text"
+            @click="showModal = true"
+          >
+            {{ selectedCategory }}
+          </div>
+          <!-- <div class="category-select" @click="showModal = true">{{ selectedCategory }}</div> -->
+          <button
+            type="submit"
+            @click="handleSaveCategory"
+          >
+            保存
           </button>
         </div>
       </div>
-      <!-- 个人简介 -->
+      <!-- 直播公告 -->
       <div class="content-container">
-        <div class="title">个人简介</div>
-        <div class="el-textarea">
-          <textarea
-            rows="2"
-            v-model="introduction"
-          ></textarea>
-        </div>
+        <div class="title">主播公告</div>
+        <input
+          id="liveTitle"
+          v-model="announcement"
+          placeholder="说说下次开播的时间和内容吧～"
+          style="width: 100%"
+          maxlength="60"
+          clearable
+        />
+        <div class="tip">Tips：未填写内容时，主播公告将隐藏</div>
         <button
           type="submit"
-          @click="handleSaveIntroduction"
+          @click="handleSaveAnnouncement"
         >
           保存
         </button>
       </div>
-    </div>
+      <div style="display: flex; gap: 20px">
+        <!-- 直播封面 -->
+        <div class="content-container">
+          <div class="title">直播封面</div>
+          <div class="cover-upload">
+            <!-- <input type="file" id="coverInput" @change="handleCoverChange" hidden /> -->
+            <img
+              v-if="cover"
+              :src="cover || placeholderCover"
+              alt="封面预览"
+            />
+            <div
+              class="empty-cover"
+              v-else
+            >
+              <div class="ico empty"></div>
+              这里还没有图片啦～
+            </div>
+            <button
+              type="button"
+              @click="triggerCoverUpload"
+            >
+              更换封面
+            </button>
+          </div>
+        </div>
+        <!-- 个人简介 -->
+        <div class="content-container">
+          <div class="title">个人简介</div>
+          <div class="el-textarea">
+            <textarea
+              rows="2"
+              v-model="introduction"
+              placeholder="描述一下自己吧～"
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            @click="handleSaveIntroduction"
+          >
+            保存
+          </button>
+        </div>
+      </div>
 
-    <!-- 控制弹窗的显示 -->
-    <CategoryBox
-      :isVisible="showModal"
-      @update:isVisible="handleCategorySelect"
-    >
-    </CategoryBox>
-    <!-- 隐藏文件选择框 -->
-    <input
-      type="file"
-      ref="fileInput"
-      class="file-input"
-      @change="handleFileChange"
-    />
+      <!-- 控制弹窗的显示 -->
+      <CategoryBox
+        :isVisible="showModal"
+        @update:isVisible="handleCategorySelect"
+      >
+      </CategoryBox>
+      <!-- 隐藏文件选择框 -->
+      <input
+        type="file"
+        ref="fileInput"
+        class="file-input"
+        @change="handleFileChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -113,6 +128,7 @@
 import { fetchUpdateMyLiveRoom, uploadCover } from '@/api/liveRoom';
 import { fetchUserHasLiveRoom } from '@/api/userLiveRoom';
 import CategoryBox from '@/components/CategoryBox/index.vue';
+import VerifyCard from '@/components/VerifyCard/index.vue';
 import { useAppStore } from '@/store/app';
 import { useUserStore } from '@/store/user';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -276,6 +292,34 @@ const handleFileChange = async (event: Event) => {
 .start-live-page {
   background: #f5f6fa;
 
+  .empty-cover {
+    width: 200px;
+    height: 120px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #eaeaea;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .ico {
+    width: 18px;
+    height: 18px;
+    opacity: 0.9;
+    background-size: contain;
+    background-repeat: no-repeat;
+    &.empty {
+      width: 50px;
+      height: 50px;
+      margin-bottom: 5px;
+      background-image: url('@/assets/img/empty-data.png');
+    }
+  }
+
   .page-title {
     font-size: 24px;
     margin-bottom: 20px;
@@ -322,8 +366,8 @@ const handleFileChange = async (event: Event) => {
 
   textarea {
     resize: none;
-    min-height: 201px;
-    height: 201px;
+    min-height: 150px;
+    height: 150px;
     display: block;
     padding: 5px 7px;
     line-height: 1.5;
